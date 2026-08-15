@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// Pilotage en ligne de commande.
     ///
@@ -22,7 +22,7 @@ namespace LumaFlux
 
         private static readonly string[] Commands = {
             "--brightness", "--temp", "--mode", "--reset", "--pause", "--resume",
-            "--adaptive", "--blackout", "--break"
+            "--adaptive", "--blackout", "--break", "--show"
         };
 
         public static bool HasCommand(string[] args)
@@ -47,11 +47,23 @@ namespace LumaFlux
             return false;
         }
 
+        /// <summary>
+        /// Demande explicite de la fenetre. Emise par la liste de raccourcis de la
+        /// barre des taches, ou par qui veut ouvrir les reglages sans savoir si
+        /// l'application tourne deja.
+        /// </summary>
+        public static bool WantsShow(string[] args)
+        {
+            foreach (string a in args)
+                if (string.Equals(a, "--show", StringComparison.OrdinalIgnoreCase)) return true;
+            return false;
+        }
+
         /// <summary>Depose l'ordre pour l'instance en cours. Faux si aucune ne tourne.</summary>
         public static bool SendToRunningInstance(string[] args)
         {
             bool isNew;
-            using (Mutex probe = new Mutex(false, "LumaFlux_SingleInstance_9f2a"))
+            using (Mutex probe = new Mutex(false, "OpusScreen_SingleInstance_9f2a"))
             {
                 try { isNew = probe.WaitOne(0); }
                 catch { isNew = false; }
@@ -204,22 +216,23 @@ namespace LumaFlux
         public static void ShowHelp()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("LumaFlux - pilotage en ligne de commande");
+            sb.AppendLine("OpusScreen - pilotage en ligne de commande");
             sb.AppendLine();
-            sb.AppendLine("  LumaFlux.exe --brightness 130     luminosite, de 5 a 150");
-            sb.AppendLine("  LumaFlux.exe --temp 3400          temperature en kelvins, 1200 a 6500");
-            sb.AppendLine("  LumaFlux.exe --mode \"Lecture\"     applique un mode par son nom");
-            sb.AppendLine("  LumaFlux.exe --adaptive on|off    adaptation au contenu affiche");
-            sb.AppendLine("  LumaFlux.exe --pause              suspend tous les effets");
-            sb.AppendLine("  LumaFlux.exe --resume             reprend");
-            sb.AppendLine("  LumaFlux.exe --break              declenche une pause pour les yeux");
-            sb.AppendLine("  LumaFlux.exe --reset              remet l'ecran a l'etat normal");
-            sb.AppendLine("  LumaFlux.exe --minimized          demarre sans ouvrir la fenetre");
+            sb.AppendLine("  OpusScreen.exe --brightness 130     luminosite, de 5 a 150");
+            sb.AppendLine("  OpusScreen.exe --temp 3400          temperature en kelvins, 1200 a 6500");
+            sb.AppendLine("  OpusScreen.exe --mode \"Lecture\"     applique un mode par son nom");
+            sb.AppendLine("  OpusScreen.exe --adaptive on|off    adaptation au contenu affiche");
+            sb.AppendLine("  OpusScreen.exe --pause              suspend tous les effets");
+            sb.AppendLine("  OpusScreen.exe --resume             reprend");
+            sb.AppendLine("  OpusScreen.exe --break              declenche une pause pour les yeux");
+            sb.AppendLine("  OpusScreen.exe --reset              remet l'ecran a l'etat normal");
+            sb.AppendLine("  OpusScreen.exe --show               ouvre la fenetre de reglages");
+            sb.AppendLine("  OpusScreen.exe --minimized          demarre sans ouvrir la fenetre");
             sb.AppendLine();
-            sb.AppendLine("Si LumaFlux tourne deja, l'ordre lui est transmis et prend effet");
+            sb.AppendLine("Si OpusScreen tourne deja, l'ordre lui est transmis et prend effet");
             sb.AppendLine("immediatement. Sinon il s'applique au demarrage.");
 
-            MessageBox.Show(sb.ToString(), "LumaFlux - aide", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(sb.ToString(), "OpusScreen - aide", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 }

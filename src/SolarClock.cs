@@ -1,6 +1,6 @@
 using System;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     public enum DayPhase { Day, Sunset, Night, Late }
 

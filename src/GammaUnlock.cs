@@ -1,6 +1,6 @@
 using Microsoft.Win32;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>
     /// Depuis Windows Vista, GDI rabote les courbes gamma trop eloignees de la lineaire.

@@ -4,7 +4,7 @@
 
 Windows n'offre aucun moyen unique de régler la luminosité d'un écran. Il en existe
 quatre, à des couches différentes du pipeline d'affichage, chacun avec ses forces et ses
-limites. LumaFlux les combine.
+limites. OpusScreen les combine.
 
 ```
    application dessine
@@ -106,7 +106,7 @@ HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ICM
    GdiIcmGammaRange = 256   (DWORD)
 ```
 
-Administrateur, puis réouverture de session. LumaFlux le détecte en relisant la rampe
+Administrateur, puis réouverture de session. OpusScreen le détecte en relisant la rampe
 après l'avoir écrite, et redescend progressivement jusqu'à une version acceptée plutôt
 que d'échouer en silence.
 
@@ -190,10 +190,37 @@ src/
 ├── PageAdvanced.cs         pages Raccourcis et Avancé
 ├── ControlPanel.cs         coquille de la fenêtre
 │
+├── AppIcon.cs              icône de l'application, embarquée dans l'exécutable
+├── Taskbar.cs              raccourci du menu Démarrer, liste de tâches épinglée
+│
 ├── TrayApp.cs              cycle de vie, événements système, raccourcis
 ├── CommandLine.cs          pilotage en ligne de commande
 └── Program.cs              point d'entrée, filets de sécurité
+
+tools/
+└── MakeIcon.cs             dessine assets/OpusScreen.ico, appelé par build.cmd
 ```
+
+### Épinglage à la barre des tâches
+
+Windows n'épingle pas un exécutable, il épingle un **raccourci**, et regroupe les
+fenêtres sous cette épingle par un identifiant d'application. Trois décisions en
+découlent :
+
+- **Aucun identifiant explicite n'est posé.** Windows en dérive un du chemin de
+  l'exécutable. Un identifiant maison ferait apparaître deux boutons côte à côte pour
+  un seul programme dès que l'utilisateur épingle l'exécutable lui-même plutôt que
+  notre raccourci.
+- **Un raccourci est déposé dans le menu Démarrer** à chaque démarrage, et sa cible
+  corrigée si l'exécutable a changé de dossier.
+- **Un second lancement ne refuse plus de démarrer.** Une application épinglée est
+  relancée à chaque clic sur son icône : le nouveau processus diffuse un message
+  enregistré, l'instance en cours ouvre sa fenêtre, et le nouveau processus s'efface.
+  Le fichier d'ordres existant restait trop lent pour ce geste (jusqu'à une seconde).
+
+L'épinglage proprement dit reste **un geste de l'utilisateur** : depuis Windows 10
+version 1607, le shell ignore le verbe correspondant. L'application prépare le
+raccourci et conduit l'utilisateur jusqu'à lui.
 
 ### Flux d'une modification
 

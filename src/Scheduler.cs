@@ -1,6 +1,6 @@
 using System;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>Ce que la planification impose a un instant donne.</summary>
     public struct ScheduleResult

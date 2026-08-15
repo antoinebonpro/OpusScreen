@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>
     /// Quatrieme etage du pipeline : une matrice de couleur appliquee par le compositeur

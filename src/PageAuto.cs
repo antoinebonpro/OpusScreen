@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>
     /// Tout ce qui decide a votre place : l'heure, et le contenu affiche.
@@ -372,7 +372,7 @@ namespace LumaFlux
         private void OnAddCurrent(object sender, EventArgs e)
         {
             string proc = Watcher != null ? Watcher.CurrentProcess : "";
-            if (string.IsNullOrEmpty(proc) || proc == "lumaflux")
+            if (string.IsNullOrEmpty(proc) || proc == "opusscreen")
             {
                 MessageBox.Show(FindForm(),
                     "Aucune autre application au premier plan.\n\n"
@@ -458,7 +458,7 @@ namespace LumaFlux
                 _list.Reload();
 
                 string proc = Watcher != null ? Watcher.CurrentProcess : "";
-                _current.Text = string.IsNullOrEmpty(proc) || proc == "lumaflux"
+                _current.Text = string.IsNullOrEmpty(proc) || proc == "opusscreen"
                     ? "Application au premier plan : (cette fenetre)"
                     : "Application au premier plan : " + proc;
             }

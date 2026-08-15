@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>
     /// Un bloc de reglages par ecran.

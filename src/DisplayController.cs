@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>
     /// Chef d'orchestre. Traduit une consigne en actions coordonnees sur quatre etages,

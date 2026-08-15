@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>
     /// Surveille l'application au premier plan.

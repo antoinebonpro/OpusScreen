@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>
     /// Reglages fins de la couleur : balance des canaux, forme de la courbe, filtres

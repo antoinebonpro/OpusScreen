@@ -69,7 +69,7 @@ nécessaire.** Le même bouton propose ensuite l'opération inverse.
 |---|---|---|
 | Luminosité adaptative Windows (capteur) | `powercfg /q SCHEME_CURRENT SUB_VIDEO ADAPTBRIGHT` | doit valoir 0 |
 | Luminosité selon le contenu (Windows 11) | Paramètres → Système → Affichage → Luminosité | désactiver |
-| Adaptation au contenu de LumaFlux | onglet *Automatisme* | c'est voulu si activée |
+| Adaptation au contenu de OpusScreen | onglet *Automatisme* | c'est voulu si activée |
 | Économie d'énergie sur batterie | Paramètres → Système → Batterie | assombrit sur batterie |
 
 ---
@@ -80,9 +80,9 @@ nécessaire.** Le même bouton propose ensuite l'opération inverse.
 Deux programmes qui y écrivent se remplacent mutuellement en boucle.
 
 **Vérifier** : f.lux, PangoBright, Iris, Gammy, LightBulb, Twinkle Tray, ClickMonitorDDC
-tournent-ils ? LumaFlux les détecte au démarrage et propose de les fermer.
+tournent-ils ? OpusScreen les détecte au démarrage et propose de les fermer.
 
-**Corriger** : n'en garder qu'un. LumaFlux reprend les fonctions de f.lux et de
+**Corriger** : n'en garder qu'un. OpusScreen reprend les fonctions de f.lux et de
 PangoBright, les faire coexister n'apporte rien.
 
 ---
@@ -104,7 +104,7 @@ HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ICM
 
 Droits administrateur, puis **fermeture et réouverture de session**.
 
-Sans cela, LumaFlux ne reste pas sans rien faire : il redescend progressivement jusqu'à
+Sans cela, OpusScreen ne reste pas sans rien faire : il redescend progressivement jusqu'à
 une version acceptée par le pilote, et signale que l'effet est réduit.
 
 ---
@@ -144,12 +144,12 @@ plein écran — il ne peut y en avoir qu'un à la fois sur le système.
 Une table de couleurs modifiée **survit à la mort du processus**. Dans l'ordre :
 
 1. **`Ctrl + Alt + Maj + R`** — fonctionne même si l'interface est figée
-2. **Fermer LumaFlux** depuis le gestionnaire des tâches — la restauration s'exécute à
+2. **Fermer OpusScreen** depuis le gestionnaire des tâches — la restauration s'exécute à
    la sortie
-3. **Relancer LumaFlux** — le fichier témoin déclenche la remise à neuf
+3. **Relancer OpusScreen** — le fichier témoin déclenche la remise à neuf
 4. **Changer la résolution puis la remettre** — Windows réinitialise la table
 5. **Fermer et rouvrir la session Windows**
-6. **Supprimer `%LOCALAPPDATA%\LumaFlux\settings.ini`**
+6. **Supprimer `%LOCALAPPDATA%\OpusScreen\settings.ini`**
 
 Si cela s'est produit, c'est un défaut : voir [SECURITE.md](SECURITE.md).
 

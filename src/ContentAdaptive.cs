@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>
     /// Luminosite qui suit le contenu affiche : une page blanche fait baisser l'ecran,
@@ -66,7 +66,7 @@ namespace LumaFlux
             _running = true;
             _worker = new Thread(Loop);
             _worker.IsBackground = true;
-            _worker.Name = "LumaFlux-Adaptive";
+            _worker.Name = "OpusScreen-Adaptive";
             _worker.Priority = ThreadPriority.BelowNormal;
             _worker.Start();
         }

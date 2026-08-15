@@ -4,7 +4,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>
     /// Filet de securite contre le scenario "ecran noir dont on ne peut plus sortir".
@@ -113,7 +113,7 @@ namespace LumaFlux
             _running = true;
             _guardThread = new Thread(GuardLoop);
             _guardThread.IsBackground = true;
-            _guardThread.Name = "LumaFlux-Safety";
+            _guardThread.Name = "OpusScreen-Safety";
             _guardThread.Priority = ThreadPriority.AboveNormal;
             _guardThread.Start();
         }

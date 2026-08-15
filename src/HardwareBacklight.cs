@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Management;
 using System.Threading;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>
     /// Pilote le retroeclairage physique de l'ecran - le seul etage qui produit
@@ -41,7 +41,7 @@ namespace LumaFlux
             _running = true;
             _worker = new Thread(WorkerLoop);
             _worker.IsBackground = true;
-            _worker.Name = "LumaFlux-Backlight";
+            _worker.Name = "OpusScreen-Backlight";
             _worker.Start();
         }
 

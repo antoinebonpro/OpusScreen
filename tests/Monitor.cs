@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Management;
 using System.Threading;
-using LumaFlux;
+using OpusScreen;
 
 class MonitorTool
 {

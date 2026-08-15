@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>
     /// Un ecran physique detecte sur la machine.

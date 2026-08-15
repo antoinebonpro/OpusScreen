@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>
     /// Detecte les autres applications qui pilotent la meme LUT gamma.
@@ -10,7 +10,7 @@ namespace LumaFlux
     /// Il n'existe qu'une seule table de conversion par carte graphique : deux
     /// programmes qui y ecrivent chacun de leur cote se remplacent mutuellement en
     /// boucle, ce qui donne un ecran qui clignote et des reglages qui "ne tiennent pas".
-    /// Comme LumaFlux reprend justement les roles de f.lux et de PangoBright, le cas
+    /// Comme OpusScreen reprend justement les roles de f.lux et de PangoBright, le cas
     /// est frequent au premier lancement.
     /// </summary>
     public static class ConflictDetector

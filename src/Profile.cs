@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Text;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>Filtres qui melangent les canaux entre eux : impossibles avec une simple LUT.</summary>
     public enum ColorFilter

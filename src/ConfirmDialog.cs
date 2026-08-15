@@ -2,7 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>
     /// Confirmation a rebours, calquee sur ce que fait Windows lors d'un changement de

@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>
     /// Coordonne l'ensemble : icone de notification, menu, raccourcis, horloge,
@@ -28,6 +28,7 @@ namespace LumaFlux
 
         private ControlPanel _panel;
         private HotkeyWindow _hotkeys;
+        private WakeWindow _wake;
         private TrayWheel _wheel;
         private Icon _currentIcon;
         private DateTime _pauseUntil = DateTime.MinValue;
@@ -43,12 +44,20 @@ namespace LumaFlux
 
             _tray = new NotifyIcon();
             _tray.Visible = true;
-            _tray.Text = "LumaFlux";
+            _tray.Text = "OpusScreen";
             _tray.MouseUp += OnTrayClick;
 
             BuildMenu();
             HookSystemEvents();
             RebindHotkeys();
+
+            _wake = new WakeWindow(this);
+
+            // Un raccourci connu du menu Demarrer est ce que Windows epingle ; la liste
+            // de taches vient s'y accrocher. Les deux sont rejoues a chaque demarrage :
+            // l'executable a pu changer de dossier entre-temps.
+            Taskbar.EnsureShortcut();
+            Taskbar.PublishJumpList(false);
 
             _wheel = new TrayWheel(_tray);
             _wheel.Scrolled += OnTrayWheel;
@@ -73,8 +82,10 @@ namespace LumaFlux
 
             // Le panneau s'ouvre au tout premier lancement - sinon rien ne semble se
             // passer - puis seulement si l'utilisateur n'a pas demande le contraire.
-            bool wantsQuiet = CommandLine.StartMinimized(args) || CommandLine.HasCommand(args);
-            if (!wantsQuiet && (_s.IsFirstRun || !_s.StartMinimized))
+            // --show passe outre : c'est une demande explicite de la fenetre.
+            bool wantsQuiet = (CommandLine.StartMinimized(args) || CommandLine.HasCommand(args))
+                              && !CommandLine.WantsShow(args);
+            if (!wantsQuiet && (_s.IsFirstRun || !_s.StartMinimized || CommandLine.WantsShow(args)))
                 ShowPanel();
         }
 
@@ -97,6 +108,7 @@ namespace LumaFlux
                     case "--pause": PauseFor(TimeSpan.MaxValue); return;
                     case "--resume": ResumeEffects(); return;
                     case "--break": _breaks.TriggerBreak(); return;
+                    case "--show": ShowPanel(); return;
                 }
             }
 
@@ -145,7 +157,7 @@ namespace LumaFlux
             menu.Items.Clear();
 
             ToolStripMenuItem header = new ToolStripMenuItem(
-                _display.Suspended ? "LumaFlux - suspendu" : string.Format("LumaFlux - {0} % - {1} K",
+                _display.Suspended ? "OpusScreen - suspendu" : string.Format("OpusScreen - {0} % - {1} K",
                     (int)Math.Round(_s.Current.Brightness), _s.Current.Kelvin));
             header.Enabled = false;
             header.Font = Theme.BodyBold;
@@ -346,6 +358,7 @@ namespace LumaFlux
                 ? "en pause"
                 : "en pause jusqu'a " + _pauseUntil.ToString("HH:mm"));
             UpdateIcon();
+            Taskbar.PublishJumpList(true);
             if (_panel != null && _panel.IsHandleCreated) _panel.RefreshReadouts();
         }
 
@@ -354,6 +367,7 @@ namespace LumaFlux
             _pauseUntil = DateTime.MinValue;
             _display.Resume();
             UpdateIcon();
+            Taskbar.PublishJumpList(false);
             if (_panel != null && _panel.IsHandleCreated) _panel.RefreshReadouts();
         }
 
@@ -459,7 +473,7 @@ namespace LumaFlux
         private void OnForegroundChanged(string process)
         {
             if (!_s.AppRulesEnabled || string.IsNullOrEmpty(process)) return;
-            if (process == "lumaflux") return;
+            if (process == "opusscreen") return;
 
             AppRule match = null;
             foreach (AppRule r in _s.AppRules)
@@ -564,9 +578,21 @@ namespace LumaFlux
             }
             _panel.SyncAll();
             _panel.Show();
-            _panel.WindowState = FormWindowState.Normal;
+            if (_panel.WindowState == FormWindowState.Minimized)
+                _panel.WindowState = FormWindowState.Normal;
             _panel.BringToFront();
             _panel.Activate();
+
+            // Activate() suffit quand le clic vient de l'application elle-meme. Venant
+            // d'un autre processus - icone epinglee, liste de taches - Windows exige
+            // en plus cette demande explicite, sans quoi la fenetre reste derriere.
+            try
+            {
+                IntPtr h = _panel.Handle;
+                Native.ShowWindow(h, Native.SW_RESTORE);
+                Native.SetForegroundWindow(h);
+            }
+            catch { }
         }
 
         private static void PositionNearTray(Form f)
@@ -582,8 +608,8 @@ namespace LumaFlux
         private void UpdateTooltip()
         {
             string t = _display.Suspended
-                ? "LumaFlux - suspendu"
-                : string.Format("LumaFlux - {0} % - {1} K",
+                ? "OpusScreen - suspendu"
+                : string.Format("OpusScreen - {0} % - {1} K",
                     (int)Math.Round(_s.Current.Brightness), _s.Current.Kelvin);
             // Windows tronque au-dela de 63 caracteres.
             _tray.Text = t.Length > 62 ? t.Substring(0, 62) : t;
@@ -760,6 +786,7 @@ namespace LumaFlux
 
             try { if (_wheel != null) _wheel.Dispose(); } catch { }
             try { if (_hotkeys != null) _hotkeys.Dispose(); } catch { }
+            try { if (_wake != null) _wake.Dispose(); } catch { }
             try { _adaptive.Dispose(); } catch { }
             try { _breaks.Dispose(); } catch { }
             try { _display.RestoreAll(); } catch { }
@@ -772,6 +799,38 @@ namespace LumaFlux
             _tray.Visible = false;
             _tray.Dispose();
             ExitThread();
+        }
+
+        /// <summary>
+        /// Fenetre invisible qui ecoute la demande d'ouverture emise par un second
+        /// lancement - un clic sur l'icone epinglee a la barre des taches, par exemple.
+        ///
+        /// Elle doit etre de premier niveau, et non rattachee au bureau des messages :
+        /// une diffusion a HWND_BROADCAST n'atteint que les fenetres de premier niveau.
+        /// Elle vit hors du panneau de reglages, qui n'existe pas tant qu'on ne l'a pas
+        /// demande - or c'est justement ce qu'on demande ici.
+        /// </summary>
+        private class WakeWindow : NativeWindow, IDisposable
+        {
+            private readonly TrayApp _owner;
+
+            public WakeWindow(TrayApp owner)
+            {
+                _owner = owner;
+                CreateHandle(new CreateParams());
+            }
+
+            protected override void WndProc(ref Message m)
+            {
+                if (m.Msg == (int)Native.WM_OPUSSCREEN_SHOW && Native.WM_OPUSSCREEN_SHOW != 0)
+                {
+                    try { _owner.ShowPanel(); } catch { }
+                    return;
+                }
+                base.WndProc(ref m);
+            }
+
+            public void Dispose() { DestroyHandle(); }
         }
 
         /// <summary>

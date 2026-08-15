@@ -6,12 +6,12 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
-[assembly: AssemblyTitle("LumaFlux")]
+[assembly: AssemblyTitle("OpusScreen")]
 [assembly: AssemblyDescription("Luminosite 5-150 %, temperature de couleur et confort visuel")]
-[assembly: AssemblyVersion("2.0.0.0")]
-[assembly: AssemblyFileVersion("2.0.0.0")]
+[assembly: AssemblyVersion("2.1.0.0")]
+[assembly: AssemblyFileVersion("2.1.0.0")]
 
-namespace LumaFlux
+namespace OpusScreen
 {
     internal static class Program
     {
@@ -21,29 +21,11 @@ namespace LumaFlux
         [STAThread]
         private static void Main(string[] args)
         {
-            // --- ligne de commande : si une instance tourne deja, on lui transmet
-            //     l'ordre et on ressort. Lunar reserve son pilotage en ligne de
-            //     commande a la version payante. ---
-            if (CommandLine.HasCommand(args))
-            {
-                if (CommandLine.SendToRunningInstance(args)) return;
-                // aucune instance en cours : la commande sera appliquee au demarrage
-            }
-
             if (CommandLine.WantsHelp(args)) { CommandLine.ShowHelp(); return; }
 
             bool isNew;
-            _instanceLock = new Mutex(true, "LumaFlux_SingleInstance_9f2a", out isNew);
-            if (!isNew)
-            {
-                MessageBox.Show(
-                    "LumaFlux est deja en cours d'execution.\n\n"
-                  + "Son icone se trouve dans la zone de notification, en bas a droite.\n\n"
-                  + "Astuce : LumaFlux.exe --help liste les commandes utilisables "
-                  + "pour piloter l'instance en cours.",
-                    "LumaFlux", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
+            _instanceLock = new Mutex(true, "OpusScreen_SingleInstance_9f2a", out isNew);
+            if (!isNew) { HandOver(args); return; }
 
             // --- conscience du DPI : sans cela, sur un ecran a mise a l'echelle, le
             //     voile serait place en coordonnees logiques et ne couvrirait pas tout ---
@@ -64,6 +46,13 @@ namespace LumaFlux
             Application.SetCompatibleTextRenderingDefault(false);
 
             Settings settings = Settings.Load();
+
+            // Le chemin de l'executable a pu changer depuis la derniere session - le
+            // renommage de LumaFlux en OpusScreen en est un cas. Reecrire l'entree de
+            // demarrage a chaque lancement la garde exacte, et efface au passage celle
+            // que portait l'ancien nom.
+            settings.ApplyStartupRegistration();
+
             CommandLine.ApplyTo(settings, args);
 
             CheckForConflicts(settings);
@@ -74,6 +63,29 @@ namespace LumaFlux
 
             TrayApp app = new TrayApp(settings, _display, args);
             Application.Run(app);
+        }
+
+        // ------------------------------------------------------------------ instance unique
+
+        /// <summary>
+        /// Une instance tourne deja : ce lancement lui passe la main puis s'efface.
+        ///
+        /// Une application epinglee a la barre des taches est relancee a chaque clic
+        /// sur son icone ; repondre « OpusScreen est deja en cours d'execution » serait
+        /// un refus la ou l'utilisateur attend sa fenetre. On transmet donc l'ordre
+        /// recu s'il y en a un, et on demande l'ouverture de la fenetre sinon.
+        /// </summary>
+        private static void HandOver(string[] args)
+        {
+            if (CommandLine.HasCommand(args)) CommandLine.SendToRunningInstance(args);
+
+            if (CommandLine.HasCommand(args) && !CommandLine.WantsShow(args)) return;
+
+            // Le droit de passer au premier plan se cede, il ne se prend pas : sans
+            // cette autorisation donnee par le processus qui part, Windows se
+            // contenterait de faire clignoter le bouton de la barre des taches.
+            Native.AllowSetForegroundWindow(Native.ASFW_ANY);
+            Native.PostMessage(Native.HWND_BROADCAST, Native.WM_OPUSSCREEN_SHOW, IntPtr.Zero, IntPtr.Zero);
         }
 
         // ------------------------------------------------------------------ conflits
@@ -90,8 +102,8 @@ namespace LumaFlux
                 names + " " + (conflicts.Count > 1 ? "sont en cours d'execution" : "est en cours d'execution") + ".\n\n"
               + "Windows ne dispose que d'une seule table de couleurs par carte graphique. "
               + "Si ces programmes restent actifs, ils ecraseront en permanence les reglages "
-              + "de LumaFlux, et l'ecran clignotera.\n\n"
-              + "LumaFlux reprend deja leurs fonctions.\n\n"
+              + "de OpusScreen, et l'ecran clignotera.\n\n"
+              + "OpusScreen reprend deja leurs fonctions.\n\n"
               + "Oui      : les fermer maintenant\n"
               + "Non      : les laisser, et me redemander au prochain lancement\n"
               + "Annuler : les laisser, et ne plus jamais me le demander";
@@ -131,9 +143,9 @@ namespace LumaFlux
         {
             SafetyGuard.EmergencyRestore();
             MessageBox.Show(
-                "LumaFlux a rencontre une erreur et a remis l'ecran a l'etat normal.\n\n"
+                "OpusScreen a rencontre une erreur et a remis l'ecran a l'etat normal.\n\n"
                 + e.Exception.Message,
-                "LumaFlux", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                "OpusScreen", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
 
         // ------------------------------------------------------------------ DPI

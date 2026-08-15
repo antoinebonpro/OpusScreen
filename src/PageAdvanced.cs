@@ -4,7 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>Reconfiguration des raccourcis globaux.</summary>
     public class PageHotkeys : SettingsPage
@@ -299,6 +299,15 @@ namespace LumaFlux
             _conflicts.Changed += delegate { S.IgnoreConflicts = !_conflicts.Checked; Commit(); };
             Add(_conflicts, Theme.SpaceSm);
 
+            DarkButton pin = new DarkButton();
+            pin.Text = "Epingler OpusScreen a la barre des taches...";
+            pin.Height = Theme.MinTarget;
+            pin.Click += OnPin;
+            Add(pin, Theme.SpaceSm);
+
+            Note("Un clic sur l'icone epinglee ouvre cette fenetre ; un clic droit donne "
+               + "les reglages, la suspension et les modes principaux, sans rien ouvrir.");
+
             Section("Configuration");
 
             DarkButton export = new DarkButton();
@@ -359,22 +368,60 @@ namespace LumaFlux
             Add(reset, Theme.SpaceMd);
         }
 
+        /// <summary>
+        /// Depuis Windows 10 version 1607, une application ne peut plus s'epingler
+        /// elle-meme : le verbe existe toujours, le shell l'ignore. Tout ce qu'on peut
+        /// faire est de preparer un raccourci correct et d'amener l'utilisateur dessus.
+        /// </summary>
+        private void OnPin(object sender, EventArgs e)
+        {
+            if (!Taskbar.EnsureShortcut())
+            {
+                MessageBox.Show(FindForm(),
+                    "Le raccourci n'a pas pu etre cree dans le menu Demarrer.\n\n"
+                  + "Vous pouvez tout de meme epingler OpusScreen : clic droit sur "
+                  + "OpusScreen.exe dans l'explorateur, puis « Epingler a la barre des taches ».",
+                    "OpusScreen", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (Taskbar.TryPin())
+            {
+                MessageBox.Show(FindForm(),
+                    "OpusScreen est maintenant epingle a la barre des taches.",
+                    "OpusScreen", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            DialogResult r = MessageBox.Show(FindForm(),
+                "Le raccourci OpusScreen est en place dans le menu Demarrer.\n\n"
+              + "Depuis Windows 10, seul un geste de l'utilisateur peut epingler un "
+              + "programme - aucune application ne peut le faire a votre place :\n\n"
+              + "   1.  l'explorateur s'ouvre sur le raccourci\n"
+              + "   2.  clic droit dessus, puis « Epingler a la barre des taches »\n"
+              + "        (sous Windows 11, via « Afficher plus d'options »)\n\n"
+              + "Ouvrir l'explorateur maintenant ?",
+                "Epingler OpusScreen", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+
+            if (r == DialogResult.Yes) Taskbar.RevealShortcut();
+        }
+
         private void OnExport(object sender, EventArgs e)
         {
             using (SaveFileDialog dlg = new SaveFileDialog())
             {
-                dlg.Filter = "Configuration LumaFlux (*.ini)|*.ini|Tous les fichiers (*.*)|*.*";
-                dlg.FileName = "lumaflux-config.ini";
+                dlg.Filter = "Configuration OpusScreen (*.ini)|*.ini|Tous les fichiers (*.*)|*.*";
+                dlg.FileName = "opusscreen-config.ini";
                 if (dlg.ShowDialog(FindForm()) != DialogResult.OK) return;
                 try
                 {
                     File.WriteAllText(dlg.FileName, S.Export());
-                    MessageBox.Show(FindForm(), "Configuration exportee.", "LumaFlux",
+                    MessageBox.Show(FindForm(), "Configuration exportee.", "OpusScreen",
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(FindForm(), "Export impossible : " + ex.Message, "LumaFlux",
+                    MessageBox.Show(FindForm(), "Export impossible : " + ex.Message, "OpusScreen",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
@@ -384,7 +431,7 @@ namespace LumaFlux
         {
             using (OpenFileDialog dlg = new OpenFileDialog())
             {
-                dlg.Filter = "Configuration LumaFlux (*.ini)|*.ini|Tous les fichiers (*.*)|*.*";
+                dlg.Filter = "Configuration OpusScreen (*.ini)|*.ini|Tous les fichiers (*.*)|*.*";
                 if (dlg.ShowDialog(FindForm()) != DialogResult.OK) return;
                 try
                 {
@@ -397,7 +444,7 @@ namespace LumaFlux
 
                     MessageBox.Show(FindForm(),
                         "Configuration importee.\n\nLes reglages sont appliques immediatement.",
-                        "LumaFlux", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        "OpusScreen", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                     Form f = FindForm() as Form;
                     ControlPanel cp = f as ControlPanel;
@@ -406,7 +453,7 @@ namespace LumaFlux
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(FindForm(), "Import impossible : " + ex.Message, "LumaFlux",
+                    MessageBox.Show(FindForm(), "Import impossible : " + ex.Message, "OpusScreen",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
@@ -446,7 +493,7 @@ namespace LumaFlux
             if (GammaUnlock.IsUnlocked())
             {
                 MessageBox.Show(FindForm(), "La plage gamma complete est deja active sur ce systeme.",
-                    "LumaFlux", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    "OpusScreen", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
@@ -464,18 +511,18 @@ namespace LumaFlux
             if (GammaUnlock.TryUnlock())
                 MessageBox.Show(FindForm(),
                     "C'est fait. Fermez puis rouvrez votre session Windows pour que la plage complete soit active.",
-                    "LumaFlux", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    "OpusScreen", MessageBoxButtons.OK, MessageBoxIcon.Information);
             else
                 MessageBox.Show(FindForm(),
-                    "Echec : relancez LumaFlux en tant qu'administrateur (clic droit sur l'application).",
-                    "LumaFlux", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    "Echec : relancez OpusScreen en tant qu'administrateur (clic droit sur l'application).",
+                    "OpusScreen", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
             Sync();
         }
 
         /// <summary>
         /// Le pilote Intel fait varier la luminosite de lui-meme, en aval de tout ce que
-        /// LumaFlux controle. Sans cette explication, le symptome est naturellement
+        /// OpusScreen controle. Sans cette explication, le symptome est naturellement
         /// attribue a l'application.
         /// </summary>
         private void OnFixDpst(object sender, EventArgs e)
@@ -486,7 +533,7 @@ namespace LumaFlux
             {
                 MessageBox.Show(FindForm(),
                     "Aucune carte graphique Intel detectee : ce reglage ne s'applique pas ici.",
-                    "LumaFlux", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    "OpusScreen", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
@@ -495,7 +542,7 @@ namespace LumaFlux
                 MessageBox.Show(FindForm(),
                     "L'economiseur d'energie de l'affichage Intel est deja desactive.\n\n"
                   + IntelDpst.Describe(),
-                    "LumaFlux", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    "OpusScreen", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
@@ -514,17 +561,17 @@ namespace LumaFlux
                     "C'est fait sur " + n + " carte(s).\n\n"
                   + "Redemarrez l'ordinateur pour que le pilote en tienne compte.\n\n"
                   + "Pour annuler plus tard, ce meme bouton proposera de remettre l'etat d'origine.",
-                    "LumaFlux", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    "OpusScreen", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
                 MessageBox.Show(FindForm(),
                     "Ecriture refusee : cette cle appartient au systeme.\n\n"
-                  + "Relancez LumaFlux en tant qu'administrateur, ou utilisez plutot "
+                  + "Relancez OpusScreen en tant qu'administrateur, ou utilisez plutot "
                   + "l'Intel Graphics Command Center :\n\n"
                   + "  Systeme > Alimentation > Economie d'energie de l'affichage > Desactiver\n\n"
                   + "Cette seconde voie est immediate et ne demande pas de redemarrage.",
-                    "LumaFlux", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    "OpusScreen", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
 
             Sync();
@@ -583,7 +630,7 @@ namespace LumaFlux
                 _dpstButton.ForeColor = dpst ? Theme.Boost : Theme.Fg;
                 _dpstNote.Text = dpst
                     ? "Attention : le pilote Intel ajuste la luminosite selon le contenu affiche. "
-                    + "L'ecran semble alors « respirer » et aucun reglage ne tient - LumaFlux n'y "
+                    + "L'ecran semble alors « respirer » et aucun reglage ne tient - OpusScreen n'y "
                     + "peut rien, cela se passe apres la table de couleurs."
                     : "L'economiseur d'energie de l'affichage Intel est desactive : rien ne vient "
                     + "perturber les reglages.";

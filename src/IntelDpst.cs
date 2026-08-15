@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Win32;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>
     /// Detecte les economiseurs d'energie du pilote graphique qui font varier la

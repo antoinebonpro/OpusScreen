@@ -5,7 +5,7 @@
 Une table de couleurs modifiée est **détenue par le pilote graphique, pas par le
 processus qui l'a écrite**. Elle survit donc à sa mort.
 
-> Si LumaFlux disparaît alors que l'écran est réglé à 5 %, **l'écran reste à 5 %**.
+> Si OpusScreen disparaît alors que l'écran est réglé à 5 %, **l'écran reste à 5 %**.
 > Après un plantage, l'utilisateur se retrouve devant un écran quasi noir, sans
 > application pour le remettre en état.
 
@@ -54,7 +54,7 @@ Un fichier `active.flag` est créé dès que l'écran est réellement modifié, 
 quand il redevient neutre.
 
 S'il est **encore présent au démarrage**, c'est que la session précédente s'est mal
-terminée : l'écran est probablement resté modifié. LumaFlux le remet à neuf **avant toute
+terminée : l'écran est probablement resté modifié. OpusScreen le remet à neuf **avant toute
 autre chose**, avant même de charger les réglages.
 
 ```csharp
@@ -146,9 +146,9 @@ Par honnêteté, les limites connues :
 
 - **Coupure de courant pendant l'écriture de la rampe.** La fenêtre est de quelques
   millisecondes ; le fichier témoin traite le redémarrage suivant.
-- **Un autre programme qui écrit dans la même table.** LumaFlux détecte les plus
+- **Un autre programme qui écrit dans la même table.** OpusScreen détecte les plus
   courants au démarrage, mais ne peut pas les empêcher d'agir ensuite.
-- **Le DPST et le LACE des pilotes Intel** agissent en aval de tout ce que LumaFlux
+- **Le DPST et le LACE des pilotes Intel** agissent en aval de tout ce que OpusScreen
   contrôle. Ils sont détectés et signalés, mais ne peuvent pas être compensés —
   voir [DEPANNAGE.md](DEPANNAGE.md).
 - **Un pilote graphique qui ignore `SetDeviceGammaRamp`.** Rare, mais possible en machine
@@ -162,10 +162,10 @@ Par honnêteté, les limites connues :
 Dans l'ordre, du plus simple au plus radical :
 
 1. **`Ctrl + Alt + Maj + R`** — fonctionne même si l'interface est figée.
-2. **Fermer LumaFlux** depuis le gestionnaire des tâches : la restauration s'exécute
+2. **Fermer OpusScreen** depuis le gestionnaire des tâches : la restauration s'exécute
    à la sortie du processus.
-3. **Relancer LumaFlux** : le fichier témoin déclenche la remise à neuf.
+3. **Relancer OpusScreen** : le fichier témoin déclenche la remise à neuf.
 4. **Changer la résolution d'écran puis la remettre** : Windows réinitialise la table
    de couleurs au passage.
 5. **Fermer la session Windows et la rouvrir** : la table est réinitialisée.
-6. **Supprimer `%LOCALAPPDATA%\LumaFlux\settings.ini`** : tout revient par défaut.
+6. **Supprimer `%LOCALAPPDATA%\OpusScreen\settings.ini`** : tout revient par défaut.

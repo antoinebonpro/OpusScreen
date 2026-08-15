@@ -5,7 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>Ce qui pilote la temperature quand l'automatisme est actif.</summary>
     public enum ScheduleMode
@@ -141,11 +141,51 @@ namespace LumaFlux
             {
                 return Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "LumaFlux");
+                    "OpusScreen");
             }
         }
 
         private static string FilePath { get { return Path.Combine(DataFolder, "settings.ini"); } }
+
+        /// <summary>
+        /// Dossier utilise avant que l'application ne s'appelle OpusScreen. Sans reprise,
+        /// un utilisateur de LumaFlux retrouverait ses reglages remis a zero par un simple
+        /// changement de nom.
+        /// </summary>
+        private static string LegacyDataFolder
+        {
+            get
+            {
+                return Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "LumaFlux");
+            }
+        }
+
+        /// <summary>
+        /// Deplace la configuration de l'ancien dossier vers le nouveau, une seule fois :
+        /// des que le nouveau fichier de reglages existe, l'ancien n'est plus regarde.
+        ///
+        /// La condition porte sur le fichier et non sur le dossier : un dossier vide
+        /// suffirait sinon a faire passer la reprise pour deja faite.
+        /// </summary>
+        private static void MigrateLegacyFolder()
+        {
+            try
+            {
+                if (File.Exists(FilePath)) return;
+                if (!File.Exists(Path.Combine(LegacyDataFolder, "settings.ini"))) return;
+
+                Directory.CreateDirectory(DataFolder);
+                foreach (string src in Directory.GetFiles(LegacyDataFolder))
+                    File.Copy(src, Path.Combine(DataFolder, Path.GetFileName(src)), true);
+
+                // L'ancien dossier n'est efface que si la copie a tenu : mieux vaut deux
+                // exemplaires qu'aucun.
+                if (File.Exists(FilePath)) Directory.Delete(LegacyDataFolder, true);
+            }
+            catch { }
+        }
 
         /// <summary>
         /// Vrai si aucun fichier de reglages n'existait au chargement.
@@ -293,6 +333,7 @@ namespace LumaFlux
             Settings s = new Settings();
             try
             {
+                MigrateLegacyFolder();
                 s.IsFirstRun = !File.Exists(FilePath);
                 if (File.Exists(FilePath))
                 {
@@ -400,7 +441,7 @@ namespace LumaFlux
         {
             CultureInfo inv = CultureInfo.InvariantCulture;
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("# LumaFlux - configuration");
+            sb.AppendLine("# OpusScreen - configuration");
             sb.AppendLine("# Supprimer ce fichier remet tous les reglages par defaut.");
             sb.AppendLine();
             sb.AppendLine("current=" + Current.Serialize());
@@ -490,14 +531,19 @@ namespace LumaFlux
                     @"Software\Microsoft\Windows\CurrentVersion\Run", true))
                 {
                     if (key == null) return;
+
+                    // Entree laissee par LumaFlux : elle pointe vers un executable qui
+                    // n'existe plus, et Windows signalerait un demarrage en echec.
+                    if (key.GetValue("LumaFlux") != null) key.DeleteValue("LumaFlux", false);
+
                     if (StartWithWindows)
                     {
                         string exe = System.Reflection.Assembly.GetExecutingAssembly().Location;
-                        key.SetValue("LumaFlux", "\"" + exe + "\"" + (StartMinimized ? " --minimized" : ""));
+                        key.SetValue("OpusScreen", "\"" + exe + "\"" + (StartMinimized ? " --minimized" : ""));
                     }
-                    else if (key.GetValue("LumaFlux") != null)
+                    else if (key.GetValue("OpusScreen") != null)
                     {
-                        key.DeleteValue("LumaFlux", false);
+                        key.DeleteValue("OpusScreen", false);
                     }
                 }
             }

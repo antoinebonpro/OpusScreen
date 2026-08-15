@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>
     /// Convertit une temperature de couleur (Kelvin) en multiplicateurs RGB.

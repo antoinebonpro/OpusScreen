@@ -56,7 +56,7 @@ Styles de la fenêtre-lentille, déduits du comportement observé :
 
 C'est la raison pour laquelle PangoBright plafonne à 100 % et s'arrête à 20 % : au-delà
 l'écran deviendrait illisible, en deçà de 100 % il n'a rien à ajouter. C'est précisément
-la limite que LumaFlux franchit, et cela impose de changer de technique.
+la limite que OpusScreen franchit, et cela impose de changer de technique.
 
 ---
 
@@ -91,7 +91,7 @@ Le fichier `media\preset.json` de f.lux contient ses sept ambiances, en clair :
 | Cave Painting | 2700 K | 2300 K | 1500 K |
 | Color Fidelity | 6500 K | 5000 K | 3400 K |
 
-Ces valeurs sont des **données de configuration**, pas du code. LumaFlux les reprend pour
+Ces valeurs sont des **données de configuration**, pas du code. OpusScreen les reprend pour
 offrir un rendu familier à qui vient de f.lux.
 
 ---
@@ -108,7 +108,7 @@ offrir un rendu familier à qui vient de f.lux.
 | Visible sur les captures d'écran | **oui** | non |
 | Réseau | aucun | oui (position, mises à jour) |
 
-### Ce que LumaFlux en retient
+### Ce que OpusScreen en retient
 
 - **De PangoBright** : la fenêtre-lentille, seule technique qui descende sous le minimum
   matériel. Reprise pour la plage 5 → 35 % seulement, et rendue invisible aux captures

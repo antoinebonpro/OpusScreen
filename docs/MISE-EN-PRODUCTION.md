@@ -45,7 +45,7 @@ cause de bug la plus fréquente et la plus trompeuse — voir [DEPANNAGE.md](DEP
 ## Étape 5 — Le premier lancement
 
 À faire sur une machine **où l'application n'a jamais tourné**, ou après avoir supprimé
-`%LOCALAPPDATA%\LumaFlux\`.
+`%LOCALAPPDATA%\OpusScreen\`.
 
 - [ ] La fenêtre **s'ouvre** au tout premier lancement
       Sans cela l'utilisateur lance l'exe et ne voit rien se produire. Ce défaut a
@@ -60,7 +60,7 @@ cause de bug la plus fréquente et la plus trompeuse — voir [DEPANNAGE.md](DEP
 
 - [ ] Étiquette git posée : `git tag -a v2.0.0 -m "…"`
 - [ ] Binaire compilé depuis un dépôt propre, à partir de l'étiquette
-- [ ] Empreinte publiée : `certutil -hashfile LumaFlux.exe SHA256`
+- [ ] Empreinte publiée : `certutil -hashfile OpusScreen.exe SHA256`
 - [ ] Signature Authenticode si un certificat est disponible — sans elle, SmartScreen
       avertira l'utilisateur au premier lancement
 
@@ -76,7 +76,7 @@ de tout soupçon :
 | Élément | Portée | Réversible |
 |---|---|---|
 | Table de couleurs du GPU | session, jusqu'au redémarrage | oui, automatiquement |
-| `%LOCALAPPDATA%\LumaFlux\settings.ini` | utilisateur | supprimer le fichier |
+| `%LOCALAPPDATA%\OpusScreen\settings.ini` | utilisateur | supprimer le fichier |
 | `HKCU\…\Run` (si démarrage automatique) | utilisateur | case à décocher |
 | `HKLM\…\ICM\GdiIcmGammaRange` | **machine, admin** | uniquement sur action explicite |
 | `HKLM\…\Class\{4d36e968…}\FeatureTestControl` | **machine, admin** | bouton d'annulation prévu |
@@ -89,7 +89,7 @@ l'utilisateur, avec la clé et la valeur affichées avant l'écriture.
 - Aucune connexion réseau — le calcul solaire est fait sur place
 - Aucune télémétrie, aucune donnée transmise
 - Aucun service, aucune tâche planifiée, aucun pilote installé
-- Aucun fichier hors de `%LOCALAPPDATA%\LumaFlux\`
+- Aucun fichier hors de `%LOCALAPPDATA%\OpusScreen\`
 
 ### SmartScreen
 

@@ -1,6 +1,6 @@
 using System;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>
     /// Repartition d'une consigne de luminosite entre les trois etages disponibles.

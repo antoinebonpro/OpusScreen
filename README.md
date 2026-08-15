@@ -1,4 +1,4 @@
-# LumaFlux
+# OpusScreen
 
 **Luminosité 5 % → 150 %, température de couleur, filtres d'accessibilité et confort visuel, pour Windows.**
 
@@ -23,12 +23,12 @@ noir semi-transparent** par-dessus l'écran. Un voile retire de la lumière, il 
 f.lux, lui, reprogramme la **table de couleurs de la carte graphique**, ce qui permet de
 dépasser 100 % — mais il ne s'en sert que pour la température, jamais pour la luminosité.
 
-LumaFlux réunit les deux techniques, y ajoute le **rétroéclairage physique** et une
+OpusScreen réunit les deux techniques, y ajoute le **rétroéclairage physique** et une
 **matrice de couleur plein écran**, et pilote le tout depuis une seule interface.
 
 ## Ce qu'il fait
 
-| | PangoBright | f.lux | Iris Pro 15 $ | Lunar Pro 23 $ | **LumaFlux** |
+| | PangoBright | f.lux | Iris Pro 15 $ | Lunar Pro 23 $ | **OpusScreen** |
 |---|:--:|:--:|:--:|:--:|:--:|
 | Luminosité logicielle | 20-100 % | — | oui | oui | **5-150 %** |
 | Au-delà de 100 % | — | — | — | payant | **oui** |
@@ -51,8 +51,8 @@ Aucune. Le binaire est autonome : il utilise le .NET Framework 4 présent sur to
 installation de Windows.
 
 ```
-build.cmd          compile LumaFlux.exe
-LumaFlux.exe       lance l'application (icône dans la zone de notification)
+build.cmd          compile OpusScreen.exe
+OpusScreen.exe       lance l'application (icône dans la zone de notification)
 ```
 
 **Prérequis** : Windows 7 ou plus récent. Certaines fonctions demandent davantage —
@@ -64,6 +64,18 @@ voir [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#compatibilité).
 - **Clic droit** : menu rapide
 - **Molette au-dessus de l'icône** : luminosité
 
+### Épingler à la barre des tâches
+
+*Avancé → Système → Épingler OpusScreen à la barre des tâches*. OpusScreen dépose un
+raccourci dans le menu Démarrer et vous conduit dessus — depuis Windows 10, seul un
+geste de l'utilisateur peut épingler un programme.
+
+Une fois épinglé :
+
+- **Clic** sur l'icône : ouvre les réglages, même si l'application tourne déjà
+- **Clic droit** : réglages, suspension, pause pour les yeux, modes principaux et
+  retour à un écran normal — sans rien ouvrir
+
 | Raccourci | Effet |
 |---|---|
 | `Ctrl + Alt + ↑ / ↓` | luminosité ± 5 % |
@@ -73,10 +85,11 @@ voir [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#compatibilité).
 | **`Ctrl + Alt + Maj + R`** | **secours : écran normal en toutes circonstances** |
 
 ```bash
-LumaFlux.exe --brightness 130
-LumaFlux.exe --mode "Nuit profonde"     # les guillemets sont facultatifs
-LumaFlux.exe --adaptive on
-LumaFlux.exe --reset
+OpusScreen.exe --brightness 130
+OpusScreen.exe --mode "Nuit profonde"     # les guillemets sont facultatifs
+OpusScreen.exe --adaptive on
+OpusScreen.exe --show                     # ouvre les réglages
+OpusScreen.exe --reset
 ```
 
 ## ⚠️ La règle de sécurité
@@ -109,7 +122,7 @@ propre file de messages.
 tests\run-tests.cmd
 ```
 
-Quatre suites, une centaine d'assertions. Le script refuse d'annoncer un succès si un
+Cinq suites, une centaine d'assertions. Le script refuse d'annoncer un succès si un
 test n'a pas été exécuté. Détail dans [docs/PROTOCOLES-TESTS.md](docs/PROTOCOLES-TESTS.md).
 
 ## Un piège à connaître
@@ -119,7 +132,7 @@ de lui-même selon le contenu affiché (**DPST** et **LACE**). Symptôme : l'éc
 « respire » en permanence et aucun réglage ne tient.
 
 Ces mécanismes agissent **en aval** de la table de couleurs : aucune application ne peut
-les compenser, et ils sont invisibles aux mesures logicielles habituelles. LumaFlux les
+les compenser, et ils sont invisibles aux mesures logicielles habituelles. OpusScreen les
 détecte et propose d'y remédier — voir [docs/DEPANNAGE.md](docs/DEPANNAGE.md).
 
 ## Licence et attributions

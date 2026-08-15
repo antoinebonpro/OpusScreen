@@ -6,7 +6,7 @@
 tests\run-tests.cmd
 ```
 
-Quatre suites, une centaine d'assertions. Code de sortie **0** si tout passe, **1** sinon.
+Cinq suites, une centaine d'assertions. Code de sortie **0** si tout passe, **1** sinon.
 
 ```
 tests\run-tests.cmd monitor
@@ -80,6 +80,17 @@ contrastes du thème.
 
 Détecte le DPST et le LACE, et vérifie le calcul du bit de désactivation sans rien
 écrire dans le registre. Voir [DEPANNAGE.md](DEPANNAGE.md).
+
+### 5. TaskbarTest — présence dans la barre des tâches
+
+Vérifie que `assets/OpusScreen.ico` fournit chaque taille demandée par Windows selon la
+mise à l'échelle de l'écran (16 à 128), que `OpusScreen.exe` porte bien cette icône en
+ressource Win32, qu'un raccourci s'écrit et se relit à l'identique, et que le shell
+accepte la liste de tâches.
+
+Le raccourci de test est écrit dans le dossier temporaire, puis supprimé : rien n'est
+déposé dans le menu Démarrer. La liste de tâches publiée sous l'identité du programme
+de test est retirée dans la foulée.
 
 ---
 

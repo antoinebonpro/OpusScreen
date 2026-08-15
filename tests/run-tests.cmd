@@ -1,12 +1,12 @@
 @echo off
 REM ---------------------------------------------------------------------------
-REM  LumaFlux - protocole de verification
+REM  OpusScreen - protocole de verification
 REM
 REM  Compile chaque test avec les sources de l'application, puis l'execute.
 REM  Un seul echec fait echouer l'ensemble : ce script est le filtre a passer
 REM  avant toute mise en production.
 REM
-REM  Usage :  run-tests.cmd            les quatre tests automatiques
+REM  Usage :  run-tests.cmd            les cinq tests automatiques
 REM           run-tests.cmd monitor    observation continue (Ctrl+C pour sortir)
 REM
 REM  Note d'implementation : la sequence est ecrite a plat, sans "call :label".
@@ -40,10 +40,10 @@ set RAN=0
 
 if /I "%~1"=="monitor" goto monitor
 
-REM =========================================================== 1/4
+REM =========================================================== 1/5
 echo.
 echo ============================================================
-echo  1/4  EngineTest  --  plan de luminosite, rampes, temperature, soleil
+echo  1/5  EngineTest  --  plan de luminosite, rampes, temperature, soleil
 echo ============================================================
 "%FW%\csc.exe" /nologo /target:exe /out:bin\EngineTest.exe %REFS% EngineTest.cs !SOURCES!
 if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
@@ -52,10 +52,10 @@ if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
     if errorlevel 1 set /a FAILED+=1
 )
 
-REM =========================================================== 2/4
+REM =========================================================== 2/5
 echo.
 echo ============================================================
-echo  2/4  MatrixTest  --  saturation, filtres, daltonisme
+echo  2/5  MatrixTest  --  saturation, filtres, daltonisme
 echo ============================================================
 "%FW%\csc.exe" /nologo /target:exe /out:bin\MatrixTest.exe %REFS% MatrixTest.cs !SOURCES!
 if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
@@ -64,10 +64,10 @@ if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
     if errorlevel 1 set /a FAILED+=1
 )
 
-REM =========================================================== 3/4
+REM =========================================================== 3/5
 echo.
 echo ============================================================
-echo  3/4  SafetyTest  --  restauration, bornes, configuration, contrastes
+echo  3/5  SafetyTest  --  restauration, bornes, configuration, contrastes
 echo ============================================================
 "%FW%\csc.exe" /nologo /target:exe /out:bin\SafetyTest.exe %REFS% SafetyTest.cs !SOURCES!
 if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
@@ -76,10 +76,10 @@ if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
     if errorlevel 1 set /a FAILED+=1
 )
 
-REM =========================================================== 4/4
+REM =========================================================== 4/5
 echo.
 echo ============================================================
-echo  4/4  DpstTest  --  detection DPST et LACE du pilote Intel
+echo  4/5  DpstTest  --  detection DPST et LACE du pilote Intel
 echo ============================================================
 "%FW%\csc.exe" /nologo /target:exe /out:bin\DpstTest.exe %REFS% DpstTest.cs !SOURCES!
 if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
@@ -88,12 +88,24 @@ if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
     if errorlevel 1 set /a FAILED+=1
 )
 
+REM =========================================================== 5/5
+echo.
+echo ============================================================
+echo  5/5  TaskbarTest  --  icone, raccourci et liste de taches
+echo ============================================================
+"%FW%\csc.exe" /nologo /target:exe /out:bin\TaskbarTest.exe %REFS% TaskbarTest.cs !SOURCES!
+if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
+    set /a RAN+=1
+    bin\TaskbarTest.exe
+    if errorlevel 1 set /a FAILED+=1
+)
+
 REM =========================================================== bilan
 echo.
 echo ============================================================
-echo   Tests executes : !RAN! / 4
+echo   Tests executes : !RAN! / 5
 echo   Echecs         : !FAILED!
-if !RAN! NEQ 4 (
+if !RAN! NEQ 5 (
     echo   RESULTAT : INCOMPLET - un test n'a pas ete execute
     echo ============================================================
     exit /b 1

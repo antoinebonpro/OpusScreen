@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>
     /// Fenetre de reglages.
@@ -54,13 +54,18 @@ namespace LumaFlux
 
         private void BuildUi()
         {
-            Text = "LumaFlux";
+            Text = "OpusScreen";
             BackColor = Theme.Bg;
             ForeColor = Theme.Fg;
             Font = Theme.Body;
             FormBorderStyle = FormBorderStyle.Sizable;
             MaximizeBox = false;
             StartPosition = FormStartPosition.Manual;
+
+            // La fenetre se montre dans la barre des taches, sous l'icone de
+            // l'application : c'est la que Windows regroupe ce qui est epingle.
+            ShowInTaskbar = true;
+            AppIcon.ApplyTo(this);
             ClientSize = new Size(806, 660);
             MinimumSize = new Size(760, 560);
             KeyPreview = true;
@@ -130,7 +135,7 @@ namespace LumaFlux
             Controls.Add(_nav);
 
             Label brand = new Label();
-            brand.Text = "LumaFlux";
+            brand.Text = "OpusScreen";
             brand.Font = Theme.Title;
             brand.ForeColor = Theme.Accent;
             brand.AutoSize = false;
@@ -139,7 +144,10 @@ namespace LumaFlux
             _nav.Controls.Add(brand);
 
             Label version = new Label();
-            version.Text = "version 2.0";
+            // Lue dans l'assemblage plutot qu'ecrite ici : la version affichee avait
+            // deja pris du retard sur la version reelle.
+            Version v = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            version.Text = "version " + v.Major + "." + v.Minor;
             version.Font = Theme.Small;
             version.ForeColor = Theme.Faint;
             version.AutoSize = false;

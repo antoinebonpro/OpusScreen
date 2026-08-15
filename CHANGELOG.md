@@ -4,6 +4,53 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ---
 
+## [2.1.0] — 2026-08-15
+
+OpusScreen s'épingle à la barre des tâches et au menu Démarrer.
+
+### Ajouté
+
+**Icône d'application**
+L'exécutable n'en portait aucune : épinglé, il aurait affiché l'icône générique de
+Windows. L'icône est dessinée par code, taille par taille de 16 à 256 pixels — une
+grande image réduite donne un 16×16 flou dans la barre des tâches. Elle est embarquée
+en ressource Win32 pour le shell, et en ressource managée pour la fenêtre.
+
+**Raccourci et épinglage**
+- Raccourci déposé dans le menu Démarrer, sa cible corrigée si l'exécutable a déménagé
+- *Avancé → Système → Épingler OpusScreen à la barre des tâches* prépare le raccourci et
+  conduit l'utilisateur jusqu'à lui
+
+**Liste de tâches**
+Clic droit sur l'icône épinglée : réglages, suspension, pause pour les yeux, modes
+Confort, Nuit profonde et Plein soleil, retour à un écran normal. Chaque entrée passe
+par le pilotage en ligne de commande, qui existait déjà.
+
+**`--show`**
+Ouvre la fenêtre de réglages, que l'application tourne ou non.
+
+### Modifié
+
+- **LumaFlux s'appelle désormais OpusScreen.** Le nom change partout : exécutable,
+  fenêtre, icône de la zone de notification, aide en ligne de commande, documentation.
+  Rien n'est perdu au passage — au premier lancement, la configuration est reprise
+  depuis `%LOCALAPPDATA%\LumaFlux`, l'entrée de démarrage automatique est réécrite avec
+  le nouveau chemin, et le raccourci du menu Démarrer laissé par LumaFlux, dont la cible
+  n'existe plus, est effacé.
+- **Un second lancement n'affiche plus « OpusScreen est déjà en cours d'exécution ».**
+  Une application épinglée est relancée à chaque clic sur son icône : répondre par un
+  refus là où l'utilisateur attend sa fenêtre n'avait pas de sens. Le nouveau processus
+  transmet la demande à l'instance en cours et s'efface.
+- La fenêtre de réglages apparaît dans la barre des tâches, sous l'icône de
+  l'application.
+
+### Vérification
+
+- Cinquième suite de tests : icône complète, raccourci relu à l'identique, liste de
+  tâches acceptée par le shell.
+
+---
+
 ## [2.0.0] — 2026-08-15
 
 Version d'extension : l'application passe d'un réglage de luminosité et de température à

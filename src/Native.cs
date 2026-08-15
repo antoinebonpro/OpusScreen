@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace LumaFlux
+namespace OpusScreen
 {
     /// <summary>
     /// Toutes les declarations P/Invoke du projet, regroupees en un seul endroit.
@@ -153,6 +153,36 @@ namespace LumaFlux
         public const uint MOD_SHIFT = 0x4;
         public const uint MOD_NOREPEAT = 0x4000;
         public const int WM_HOTKEY = 0x0312;
+
+        // ---------------------------------------------------------------- USER32 : reveil de l'instance en cours
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        public static extern uint RegisterWindowMessage(string message);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool PostMessage(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        public static extern bool AllowSetForegroundWindow(int processId);
+
+        [DllImport("user32.dll")]
+        public static extern bool SetForegroundWindow(IntPtr hwnd);
+
+        [DllImport("user32.dll")]
+        public static extern bool ShowWindow(IntPtr hwnd, int command);
+
+        public static readonly IntPtr HWND_BROADCAST = new IntPtr(0xFFFF);
+        public const int ASFW_ANY = -1;
+        public const int SW_RESTORE = 9;
+
+        /// <summary>
+        /// Message par lequel un second lancement demande a l'instance en cours
+        /// d'ouvrir sa fenetre. Le nom est enregistre aupres de Windows : deux
+        /// processus qui demandent le meme nom recoivent le meme numero, sans avoir
+        /// rien a partager d'autre. C'est ce qui rend le clic sur l'icone epinglee
+        /// immediat, la ou le fichier d'ordres demande jusqu'a une seconde.
+        /// </summary>
+        public static readonly uint WM_OPUSSCREEN_SHOW = RegisterWindowMessage("OpusScreen.ShowPanel.9f2a");
 
         // ---------------------------------------------------------------- DXVA2 : retroeclairage physique (DDC/CI)
 

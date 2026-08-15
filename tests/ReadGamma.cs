@@ -1,5 +1,5 @@
 ﻿using System;
-using LumaFlux;
+using OpusScreen;
 class ReadGamma {
     static void Main() {
         foreach (MonitorInfo m in MonitorEnum.All()) {
