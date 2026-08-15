@@ -1,0 +1,19 @@
+# Binaires produits par la compilation
+*.exe
+*.dll
+*.pdb
+tests/bin/
+
+# Reglages locaux, propres a une machine
+*.ini
+
+# Artefacts d'editeurs et d'outils
+.vs/
+obj/
+bin/
+*.user
+*.suo
+
+# Systeme
+Thumbs.db
+desktop.ini

@@ -1,0 +1,11 @@
+# Normalisation des fins de ligne : LF dans le depot, CRLF a la copie de travail
+* text=auto
+
+# Fichiers qui doivent imperativement rester en CRLF pour que Windows les execute
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Sources et documentation
+*.cs   text diff=csharp
+*.md   text
+*.ini  text
