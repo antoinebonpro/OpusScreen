@@ -22,10 +22,14 @@ namespace OpusScreen
         /// <summary>Emis au relachement de la souris : c'est la que l'on confirme un reglage risque.</summary>
         public event EventHandler ValueCommitted;
 
-        public Color RailColor = Color.FromArgb(58, 62, 72);
-        public Color FillColor = Color.FromArgb(94, 160, 255);
-        public Color WarnColor = Color.FromArgb(255, 168, 66);
-        public Color KnobColor = Color.FromArgb(240, 244, 252);
+        // Jetons du theme, et non des valeurs ecrites ici : ces quatre champs etaient
+        // figes en dur, si bien qu'un changement de theme laissait tous les curseurs
+        // dans l'ancienne couleur. Ils restent publics - SetAccent les surcharge pour
+        // les curseurs qui representent une couleur precise (rouge, vert, bleu).
+        public Color RailColor = Theme.Track;
+        public Color FillColor = Theme.Accent;
+        public Color WarnColor = Theme.Boost;
+        public Color KnobColor = Theme.Knob;
 
         public Slider()
         {
