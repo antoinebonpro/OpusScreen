@@ -241,6 +241,18 @@ namespace OpusScreen
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint
                    | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
             BackColor = Theme.Card;
+
+            // Purement visuel : rien a y faire au clavier, mais un lecteur d'ecran doit
+            // pouvoir l'annoncer pour ce qu'il est plutot que de buter sur un rectangle
+            // sans nom - et surtout pouvoir le passer.
+            //
+            // TabStop vaut vrai par defaut sur un Control : sans cette ligne, la
+            // tabulation s'arretait sur une image ou il n'y a rien a faire.
+            TabStop = false;
+            AccessibleRole = AccessibleRole.Graphic;
+            AccessibleName = "Apercu des couleurs";
+            AccessibleDescription = "Degrade de gris et pastilles de reference, tels qu'ils "
+                                  + "sortiront apres les reglages en cours.";
         }
 
         protected override void OnPaint(PaintEventArgs e)

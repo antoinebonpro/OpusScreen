@@ -503,11 +503,80 @@ namespace OpusScreen
                    | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
             BackColor = Theme.Sunken;
             Cursor = Cursors.Hand;
+
+            // Cette liste ne s'atteignait qu'a la souris : ni tabulation, ni clavier,
+            // ni annonce. Une regle par application se supprime et se modifie depuis
+            // ici - la rendre inaccessible revenait a reserver la fonction entiere a
+            // qui peut viser une ligne de trente pixels.
+            TabStop = true;
+            AccessibleRole = AccessibleRole.List;
+            AccessibleName = "Regles par application";
         }
 
         public int SelectedIndex { get { return _selected; } }
 
         public void Reload() { Invalidate(); }
+
+        protected override bool IsInputKey(Keys key)
+        {
+            if (key == Keys.Up || key == Keys.Down || key == Keys.Home || key == Keys.End) return true;
+            return base.IsInputKey(key);
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+            int count = _s.AppRules.Count;
+            if (count == 0) return;
+
+            switch (e.KeyCode)
+            {
+                case Keys.Up: _selected = Math.Max(0, _selected - 1); e.Handled = true; break;
+                case Keys.Down: _selected = Math.Min(count - 1, _selected + 1); e.Handled = true; break;
+                case Keys.Home: _selected = 0; e.Handled = true; break;
+                case Keys.End: _selected = count - 1; e.Handled = true; break;
+            }
+            if (!e.Handled) return;
+
+            // La ligne choisie doit rester visible : sans cela, la selection sortirait
+            // du cadre des la quatrieme regle et le clavier piloterait a l'aveugle.
+            int top = _selected * RowH, bottom = top + RowH;
+            if (top < _scroll) _scroll = top;
+            else if (bottom > _scroll + Height) _scroll = bottom - Height;
+            _scroll = Math.Max(0, _scroll);
+
+            Invalidate();
+            if (Changed != null) Changed(this, EventArgs.Empty);
+        }
+
+        protected override void OnGotFocus(EventArgs e) { Invalidate(); base.OnGotFocus(e); }
+        protected override void OnLostFocus(EventArgs e) { Invalidate(); base.OnLostFocus(e); }
+
+        protected override AccessibleObject CreateAccessibilityInstance()
+        {
+            return new RuleListAccessibleObject(this);
+        }
+
+        private class RuleListAccessibleObject : Control.ControlAccessibleObject
+        {
+            private readonly RuleList _owner;
+
+            public RuleListAccessibleObject(RuleList owner) : base(owner) { _owner = owner; }
+
+            public override AccessibleRole Role { get { return AccessibleRole.List; } }
+
+            public override string Value
+            {
+                get
+                {
+                    int i = _owner._selected;
+                    if (i < 0 || i >= _owner._s.AppRules.Count) return "";
+                    AppRule r = _owner._s.AppRules[i];
+                    return r.ProcessName + " : " + r.ProfileName;
+                }
+                set { }
+            }
+        }
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
@@ -598,7 +667,9 @@ namespace OpusScreen
                     g.DrawLine(p, 0, y + RowH - 1, Width, y + RowH - 1);
             }
 
-            using (Pen p = new Pen(Theme.Border))
+            // Anneau de focus : la meme convention que la liste des raccourcis, pour
+            // qu'un parcours au clavier montre toujours ou il en est.
+            using (Pen p = new Pen(Focused ? Theme.Focus : Theme.Border))
                 g.DrawRectangle(p, 0, 0, Width - 1, Height - 1);
         }
     }

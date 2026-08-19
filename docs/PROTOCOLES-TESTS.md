@@ -113,10 +113,18 @@ tenues par un test plutôt que par l'œil.
 | Détection de l'état neutre | l'étage ne doit pas s'armer pour rien |
 | Noms de couleurs justes, rouge ≠ vert | l'identificateur est un outil de confiance : celui qui l'interroge **ne peut pas vérifier la réponse** |
 | Aller-retour d'un profil, y compris les champs 3.0 | un fichier ancien reste lisible et reproduit l'ancien comportement |
+| **Tout contrôle peint à la main déclare un rôle** | un contrôle entièrement dessiné est, par défaut, un rectangle sans nom ni rôle pour Windows |
+| Tout contrôle atteignable au Tab répond à une touche | sinon la tabulation s'arrête sur un cul-de-sac |
 | **Deux écrans du même modèle reçoivent deux identifiants** | sans cela ils partagent une seule fiche de réglages |
 | Sans collision, aucun identifiant ne change | la correction ne doit pas faire perdre les réglages déjà mémorisés |
 
-**Ce test a attrapé deux bugs réels.** Les paires de couleurs « confondues » étaient
+La règle sur les contrôles est vérifiée par **réflexion sur tout l'assemblage** : le
+test énumère les classes dérivant directement de `Control` et refuse celles qui ne
+déclarent rien. Ajouter un contrôle peint à la main sans l'annoncer fait donc échouer la
+suite — c'est ce qui transforme la mention « compatible lecteurs d'écran » du README en
+promesse tenue plutôt qu'en affirmation.
+
+**Ce test a attrapé quatre bugs réels.** Les paires de couleurs « confondues » étaient
 d'abord écrites à la main d'après le sens commun — rouge/vert, rose/gris. Mesurées, elles
 se révélaient parfaitement distinctes une fois simulées : elles différaient surtout par la
 **clarté**, que la déficience ne touche pas. Le comparateur montrait donc des couleurs que
@@ -124,6 +132,12 @@ la personne distingue déjà et concluait à l'inutilité d'une correction qui, 
 fonctionnait. Les paires sont désormais calculées à partir de la matrice de simulation
 elle-même. Second bug : elles étaient construites à gravité maximale puis montrées à
 quelqu'un réglé sur une anomalie modérée — donc parfaitement distinctes de nouveau.
+
+Les deux autres portent sur l'interface elle-même. La bande de teintes de lecture était
+atteignable au Tab et ne répondait à **aucune** touche : un cul-de-sac au clavier, dans la
+page qui parle d'accessibilité. Et deux contrôles purement décoratifs — l'aperçu des
+couleurs et le comparateur — recevaient le focus sans avoir la moindre action, parce que
+`TabStop` vaut vrai par défaut sur un `Control`.
 
 ---
 

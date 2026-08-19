@@ -33,6 +33,53 @@ namespace OpusScreen
             Height = 22;
             Cursor = Cursors.Hand;
             ForeColor = Color.FromArgb(232, 236, 244);
+            AccessibleRole = AccessibleRole.CheckButton;
+        }
+
+        // Ce controle n'est plus instancie nulle part : ToggleSwitch l'a remplace dans
+        // toute l'interface. Il reste neanmoins tenu aux memes regles que les autres,
+        // parce qu'un controle laisse en place finit toujours par etre reutilise - et
+        // le jour ou il le sera, il ne devra pas rouvrir un trou d'accessibilite.
+
+        protected override bool IsInputKey(Keys key)
+        {
+            return key == Keys.Space || base.IsInputKey(key);
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Space) { Checked = !Checked; e.Handled = true; }
+            base.OnKeyDown(e);
+        }
+
+        protected override void OnGotFocus(EventArgs e) { Invalidate(); base.OnGotFocus(e); }
+        protected override void OnLostFocus(EventArgs e) { Invalidate(); base.OnLostFocus(e); }
+
+        protected override AccessibleObject CreateAccessibilityInstance()
+        {
+            return new CheckAccessibleObject(this);
+        }
+
+        private class CheckAccessibleObject : Control.ControlAccessibleObject
+        {
+            private readonly DarkCheckBox _owner;
+
+            public CheckAccessibleObject(DarkCheckBox owner) : base(owner) { _owner = owner; }
+
+            public override AccessibleRole Role { get { return AccessibleRole.CheckButton; } }
+            public override string DefaultAction { get { return _owner.Checked ? "Decocher" : "Cocher"; } }
+            public override void DoDefaultAction() { _owner.Checked = !_owner.Checked; }
+
+            public override AccessibleStates State
+            {
+                get
+                {
+                    AccessibleStates s = base.State;
+                    if (_owner.Checked) s |= AccessibleStates.Checked;
+                    if (!_owner.Enabled) s |= AccessibleStates.Unavailable;
+                    return s;
+                }
+            }
         }
 
         public bool Checked

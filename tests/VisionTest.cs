@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Reflection;
+using System.Windows.Forms;
 using OpusScreen;
 
 /// <summary>
@@ -46,6 +47,7 @@ class VisionTest
         ColorFilter.Protanopia, ColorFilter.Deuteranopia, ColorFilter.Tritanopia
     };
 
+    [STAThread]
     static void Main()
     {
         TestSeverityZeroIsNeutral();
@@ -58,6 +60,7 @@ class VisionTest
         TestColorNaming();
         TestProfileRoundTrip();
         TestCommandLine();
+        TestEveryCustomControlIsAnnounced();
         TestMonitorIdsAreUnique();
 
         Console.WriteLine();
@@ -394,6 +397,117 @@ class VisionTest
         Check(Math.Abs(t.Current.Brightness - 130) < 0.01 && t.Current.Kelvin == 3400,
               "les anciennes options fonctionnent toujours");
         Console.WriteLine("  OK");
+    }
+
+    // ------------------------------------------------------------------ lecteurs d'ecran
+
+    /// <summary>
+    /// Aucun controle dessine a la main ne doit rester muet.
+    ///
+    /// Le README annonce « compatible lecteurs d'ecran ». Une affirmation pareille ne
+    /// vaut que si elle est tenue par un test : un controle entierement peint par du
+    /// code est, par defaut, un rectangle sans nom, sans role et sans valeur pour
+    /// Windows. Il suffit d'en ajouter un pour que la promesse devienne fausse, et
+    /// rien a l'ecran ne le signalerait - c'est justement le propre de ce defaut.
+    ///
+    /// La regle verifiee ici :
+    ///   1. tout controle peint a la main declare un role, par la propriete ou par un
+    ///      objet d'accessibilite dedie ;
+    ///   2. tout controle atteignable au clavier (TabStop) repond a une touche.
+    ///
+    /// La seconde regle vient d'un cas reel : la bande de teintes de lecture etait
+    /// atteignable au Tab et ne repondait a aucune touche. Un cul-de-sac au clavier,
+    /// dans la page qui parle d'accessibilite.
+    /// </summary>
+    static void TestEveryCustomControlIsAnnounced()
+    {
+        Console.WriteLine();
+        Console.WriteLine("=== Tout controle dessine a la main doit s'annoncer ===");
+
+        const BindingFlags Any = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+        int checkedCount = 0;
+
+        foreach (Type t in typeof(Slider).Assembly.GetTypes())
+        {
+            // Seuls les controles peints a la main : ceux qui derivent directement de
+            // Control. Un Button ou une ComboBox heritent d'un role de Windows.
+            if (t.BaseType != typeof(Control)) continue;
+            if (t.IsAbstract) continue;
+
+            Control c = Instantiate(t);
+            if (c == null)
+            {
+                Check(false, t.Name + " : le test ne sait pas l'instancier - a completer");
+                continue;
+            }
+
+            using (c)
+            {
+                checkedCount++;
+
+                MethodInfo custom = t.GetMethod("CreateAccessibilityInstance", Any);
+                bool declaresRole = c.AccessibleRole != AccessibleRole.Default
+                                 || (custom != null && custom.DeclaringType == t);
+
+                Check(declaresRole, t.Name + " : doit declarer un role d'accessibilite");
+
+                if (c.TabStop)
+                {
+                    MethodInfo key = t.GetMethod("OnKeyDown", Any);
+                    bool operable = key != null && key.DeclaringType == t;
+                    Check(operable, t.Name + " : atteignable au clavier, il doit repondre a une touche");
+                }
+
+                Console.WriteLine(string.Format("  {0,-16} role {1,-6} clavier {2}",
+                    t.Name, declaresRole ? "oui" : "NON",
+                    c.TabStop ? "requis" : "sans objet"));
+            }
+        }
+
+        Check(checkedCount >= 8, "au moins huit controles peints a la main devraient exister, "
+                               + checkedCount + " trouves - le test ne les voit-il plus ?");
+    }
+
+    /// <summary>
+    /// Fabrique un controle sans connaitre sa signature. Retourne null si aucune des
+    /// deux formes attendues ne convient - le test echoue alors plutot que d'ignorer
+    /// silencieusement un controle qu'il aurait du couvrir.
+    /// </summary>
+    static Control Instantiate(Type t)
+    {
+        const BindingFlags Any = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+
+        // Le constructeur le plus court d'abord : moins il demande d'arguments, moins
+        // le test fabrique de valeurs arbitraires.
+        List<ConstructorInfo> ctors = new List<ConstructorInfo>(t.GetConstructors(Any));
+        ctors.Sort(delegate(ConstructorInfo a, ConstructorInfo b)
+        {
+            return a.GetParameters().Length.CompareTo(b.GetParameters().Length);
+        });
+
+        foreach (ConstructorInfo ctor in ctors)
+        {
+            ParameterInfo[] ps = ctor.GetParameters();
+            object[] args = new object[ps.Length];
+            bool ok = true;
+
+            for (int i = 0; i < ps.Length && ok; i++)
+            {
+                Type p = ps[i].ParameterType;
+                if (p == typeof(string)) args[i] = "";
+                else if (p == typeof(int)) args[i] = 0;
+                else if (p == typeof(bool)) args[i] = false;
+                else if (p == typeof(double)) args[i] = 0.0;
+                else if (p == typeof(Settings)) args[i] = new Settings();
+                else if (p == typeof(MonitorInfo)) args[i] = new MonitorInfo();
+                else ok = false;
+            }
+            if (!ok) continue;
+
+            try { return (Control)ctor.Invoke(args); }
+            catch { /* signature acceptee mais construction refusee : on essaie la suivante */ }
+        }
+        return null;
     }
 
     // ------------------------------------------------------------------ ecrans

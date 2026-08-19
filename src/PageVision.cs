@@ -463,6 +463,10 @@ namespace OpusScreen
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint
                    | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
             BackColor = Theme.Sunken;
+
+            // Tableau de lecture, sans action : la tabulation n'a rien a y faire.
+            // TabStop vaut vrai par defaut sur un Control, d'ou la mise a faux.
+            TabStop = false;
             AccessibleRole = AccessibleRole.Graphic;
             AccessibleName = "Comparateur de couleurs confondues";
             Rebuild();
@@ -578,6 +582,12 @@ namespace OpusScreen
         private readonly List<Item> _items = new List<Item>();
         private int _hover = -1;
 
+        /// <summary>
+        /// Teinte sur laquelle porte le clavier. Distincte du survol : la souris et le
+        /// clavier ne designent pas forcement la meme case au meme moment.
+        /// </summary>
+        private int _cursor;
+
         public event Action<int> Picked;
 
         public TintStrip()
@@ -613,8 +623,79 @@ namespace OpusScreen
         protected override void OnMouseClick(MouseEventArgs e)
         {
             int i = CellWidth > 0 ? e.X / CellWidth : -1;
-            if (i >= 0 && i < _items.Count && Picked != null) Picked(i);
+            if (i >= 0 && i < _items.Count) { _cursor = i; Focus(); Pick(i); }
             base.OnMouseClick(e);
+        }
+
+        private void Pick(int index)
+        {
+            if (index < 0 || index >= _items.Count) return;
+            if (Picked != null) Picked(index);
+        }
+
+        // ------------------------------------------------------------------ clavier
+        //
+        // Cette bande etait atteignable au Tab et ne repondait ensuite a aucune touche :
+        // un cul-de-sac au clavier, dans la page meme qui parle d'accessibilite. Les
+        // fleches parcourent les teintes, Espace ou Entree applique celle qui est sous
+        // le curseur - la meme convention que les autres controles de l'application.
+
+        protected override bool IsInputKey(Keys key)
+        {
+            if (key == Keys.Left || key == Keys.Right || key == Keys.Home || key == Keys.End
+             || key == Keys.Space || key == Keys.Enter) return true;
+            return base.IsInputKey(key);
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+            if (_items.Count == 0) return;
+
+            switch (e.KeyCode)
+            {
+                case Keys.Left: _cursor = Math.Max(0, _cursor - 1); e.Handled = true; break;
+                case Keys.Right: _cursor = Math.Min(_items.Count - 1, _cursor + 1); e.Handled = true; break;
+                case Keys.Home: _cursor = 0; e.Handled = true; break;
+                case Keys.End: _cursor = _items.Count - 1; e.Handled = true; break;
+                case Keys.Space:
+                case Keys.Enter: Pick(_cursor); e.Handled = true; break;
+            }
+
+            if (e.Handled) Invalidate();
+        }
+
+        protected override void OnGotFocus(EventArgs e) { Invalidate(); base.OnGotFocus(e); }
+        protected override void OnLostFocus(EventArgs e) { Invalidate(); base.OnLostFocus(e); }
+
+        /// <summary>
+        /// Le lecteur d'ecran doit annoncer la teinte designee, pas « bande de teintes ».
+        /// Sans valeur, l'utilisateur entendrait le meme mot en parcourant les six cases.
+        /// </summary>
+        protected override AccessibleObject CreateAccessibilityInstance()
+        {
+            return new StripAccessibleObject(this);
+        }
+
+        private class StripAccessibleObject : Control.ControlAccessibleObject
+        {
+            private readonly TintStrip _owner;
+
+            public StripAccessibleObject(TintStrip owner) : base(owner) { _owner = owner; }
+
+            public override AccessibleRole Role { get { return AccessibleRole.List; } }
+            public override string DefaultAction { get { return "Appliquer"; } }
+            public override void DoDefaultAction() { _owner.Pick(_owner._cursor); }
+
+            public override string Value
+            {
+                get
+                {
+                    if (_owner._cursor < 0 || _owner._cursor >= _owner._items.Count) return "";
+                    return _owner._items[_owner._cursor].Name;
+                }
+                set { }
+            }
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -637,15 +718,25 @@ namespace OpusScreen
 
                 Rectangle cell = new Rectangle(i * w + 3, 2, w - 6, 32);
                 using (SolidBrush b = new SolidBrush(c)) g.FillRectangle(b, cell);
-                using (Pen p = new Pen(i == _hover ? Theme.Accent : Theme.Border, i == _hover ? 2 : 1))
+
+                bool marked = i == _hover || (Focused && i == _cursor);
+                using (Pen p = new Pen(marked ? Theme.Accent : Theme.Border, marked ? 2 : 1))
                     g.DrawRectangle(p, cell);
+
+                // Anneau de focus, distinct du survol : il doit rester visible meme
+                // quand la souris designe une autre case.
+                if (Focused && i == _cursor)
+                {
+                    using (Pen p = new Pen(Theme.Focus, 1))
+                        g.DrawRectangle(p, cell.X - 2, cell.Y - 2, cell.Width + 4, cell.Height + 4);
+                }
 
                 using (Font f = Theme.Small)
                 {
                     TextRenderer.DrawText(g, "Aa", f, cell, Color.FromArgb(30, 30, 30),
                         TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
                     TextRenderer.DrawText(g, it.Name, f, new Rectangle(i * w, 36, w, 16),
-                        i == _hover ? Theme.Fg : Theme.Dim, TextFormatFlags.HorizontalCenter);
+                        marked ? Theme.Fg : Theme.Dim, TextFormatFlags.HorizontalCenter);
                 }
             }
         }

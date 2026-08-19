@@ -101,9 +101,42 @@ namespace OpusScreen
             BackColor = Theme.Sunken;
             Cursor = Cursors.Hand;
             TabStop = true;
+            AccessibleRole = AccessibleRole.List;
+            AccessibleName = "Raccourcis globaux";
         }
 
         public void Reload() { Invalidate(); }
+
+        /// <summary>
+        /// Annonce l'action ET sa combinaison courante. Le role de liste seul ferait
+        /// entendre « raccourcis globaux » dix fois de suite, sans jamais dire lequel.
+        /// </summary>
+        protected override AccessibleObject CreateAccessibilityInstance()
+        {
+            return new HotkeyListAccessibleObject(this);
+        }
+
+        private class HotkeyListAccessibleObject : Control.ControlAccessibleObject
+        {
+            private readonly HotkeyList _owner;
+
+            public HotkeyListAccessibleObject(HotkeyList owner) : base(owner) { _owner = owner; }
+
+            public override AccessibleRole Role { get { return AccessibleRole.List; } }
+
+            public override string Value
+            {
+                get
+                {
+                    int i = _owner._selected;
+                    if (i < 0 || i >= _owner._s.Hotkeys.Count) return "";
+                    HotkeyBinding h = _owner._s.Hotkeys[i];
+                    return Settings.ActionLabel(h.Action) + " : "
+                         + (h.Enabled && h.Key != 0 ? h.Describe() : "desactive");
+                }
+                set { }
+            }
+        }
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
