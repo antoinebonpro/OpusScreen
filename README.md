@@ -66,10 +66,26 @@ Et sur le terrain de l'accessibilité, où le tableau devient vite court :
 Plus de **85 réglages** répartis sur 9 pages, 20 modes livrés, 15 raccourcis globaux
 reconfigurables.
 
-## 📦 Installation
+## ⬇️ Télécharger
 
-Aucune. Le binaire est autonome : il utilise le .NET Framework 4 présent sur toute
-installation de Windows.
+**[OpusScreen.exe — dernière version](https://github.com/antoinebonpro/OpusScreen/releases/latest/download/OpusScreen.exe)**
+
+Un seul fichier, rien à installer : il s'appuie sur le .NET Framework 4, présent sur
+toute installation de Windows depuis Windows 7. Posez-le où vous voulez et
+double-cliquez.
+
+> 🛡️ **Windows affichera un avertissement au premier lancement.** Le binaire n'est pas
+> signé par un certificat commercial — ceux-ci se louent quelques centaines d'euros par
+> an. SmartScreen dira « Windows a protégé votre ordinateur » : *Informations
+> complémentaires* → *Exécuter quand même*. Si vous préférez ne pas faire confiance à un
+> binaire, la section suivante compile le vôtre en une commande.
+
+Toutes les versions : [page des publications](https://github.com/antoinebonpro/OpusScreen/releases).
+
+## 🔨 Compiler soi-même
+
+Aucune dépendance à installer, aucun kit de développement : le compilateur C# utilisé
+est celui que Windows livre avec le .NET Framework.
 
 ```
 build.cmd            compile OpusScreen.exe

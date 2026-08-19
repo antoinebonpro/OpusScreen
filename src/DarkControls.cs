@@ -20,9 +20,9 @@ namespace OpusScreen
 
         public event EventHandler CheckedChanged;
 
-        public Color BoxColor = Color.FromArgb(58, 62, 72);
-        public Color BorderColor = Color.FromArgb(88, 94, 108);
-        public Color CheckColor = Color.FromArgb(94, 160, 255);
+        public Color BoxColor = Theme.Track;
+        public Color BorderColor = Theme.BorderStrong;
+        public Color CheckColor = Theme.Accent;
         public Color TickColor = Color.White;
 
         public DarkCheckBox()
@@ -32,7 +32,7 @@ namespace OpusScreen
                    | ControlStyles.SupportsTransparentBackColor, true);
             Height = 22;
             Cursor = Cursors.Hand;
-            ForeColor = Color.FromArgb(232, 236, 244);
+            ForeColor = Theme.Fg;
             AccessibleRole = AccessibleRole.CheckButton;
         }
 
@@ -125,7 +125,7 @@ namespace OpusScreen
 
             if (!_checked)
             {
-                using (Pen p = new Pen(_hover ? Color.FromArgb(130, 140, 158) : BorderColor, 1))
+                using (Pen p = new Pen(_hover ? Theme.Focus : BorderColor, 1))
                     DrawRounded(g, p, box, 3);
             }
 
@@ -179,8 +179,8 @@ namespace OpusScreen
             DropDownStyle = ComboBoxStyle.DropDownList;
             DrawMode = DrawMode.OwnerDrawFixed;
             FlatStyle = FlatStyle.Flat;
-            BackColor = Color.FromArgb(44, 48, 58);
-            ForeColor = Color.FromArgb(232, 236, 244);
+            BackColor = Theme.Field;
+            ForeColor = Theme.Fg;
             ItemHeight = 20;
         }
 
@@ -189,14 +189,14 @@ namespace OpusScreen
             if (e.Index < 0) return;
 
             bool selected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
-            Color bg = selected ? Color.FromArgb(64, 104, 168) : Color.FromArgb(44, 48, 58);
+            Color bg = selected ? Theme.AccentDim : Theme.Field;
 
             using (SolidBrush b = new SolidBrush(bg))
                 e.Graphics.FillRectangle(b, e.Bounds);
 
             Rectangle text = new Rectangle(e.Bounds.X + 4, e.Bounds.Y, e.Bounds.Width - 8, e.Bounds.Height);
             TextRenderer.DrawText(e.Graphics, Items[e.Index].ToString(), e.Font, text,
-                Enabled ? Color.FromArgb(232, 236, 244) : Color.FromArgb(130, 136, 150),
+                Enabled ? Theme.Fg : Theme.Faint,
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
         }
 
@@ -204,7 +204,7 @@ namespace OpusScreen
         {
             base.OnPaint(e);
             // Le petit triangle natif reste clair : on repeint le bord pour l'attenuer.
-            using (Pen p = new Pen(Color.FromArgb(70, 76, 90)))
+            using (Pen p = new Pen(Theme.BorderStrong))
                 e.Graphics.DrawRectangle(p, 0, 0, Width - 1, Height - 1);
         }
     }
@@ -215,11 +215,11 @@ namespace OpusScreen
         public DarkButton()
         {
             FlatStyle = FlatStyle.Flat;
-            BackColor = Color.FromArgb(44, 48, 58);
-            ForeColor = Color.FromArgb(232, 236, 244);
-            FlatAppearance.BorderColor = Color.FromArgb(74, 80, 94);
-            FlatAppearance.MouseOverBackColor = Color.FromArgb(56, 62, 74);
-            FlatAppearance.MouseDownBackColor = Color.FromArgb(38, 42, 52);
+            BackColor = Theme.Field;
+            ForeColor = Theme.Fg;
+            FlatAppearance.BorderColor = Theme.BorderStrong;
+            FlatAppearance.MouseOverBackColor = Theme.CardHover;
+            FlatAppearance.MouseDownBackColor = Theme.Sunken;
             Cursor = Cursors.Hand;
         }
     }

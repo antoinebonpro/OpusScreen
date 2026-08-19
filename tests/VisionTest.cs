@@ -60,6 +60,8 @@ class VisionTest
         TestColorNaming();
         TestProfileRoundTrip();
         TestCommandLine();
+        TestBrightnessFloorCannotBeBypassed();
+        TestSliderRangeIsNeverZero();
         TestEveryCustomControlIsAnnounced();
         TestMonitorIdsAreUnique();
 
@@ -396,6 +398,146 @@ class VisionTest
         CommandLine.ApplyTo(t, new string[] { "--brightness", "130", "--temp", "3400" });
         Check(Math.Abs(t.Current.Brightness - 130) < 0.01 && t.Current.Kelvin == 3400,
               "les anciennes options fonctionnent toujours");
+        Console.WriteLine("  OK");
+    }
+
+    // ------------------------------------------------------------------ plancher de 5 %
+
+    /// <summary>
+    /// Aucun reglage, ni aucune combinaison de reglages, ne doit produire un ecran
+    /// plus sombre que le plancher de 5 %.
+    ///
+    /// La luminosite etait bien bornee des son entree. Mais elle n'est pas seule a
+    /// assombrir : la temperature et les trois gains de canaux la MULTIPLIENT ensuite,
+    /// et ces gains descendent jusqu'a zero. Les trois a zero donnaient un ecran
+    /// strictement noir a n'importe quelle luminosite demandee - le plancher ne voyait
+    /// rien passer, puisqu'il portait sur une valeur qui valait bien 100.
+    ///
+    /// Le controle porte donc sur la RAMPE PRODUITE, seule chose que l'ecran recoive.
+    /// </summary>
+    static void TestBrightnessFloorCannotBeBypassed()
+    {
+        Console.WriteLine();
+        Console.WriteLine("=== Plancher de 5 % : aucune combinaison ne doit le franchir ===");
+
+        const double Floor = GammaEngine.MinBrightness / 100.0;
+
+        // Les gains, la temperature, le contraste et la courbe pris aux extremes, en
+        // combinaison - c'est le produit qui est dangereux, pas chaque reglage isole.
+        double[] gains = { 0, 3, 25, 100, 150 };
+        int[] kelvins = { ColorTemp.MinKelvin, 3000, ColorTemp.MaxKelvin };
+        double[] brights = { 5, 20, 50, 100, 150 };
+
+        int worstCase = 0;
+        double worst = 1.0;
+        string worstLabel = "";
+
+        foreach (double bright in brights)
+            foreach (int k in kelvins)
+                foreach (double rg in gains)
+                    foreach (double gg in gains)
+                        foreach (double bg in gains)
+                        {
+                            Profile p = new Profile();
+                            p.Brightness = bright; p.Kelvin = k;
+                            p.RedGain = rg; p.GreenGain = gg; p.BlueGain = bg;
+                            p.Contrast = 50; p.GammaCurve = 50;
+                            p.ClampAll();
+
+                            BrightnessPlan plan = GammaEngine.Plan(p.Brightness, true, true);
+                            Native.RampTable r = GammaEngine.BuildRamp(plan, p);
+
+                            double lum = (0.2126 * r.Red[255] + 0.7152 * r.Green[255]
+                                        + 0.0722 * r.Blue[255]) / 65535.0;
+
+                            if (lum < worst)
+                            {
+                                worst = lum;
+                                worstLabel = string.Format("{0} % / {1} K / gains {2},{3},{4}",
+                                    bright, k, rg, gg, bg);
+                            }
+                            if (lum < Floor - 0.001) worstCase++;
+                        }
+
+        Console.WriteLine(string.Format("  cas le plus sombre atteint : {0:0.0000} ({1})", worst, worstLabel));
+        Check(worstCase == 0, worstCase + " combinaison(s) passent sous le plancher de 5 %");
+
+        // Le cas qui manquait : les trois gains a zero.
+        Profile black = new Profile();
+        black.RedGain = black.GreenGain = black.BlueGain = 0;
+        Native.RampTable br = GammaEngine.BuildRamp(GammaEngine.Plan(100, true, true), black);
+        double blackLum = (0.2126 * br.Red[255] + 0.7152 * br.Green[255] + 0.0722 * br.Blue[255]) / 65535.0;
+        Console.WriteLine(string.Format("  les trois gains a zero -> luminance {0:0.0000} (attendu >= {1:0.00})",
+            blackLum, Floor));
+        Check(blackLum >= Floor - 0.001, "trois gains a zero : l'ecran ne doit pas devenir noir");
+
+        // Couper un seul canal reste legitime, et ne doit surtout pas etre remonte :
+        // c'est la reduction de lumiere bleue poussee au bout.
+        Profile noBlue = new Profile();
+        noBlue.BlueGain = 0;
+        Native.RampTable nb = GammaEngine.BuildRamp(GammaEngine.Plan(100, true, true), noBlue);
+        Console.WriteLine(string.Format("  bleu coupe seul       -> R {0} V {1} B {2}",
+            nb.Red[255], nb.Green[255], nb.Blue[255]));
+        Check(nb.Blue[255] == 0, "couper le bleu seul doit rester possible");
+        Check(nb.Red[255] > 60000, "et ne doit pas modifier les autres canaux");
+
+        // La rampe doit rester croissante apres relevement, sinon apparaissent des
+        // bandes de couleur.
+        for (int i = 1; i < 256; i++)
+            Check(br.Red[i] >= br.Red[i - 1] && br.Green[i] >= br.Green[i - 1]
+               && br.Blue[i] >= br.Blue[i - 1], "la rampe relevee doit rester croissante");
+
+        Console.WriteLine("  OK");
+    }
+
+    // ------------------------------------------------------------------ curseurs
+
+    /// <summary>
+    /// Un curseur dont les deux bornes sont egales ne doit pas produire de position
+    /// aberrante. Le calcul divisait par la course sans garde : une course nulle
+    /// donnait NaN, et NaN converti en entier donne une coordonnee absurde - le bouton
+    /// sortait du cadre et le trace pouvait echouer.
+    /// </summary>
+    static void TestSliderRangeIsNeverZero()
+    {
+        Console.WriteLine();
+        Console.WriteLine("=== Curseur : course nulle ou inversee ===");
+
+        MethodInfo xFromValue = typeof(Slider).GetMethod("XFromValue",
+            BindingFlags.NonPublic | BindingFlags.Instance);
+        Check(xFromValue != null, "le calcul de position doit exister");
+        if (xFromValue == null) return;
+
+        // Bornes egales.
+        using (Slider a = new Slider())
+        {
+            a.Width = 200; a.Height = 34;
+            a.Minimum = 50; a.Maximum = 50;
+            int x = (int)xFromValue.Invoke(a, new object[] { 50.0 });
+            Console.WriteLine("  bornes egales (50..50)  -> x = " + x);
+            Check(x >= -1000 && x <= 1000, "position bornee malgre une course nulle");
+        }
+
+        // Maximum pose avant Minimum : l'ordre ne doit pas produire d'intervalle inverse.
+        using (Slider b = new Slider())
+        {
+            b.Width = 200; b.Height = 34;
+            b.Maximum = 10; b.Minimum = 80;
+            Console.WriteLine(string.Format("  max 10 puis min 80     -> min {0} max {1}", b.Minimum, b.Maximum));
+            Check(b.Maximum >= b.Minimum, "les bornes ne doivent jamais rester inversees");
+            int x = (int)xFromValue.Invoke(b, new object[] { b.Value });
+            Check(x >= -1000 && x <= 1000, "position bornee malgre des bornes posees a l'envers");
+        }
+
+        // La valeur doit suivre les bornes quand elles se resserrent.
+        using (Slider c = new Slider())
+        {
+            c.Minimum = 0; c.Maximum = 100; c.Value = 90;
+            c.Maximum = 50;
+            Console.WriteLine("  valeur 90 puis max 50  -> valeur = " + c.Value);
+            Check(c.Value <= 50.0001, "la valeur doit etre ramenee dans la nouvelle plage");
+        }
+
         Console.WriteLine("  OK");
     }
 

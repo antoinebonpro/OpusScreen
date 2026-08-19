@@ -172,7 +172,63 @@ namespace OpusScreen
                 ramp.Green[i] = ToRampValue(v * gMul);
                 ramp.Blue[i] = ToRampValue(v * bMul);
             }
-            return ramp;
+
+            return EnforceFloor(ramp);
+        }
+
+        /// <summary>
+        /// Plancher de securite mesure sur la RAMPE PRODUITE, et non sur la consigne.
+        ///
+        /// La luminosite est bornee a 5 % des son entree, par SafetyGuard.ClampBrightness.
+        /// Mais elle n'est pas seule a assombrir : la temperature et surtout les trois
+        /// gains de canaux la MULTIPLIENT ensuite, et ces gains descendent jusqu'a zero.
+        /// Les trois a zero donnaient donc un ecran strictement noir a n'importe quelle
+        /// luminosite demandee - le plancher de 5 % ne voyait rien passer, puisqu'il
+        /// portait sur une valeur qui, elle, valait bien 100.
+        ///
+        /// Le critere retenu est la LUMINANCE du blanc, pas chaque canal pris a part :
+        /// couper entierement le bleu est un reglage legitime - c'est meme la reduction
+        /// de lumiere bleue poussee au bout - et cela laisse encore 93 % de luminance.
+        /// Couper les trois n'en laisse aucune.
+        ///
+        /// Quand le plancher est franchi, la rampe est remontee PROPORTIONNELLEMENT :
+        /// la teinte voulue est conservee, seule son intensite est relevee jusqu'au
+        /// minimum lisible. Rien n'est refuse a l'utilisateur, sauf l'ecran noir.
+        /// </summary>
+        internal static Native.RampTable EnforceFloor(Native.RampTable ramp)
+        {
+            const double Floor = MinBrightness / 100.0;   // 0,05
+
+            double r = ramp.Red[255] / 65535.0;
+            double g = ramp.Green[255] / 65535.0;
+            double b = ramp.Blue[255] / 65535.0;
+            double luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+            // Au-dessus du plancher : la rampe passe telle quelle.
+            if (luminance >= Floor) return ramp;
+
+            // Exactement noire : il n'y a plus aucune proportion a conserver, donc
+            // rien a remonter. On rend un gris neutre au niveau du plancher.
+            if (luminance <= 1e-7)
+            {
+                Native.RampTable grey = Native.RampTable.Allocate();
+                for (int i = 0; i < 256; i++)
+                {
+                    ushort v = ToRampValue(i / 255.0 * Floor);
+                    grey.Red[i] = v; grey.Green[i] = v; grey.Blue[i] = v;
+                }
+                return grey;
+            }
+
+            double lift = Floor / luminance;
+            Native.RampTable raised = Native.RampTable.Allocate();
+            for (int i = 0; i < 256; i++)
+            {
+                raised.Red[i] = ToRampValue(ramp.Red[i] / 65535.0 * lift);
+                raised.Green[i] = ToRampValue(ramp.Green[i] / 65535.0 * lift);
+                raised.Blue[i] = ToRampValue(ramp.Blue[i] / 65535.0 * lift);
+            }
+            return raised;
         }
 
         private static ushort ToRampValue(double v)

@@ -22,10 +22,14 @@ namespace OpusScreen
         /// <summary>Emis au relachement de la souris : c'est la que l'on confirme un reglage risque.</summary>
         public event EventHandler ValueCommitted;
 
-        public Color RailColor = Color.FromArgb(58, 62, 72);
-        public Color FillColor = Color.FromArgb(94, 160, 255);
-        public Color WarnColor = Color.FromArgb(255, 168, 66);
-        public Color KnobColor = Color.FromArgb(240, 244, 252);
+        // Jetons du theme, et non des valeurs ecrites ici : ces quatre champs etaient
+        // figes en dur, si bien qu'un changement de theme laissait tous les curseurs
+        // dans l'ancienne couleur. Ils restent publics - SetAccent les surcharge pour
+        // les curseurs qui representent une couleur precise (rouge, vert, bleu).
+        public Color RailColor = Theme.Track;
+        public Color FillColor = Theme.Accent;
+        public Color WarnColor = Theme.Boost;
+        public Color KnobColor = Theme.Knob;
 
         public Slider()
         {
@@ -95,8 +99,35 @@ namespace OpusScreen
             }
         }
 
-        public double Minimum { get { return _min; } set { _min = value; Invalidate(); } }
-        public double Maximum { get { return _max; } set { _max = value; Invalidate(); } }
+        public double Minimum
+        {
+            get { return _min; }
+            set { _min = value; if (_max < _min) _max = _min; Clamp(); Invalidate(); }
+        }
+
+        public double Maximum
+        {
+            get { return _max; }
+            set { _max = value; if (_max < _min) _min = _max; Clamp(); Invalidate(); }
+        }
+
+        /// <summary>
+        /// Course du curseur, jamais nulle.
+        ///
+        /// Le calcul de la position divisait par (max - min) sans garde. Une course
+        /// nulle - deux bornes egales, ou une borne posee avant l'autre au moment de
+        /// la construction - donnait une division par zero, donc NaN, donc une
+        /// coordonnee aberrante une fois convertie en entier : le bouton partait hors
+        /// du cadre et le trace pouvait echouer. Aucun curseur de l'application n'est
+        /// dans ce cas aujourd'hui, mais rien n'empechait qu'il y en ait un.
+        /// </summary>
+        private double Range { get { double d = _max - _min; return d > 1e-9 ? d : 1e-9; } }
+
+        private void Clamp()
+        {
+            if (_value < _min) _value = _min;
+            else if (_value > _max) _value = _max;
+        }
 
         /// <summary>Graduation de reference, ex. 100 % = "etat normal".</summary>
         public double MarkerValue { get { return _markerValue; } set { _markerValue = value; Invalidate(); } }
@@ -138,13 +169,13 @@ namespace OpusScreen
             Rectangle r = RailRect;
             double p = (x - r.Left) / (double)r.Width;
             p = Math.Max(0, Math.Min(1, p));
-            return _min + p * (_max - _min);
+            return _min + p * Range;
         }
 
         private int XFromValue(double v)
         {
             Rectangle r = RailRect;
-            double p = (v - _min) / (_max - _min);
+            double p = (v - _min) / Range;
             return r.Left + (int)Math.Round(p * r.Width);
         }
 
@@ -174,7 +205,7 @@ namespace OpusScreen
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             base.OnMouseWheel(e);
-            double step = (_max - _min) / 100.0;
+            double step = Range / 100.0;
             Value = _value + (e.Delta > 0 ? step : -step) * 3;
             if (ValueCommitted != null) ValueCommitted(this, EventArgs.Empty);
         }
@@ -188,7 +219,7 @@ namespace OpusScreen
         protected override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
-            double step = (_max - _min) / 100.0;
+            double step = Range / 100.0;
             if (e.KeyCode == Keys.Left) { Value = _value - step; e.Handled = true; }
             else if (e.KeyCode == Keys.Right) { Value = _value + step; e.Handled = true; }
             if (e.Handled && ValueCommitted != null) ValueCommitted(this, EventArgs.Empty);
