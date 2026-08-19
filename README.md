@@ -220,6 +220,11 @@ cours ne faussent donc jamais la réponse.
   moitié et le clignement devient souvent incomplet : c'est la première cause de
   sécheresse oculaire au travail. Le bandeau dure trois secondes et n'attend aucune réponse.
 - **Réduction du bleu** par la température, la balance des canaux, ou les deux.
+- **Remise du son au maximum** — volume général *et* volume par application. Une vidéo
+  trop faible vient bien plus souvent du mixeur de Windows, où chaque application
+  mémorise son propre curseur, que du volume général. Ce bouton ne dépasse pas 100 % :
+  la sortie audio plafonne à 0 dB, et Windows refuse tout net d'aller au-delà — la même
+  limite qu'un voile qui ne peut retirer de la lumière sans jamais en ajouter.
 
 ### 🔊 Lecteurs d'écran
 

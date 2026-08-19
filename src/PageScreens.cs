@@ -314,9 +314,9 @@ namespace OpusScreen
     public class PageComfort : SettingsPage
     {
         private ToggleRow _enabled, _dim, _sound, _blink;
-        private SliderRow _interval, _duration, _blinkInterval;
-        private Label _stats;
-        private DarkButton _now;
+        private SliderRow _interval, _duration, _blinkInterval, _volume;
+        private Label _stats, _volumeNote;
+        private DarkButton _now, _raise;
 
         public BreakReminder Reminder;
 
@@ -380,6 +380,48 @@ namespace OpusScreen
                + "oculaire au travail, et elle pese davantage sur les yeux deja fragiles. "
                + "Le rappel n'attend aucune reponse et disparait tout seul.");
 
+            Section("Son");
+
+            _volume = new SliderRow("Volume general", 0, 100, "%");
+            _volume.Changed += delegate
+            {
+                if (Loading) return;
+                SystemVolume.SetMaster(_volume.Value);
+                UpdateVolumeNote();
+            };
+            Add(_volume, Theme.SpaceSm);
+
+            _raise = new DarkButton();
+            _raise.Text = "Tout remettre au maximum";
+            _raise.Height = Theme.MinTarget;
+            _raise.Click += OnRaiseVolume;
+            Add(_raise, Theme.SpaceSm);
+
+            _volumeNote = UiKit.Caption("");
+            _volumeNote.Height = 46;
+            Add(_volumeNote, Theme.SpaceXs);
+
+            // Le libelle du bouton dit « remettre au maximum », pas « amplifier ».
+            // C'est la seule formulation exacte, et la note ci-dessous explique
+            // pourquoi il ne peut pas y en avoir d'autre.
+            Note("Ce bouton ne rend pas le son plus fort que ne le permet Windows : il "
+               + "recupere ce qui a ete perdu en chemin. Chaque application memorise son "
+               + "propre volume dans le mixeur de Windows - un curseur baisse une fois par "
+               + "megarde le reste pour toujours, et le mixeur est un panneau que peu de gens "
+               + "savent ou trouver. Une video trop faible vient de la bien plus souvent que "
+               + "du volume general.");
+
+            Note("Aller AU-DELA de 100 % est impossible depuis une application ordinaire. "
+               + "La sortie audio declare sa plage en decibels, et son maximum vaut 0 dB : "
+               + "le 100 % de Windows EST le plafond, et demander davantage ne donne pas une "
+               + "valeur ecretee - l'appel echoue. C'est la meme limite que le voile de "
+               + "PangoBright sur la luminosite : un attenuateur retire du signal, il n'en "
+               + "ajoute pas. La luminosite a pu depasser 100 % parce qu'un autre etage "
+               + "existait - la table de couleurs de la carte graphique. Le son n'a pas "
+               + "d'equivalent : amplifier demanderait de s'inserer dans le flux audio, "
+               + "donc un pilote a installer. Le lecteur video, lui, peut le faire sur son "
+               + "propre son - VLC monte a 200 %, et les extensions de navigateur aussi.");
+
             Section("Suivi");
 
             _stats = UiKit.Caption("");
@@ -394,6 +436,61 @@ namespace OpusScreen
 
             Note("Le rappel s'affiche sans jamais prendre le focus : il ne peut ni "
                + "interrompre une frappe, ni faire perdre une saisie en cours.");
+        }
+
+        // ------------------------------------------------------------------ son
+
+        private void OnRaiseVolume(object sender, EventArgs e)
+        {
+            if (!SystemVolume.Available)
+            {
+                _volumeNote.Text = "Aucune sortie audio utilisable sur cette machine.";
+                return;
+            }
+
+            SystemVolume.RaiseResult r = SystemVolume.RaiseEverything();
+            Sync();
+
+            if (r.NothingToDo)
+            {
+                // Le cas le plus frequent, et celui qu'il ne faut surtout pas maquiller
+                // en succes : annoncer « c'est fait » quand rien n'a bouge enverrait
+                // chercher un probleme la ou il n'y en a pas.
+                _volumeNote.Text = "Tout etait deja au maximum : volume general et volume de "
+                                + "chaque application. Il n'y avait rien a recuperer, et le son "
+                                + "ne peut pas monter plus haut cote Windows. Si une video reste "
+                                + "faible, c'est dans le lecteur lui-meme qu'il faut chercher.";
+                return;
+            }
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            if (r.MasterRaised)
+                sb.AppendFormat("Volume general : {0:0} % -> {1:0} %. ", r.MasterBefore, r.MasterAfter);
+            if (r.AppsRaised > 0 || r.AppsUnmuted > 0)
+                sb.Append(string.Join("  -  ", r.Changed.ToArray()));
+            _volumeNote.Text = sb.ToString();
+        }
+
+        private void UpdateVolumeNote()
+        {
+            if (!SystemVolume.Available)
+            {
+                _volumeNote.Text = "Aucune sortie audio utilisable sur cette machine.";
+                _volume.Track.Enabled = false;
+                _raise.Enabled = false;
+                return;
+            }
+
+            List<SystemVolume.AppSession> sessions = SystemVolume.Sessions();
+            int below = 0;
+            foreach (SystemVolume.AppSession a in sessions)
+                if (a.Headroom > 1) below++;
+
+            _volumeNote.Text = below == 0
+                ? string.Format("{0} application(s) au mixeur, toutes au maximum. "
+                              + "Plafond du materiel : {1:0.0} dB.", sessions.Count, SystemVolume.CeilingDb)
+                : string.Format("{0} application(s) sous 100 % dans le mixeur de Windows : "
+                              + "il y a du volume a recuperer.", below);
         }
 
         private void PushToReminder()
@@ -445,6 +542,11 @@ namespace OpusScreen
                 _sound.SetCheckedSilent(S.BreakSound);
                 _blink.SetCheckedSilent(S.BlinkReminders);
                 _blinkInterval.SetValueSilent(S.BlinkIntervalMinutes);
+
+                double master = SystemVolume.GetMaster();
+                if (master >= 0) _volume.SetValueSilent(master);
+                UpdateVolumeNote();
+
                 PushToReminder();
                 UpdateStates();
                 UpdateStats();

@@ -4,6 +4,37 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ---
 
+## [Non publie]
+
+### Ajoute
+
+- **Section « Son » dans la page Confort** : volume general, et un bouton qui remet au
+  maximum le volume general ET celui de chaque application du mixeur de Windows.
+
+  Le libelle dit « Tout remettre au maximum », pas « amplifier », parce que c'est la
+  seule formulation exacte. **Aller au-dela de 100 % est impossible depuis une
+  application ordinaire** : la sortie audio declare sa plage en decibels et son maximum
+  vaut 0 dB - mesure sur le materiel de test, plage -65,25 a 0,00 dB. Demander davantage
+  ne donne pas une valeur ecretee, l'appel echoue.
+
+  C'est la meme limite que le voile de PangoBright sur la luminosite, et pour la meme
+  raison : un attenuateur retire du signal, il n'en ajoute pas. La luminosite a pu
+  depasser 100 % parce qu'un AUTRE etage existait - la table de couleurs de la carte
+  graphique, qui multiplie. Le son n'a pas d'equivalent accessible : amplifier
+  demanderait de s'inserer dans le flux audio, donc un pilote a installer, ce que cette
+  application refuse par principe.
+
+  Ce qui reste, et qui n'est pas rien : chaque application memorise son propre volume
+  dans le mixeur de Windows. Un curseur baisse une fois par megarde le reste pour
+  toujours, et le mixeur est un panneau que peu de gens savent ou trouver. Un son trop
+  faible vient de la bien plus souvent que du volume general.
+
+  Quand tout est deja au maximum, le compte rendu le dit franchement plutot que
+  d'annoncer un succes : laisser croire qu'une action a eu lieu enverrait chercher un
+  probleme la ou il n'y en a pas.
+
+---
+
 ## [3.0.0] — 2026-08-19
 
 L'accessibilité cesse d'être une case cochée dans un tableau comparatif.
