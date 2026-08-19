@@ -143,6 +143,51 @@ de `(I − Simulation)` est de somme nulle. Un gris produit donc une erreur null
 ressort inchangé — le filtre ne teinte jamais l'interface. Vérifié par `MatrixTest` :
 0,50 → 0,50 exactement pour les trois filtres, tandis que rouge et vert restent distincts.
 
+#### La gravité : pourquoi une dichromatie complète est le mauvais réglage par défaut
+
+La **dichromatie** — un type de cône totalement absent — est le cas rare. Le cas
+fréquent, et de très loin, est l'**anomalie** : le cône existe mais sa sensibilité est
+décalée, et la confusion n'est que partielle. Un filtre calibré uniquement sur la
+dichromatie sur-corrige donc la majorité des personnes concernées : l'écran devient
+criard sans être plus lisible.
+
+```
+Simulation(s) = (1 − s) × I  +  s × Simulation_complète
+M(s, k)       = I + k × (I − Simulation(s)) × Redistribution
+```
+
+`s` est la gravité (0 = vision normale, 1 = dichromatie), `k` l'intensité de la
+correction. C'est une **approximation assumée** : le modèle exact demanderait de décaler
+le pic d'absorption du cône dans l'espace LMS, ce qu'une interpolation linéaire ne sait
+pas représenter. Elle conserve en revanche la propriété qui compte — l'axe de confusion
+reste le même, seule son amplitude change — et c'est exactement ce que fait le réglage
+d'intensité de macOS.
+
+À `s = 0` comme à `k = 0`, la matrice redevient l'identité **exactement** : descendre un
+curseur à zéro rend l'écran d'origine, pas « presque » l'écran d'origine.
+
+#### La direction de confusion, calculée et non devinée
+
+Le comparateur de la page Vision doit montrer des couleurs que la personne confond
+*réellement*. Elles sont obtenues en cherchant la direction que la simulation écrase le
+plus : le vecteur `v` qui minimise `|v × M|`, c'est-à-dire le vecteur propre de `M × Mᵀ`
+associé à la plus petite valeur propre, trouvé par itération inverse. L'écart le long de
+cet axe est ensuite calibré par dichotomie pour rester **sous le seuil de perception**
+(ΔE 2,3 en CIE Lab).
+
+Ce détour n'est pas de la coquetterie : une première version listait des paires écrites
+à la main d'après le sens commun — rouge/vert, rose/gris. Mesurées, elles se révélaient
+parfaitement distinctes une fois simulées, car elles différaient surtout par la
+**clarté**, que la déficience ne touche pas.
+
+#### Une limite honnête : l'effet est global au bureau
+
+`MagSetFullscreenColorEffect` n'expose qu'un effet pour **tout** le bureau. La
+saturation et les filtres ne peuvent donc pas différer d'un écran à l'autre — c'est une
+contrainte de l'API, pas un choix. Plutôt que de laisser un écran arbitraire décider
+pour les autres, un **écran de référence** est désigné explicitement (page Écrans), et
+l'interface le dit. Les trois autres étages, eux, restent bien réglables écran par écran.
+
 ---
 
 ## Organisation du code
@@ -154,10 +199,11 @@ Un fichier, une responsabilité. Aucun module ne connaît les autres étages ; s
 src/
 ├── Native.cs               toutes les déclarations P/Invoke
 │
-├── MonitorEnum.cs          énumération des écrans, identifiants stables (EDID)
+├── MonitorEnum.cs          énumération des écrans, identifiants uniques
+├── DisplayConfig.cs        noms EDID réels, connectique, détection de la dalle interne
 ├── ColorTemp.cs            Kelvin → multiplicateurs RGB, ambiances f.lux
 ├── GammaEngine.cs          plan de luminosité, construction et pose de la LUT
-├── ColorMatrixEffect.cs    matrice 5×5 : saturation, filtres
+├── ColorMatrixEffect.cs    matrice 5×5 : saturation, filtres, gravité
 ├── OverlayLens.cs          la « fade lens », technique PangoBright
 ├── HardwareBacklight.cs    DDC/CI et WMI, sur thread dédié
 │
@@ -165,7 +211,12 @@ src/
 ├── AppWatcher.cs           application au premier plan, détection plein écran
 ├── SolarClock.cs           lever et coucher du soleil (algorithme NOAA)
 ├── Scheduler.cs            traduit l'heure en consigne
-├── BreakReminder.cs        pauses 20-20-20
+├── BreakReminder.cs        pauses 20-20-20 et rappels de clignement
+│
+├── Vision.cs               savoir métier : déficiences, paires de confusion, noms
+├── ColorReader.cs          identificateur de couleur sous le pointeur
+├── ScreenMagnifier.cs      loupe plein écran (API Magnification)
+├── CursorBeacon.cs         anneau de repérage autour du pointeur
 │
 ├── SafetyGuard.cs          les cinq protections anti-écran-noir
 ├── GammaUnlock.cs          déblocage de la plage gamma Windows
@@ -185,6 +236,7 @@ src/
 ├── SettingsPage.cs         base commune aux pages
 ├── PageDisplay.cs          page Écran
 ├── PageColor.cs            page Couleur
+├── PageVision.cs           page Vision et comparateur de couleurs confondues
 ├── PageAuto.cs             pages Automatisme et Applications
 ├── PageScreens.cs          pages Écrans et Confort
 ├── PageAdvanced.cs         pages Raccourcis et Avancé
@@ -198,7 +250,11 @@ src/
 └── Program.cs              point d'entrée, filets de sécurité
 
 tools/
-└── MakeIcon.cs             dessine assets/OpusScreen.ico, appelé par build.cmd
+└── MakeIcon.cs             dérive assets/OpusScreen.ico de assets/logo.png
+
+assets/
+├── logo.png                le logo, embarqué en pleine résolution dans l'exécutable
+└── OpusScreen.ico          généré : recadré au centre sous 48 px pour rester lisible
 ```
 
 ### Épinglage à la barre des tâches
@@ -261,6 +317,17 @@ et les captures de l'utilisateur sortent propres, défaut connu de PangoBright.
 **Conscience du DPI.** Sans `SetProcessDpiAwarenessContext`, le voile serait placé en
 coordonnées logiques sur un écran à mise à l'échelle et ne couvrirait pas toute la surface.
 
+**Le plein écran ne suspend que le voile.** Les quatre étages n'y réagissent pas de la
+même façon : le voile est une fenêtre `TOPMOST` posée sur l'écran, que le plein écran
+supporte mal ; la table de couleurs, elle, est appliquée par la carte graphique en sortie
+et traverse jeux et vidéos sans dommage. Or c'est elle, avec le rétroéclairage, qui porte
+tout le boost au-delà de 100 % — et le voile n'existe même pas dans cette plage
+(`GammaEngine.Plan` ne le convoque qu'en dessous de 35 %). Tout suspendre revenait donc à
+retirer la luminosité au moment précis où un film sombre en a le plus besoin.
+`DisplayController` distingue pour cela deux niveaux : `Suspend()`, qui rend l'écran
+intact, et `HoldOverlay()`, qui ne retire que l'étage ③. Le réglage
+*Applications → En plein écran* choisit entre les deux, ou aucun des deux.
+
 **Les appels DDC/CI vivent sur leur propre thread.** Ils prennent parfois 500 ms ; les
 faire sur le thread d'interface figerait le curseur pendant le glissement.
 
@@ -274,6 +341,8 @@ faire sur le thread d'interface figerait le curseur pendant le glissement.
 | Rétroéclairage DDC/CI | écran externe compatible, Windows 7 |
 | Rétroéclairage WMI | dalle de portable, Windows 7 |
 | Matrice de couleur (saturation, filtres) | Windows 8 |
+| Loupe plein écran | Windows 8 — repli sur la loupe de Windows sinon |
+| Noms d'écran réels et détection de la dalle interne | Windows 7 — repli sur `EnumDisplayDevices` sinon |
 | Voile exclu des captures | Windows 10 version 2004 |
 | Barre de titre sombre | Windows 10 version 1809 |
 

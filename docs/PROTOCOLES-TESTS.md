@@ -6,7 +6,7 @@
 tests\run-tests.cmd
 ```
 
-Cinq suites, une centaine d'assertions. Code de sortie **0** si tout passe, **1** sinon.
+Six suites, environ deux cents assertions. Code de sortie **0** si tout passe, **1** sinon.
 
 ```
 tests\run-tests.cmd monitor
@@ -21,7 +21,7 @@ Le script compte les tests **réellement exécutés** et refuse d'annoncer un su
 compte n'y est pas :
 
 ```
-Tests executes : 4 / 4
+Tests executes : 6 / 6
 Echecs         : 0
 RESULTAT : tous les tests passent
 ```
@@ -92,6 +92,53 @@ Le raccourci de test est écrit dans le dossier temporaire, puis supprimé : rie
 déposé dans le menu Démarrer. La liste de tâches publiée sous l'identité du programme
 de test est retirée dans la foulée.
 
+### 6. VisionTest — accessibilité et identification des écrans
+
+Deux sujets réunis par une même propriété : ils sont **invisibles à l'usage courant**.
+Une correction de daltonisme mal calibrée ressemble à une correction bien calibrée pour
+qui n'est pas daltonien, et un identifiant d'écran dupliqué ne se manifeste qu'avec deux
+écrans du même modèle sous la main. Ce sont exactement les règles qui doivent être
+tenues par un test plutôt que par l'œil.
+
+| Vérification | Pourquoi |
+|---|---|
+| Gravité 0 → matrice identité, dans les deux modes | descendre le curseur à zéro doit rendre l'écran **exact**, pas « presque » |
+| **Le gris ne dérive jamais**, à toute gravité et toute intensité | un gris qui vire colore toute l'interface de Windows, et le filtre devient intenable au bout d'une heure |
+| Intensité 0 → aucune correction | l'interrupteur doit vraiment éteindre |
+| Les paires proposées sont **indistinguables avant** correction | sinon le comparateur démontre l'inverse de ce qu'il prétend |
+| Les 4 paires gagnent en écart **après** correction | c'est la seule preuve que le filtre sert à quelque chose |
+| La simulation **rapproche** les paires | une simulation qui n'efface rien ne simule rien |
+| Inversion à teintes conservées : blanc↔noir, rouge reste rouge | c'est toute la différence avec l'inversion classique |
+| L'inversion appliquée deux fois rend la couleur d'origine | involution : aucune dérive à l'usage |
+| Détection de l'état neutre | l'étage ne doit pas s'armer pour rien |
+| Noms de couleurs justes, rouge ≠ vert | l'identificateur est un outil de confiance : celui qui l'interroge **ne peut pas vérifier la réponse** |
+| Aller-retour d'un profil, y compris les champs 3.0 | un fichier ancien reste lisible et reproduit l'ancien comportement |
+| **Tout contrôle peint à la main déclare un rôle** | un contrôle entièrement dessiné est, par défaut, un rectangle sans nom ni rôle pour Windows |
+| Tout contrôle atteignable au Tab répond à une touche | sinon la tabulation s'arrête sur un cul-de-sac |
+| **Deux écrans du même modèle reçoivent deux identifiants** | sans cela ils partagent une seule fiche de réglages |
+| Sans collision, aucun identifiant ne change | la correction ne doit pas faire perdre les réglages déjà mémorisés |
+
+La règle sur les contrôles est vérifiée par **réflexion sur tout l'assemblage** : le
+test énumère les classes dérivant directement de `Control` et refuse celles qui ne
+déclarent rien. Ajouter un contrôle peint à la main sans l'annoncer fait donc échouer la
+suite — c'est ce qui transforme la mention « compatible lecteurs d'écran » du README en
+promesse tenue plutôt qu'en affirmation.
+
+**Ce test a attrapé quatre bugs réels.** Les paires de couleurs « confondues » étaient
+d'abord écrites à la main d'après le sens commun — rouge/vert, rose/gris. Mesurées, elles
+se révélaient parfaitement distinctes une fois simulées : elles différaient surtout par la
+**clarté**, que la déficience ne touche pas. Le comparateur montrait donc des couleurs que
+la personne distingue déjà et concluait à l'inutilité d'une correction qui, elle,
+fonctionnait. Les paires sont désormais calculées à partir de la matrice de simulation
+elle-même. Second bug : elles étaient construites à gravité maximale puis montrées à
+quelqu'un réglé sur une anomalie modérée — donc parfaitement distinctes de nouveau.
+
+Les deux autres portent sur l'interface elle-même. La bande de teintes de lecture était
+atteignable au Tab et ne répondait à **aucune** touche : un cul-de-sac au clavier, dans la
+page qui parle d'accessibilité. Et deux contrôles purement décoratifs — l'aperçu des
+couleurs et le comparateur — recevaient le focus sans avoir la moindre action, parce que
+`TabStop` vaut vrai par défaut sur un `Control`.
+
 ---
 
 ## Vérifications manuelles
@@ -121,6 +168,12 @@ Ce que l'automatisation ne peut pas juger. À faire avant toute diffusion.
 - [ ] Débrancher un écran → aucune erreur, le voile correspondant disparaît
 - [ ] Décocher un écran → il redevient strictement normal, l'autre garde ses réglages
 - [ ] « Écran éteint » sur l'un → l'autre reste utilisable
+- [ ] **Deux écrans du même modèle** : chacun apparaît séparément et garde ses propres
+      réglages — c'est le cas que la version 2.1 ne distinguait pas
+- [ ] Monter un écran au-dessus de 100 % → **seul cet écran** voit son rétroéclairage
+      physique changer
+- [ ] Changer l'« écran de référence » des filtres → la correction daltonisme suit bien
+      les réglages de couleur de l'écran désigné
 
 ### D. Intégration système
 
@@ -133,9 +186,11 @@ Ce que l'automatisation ne peut pas juger. À faire avant toute diffusion.
 
 ### E. Interface
 
-- [ ] Parcourir les 8 pages **au clavier seul** (Tab, flèches, Espace) : tout est
+- [ ] Parcourir les 9 pages **au clavier seul** (Tab, flèches, Espace) : tout est
       atteignable et le focus reste visible
-- [ ] `Ctrl + 1` à `Ctrl + 8` ouvrent les pages correspondantes
+- [ ] `Ctrl + 1` à `Ctrl + 9` ouvrent les pages correspondantes
+- [ ] Le **narrateur de Windows** annonce le nom, le rôle et la valeur des curseurs et
+      des interrupteurs de la page Vision
 - [ ] Activer le contraste élevé de Windows → l'interface reste lisible
 - [ ] Redimensionner la fenêtre → aucun texte tronqué, aucun chevauchement
 

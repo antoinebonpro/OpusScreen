@@ -24,7 +24,8 @@ namespace OpusScreen
         public override string Subtitle { get { return "Balance des canaux, courbe et filtres"; } }
 
         private static readonly ColorFilter[] Filters = {
-            ColorFilter.None, ColorFilter.Grayscale, ColorFilter.Invert, ColorFilter.Sepia,
+            ColorFilter.None, ColorFilter.Grayscale, ColorFilter.Invert, ColorFilter.InvertKeepHue,
+            ColorFilter.Sepia,
             ColorFilter.Protanopia, ColorFilter.Deuteranopia, ColorFilter.Tritanopia
         };
 
@@ -143,15 +144,22 @@ namespace OpusScreen
                     break;
                 case ColorFilter.Invert:
                     _filterNote.Text = "Inverse toutes les couleurs. C'est le « mode programmation » d'Iris : "
-                                     + "il rend sombres les pages web claires.";
+                                     + "il rend sombres les pages web claires, mais transforme aussi les "
+                                     + "photos en negatifs.";
+                    break;
+                case ColorFilter.InvertKeepHue:
+                    _filterNote.Text = "Inverse le clair et le sombre en gardant les teintes ou elles sont : "
+                                     + "les documents passent au sombre sans que les photos virent au negatif.";
                     break;
                 case ColorFilter.Sepia:
                     _filterNote.Text = "Teinte chaude et douce pour la lecture prolongee.";
                     break;
                 default:
-                    _filterNote.Text = "Filtre d'assistance pour daltoniens : les couleurs habituellement "
-                                     + "confondues sont ecartees l'une de l'autre. Les gris restent neutres. "
-                                     + "Ce n'est pas une simulation de la vision deficiente.";
+                    _filterNote.Text = string.Format(
+                        "Assistance daltonisme, reglee sur « {0} ». Les couleurs habituellement confondues "
+                      + "sont ecartees l'une de l'autre ; les gris restent neutres. La gravite, l'intensite "
+                      + "et le comparateur de couleurs sont dans la page Vision.",
+                        Vision.SeverityWord(S.Current.VisionSeverity));
                     break;
             }
         }
@@ -233,6 +241,18 @@ namespace OpusScreen
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint
                    | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
             BackColor = Theme.Card;
+
+            // Purement visuel : rien a y faire au clavier, mais un lecteur d'ecran doit
+            // pouvoir l'annoncer pour ce qu'il est plutot que de buter sur un rectangle
+            // sans nom - et surtout pouvoir le passer.
+            //
+            // TabStop vaut vrai par defaut sur un Control : sans cette ligne, la
+            // tabulation s'arretait sur une image ou il n'y a rien a faire.
+            TabStop = false;
+            AccessibleRole = AccessibleRole.Graphic;
+            AccessibleName = "Apercu des couleurs";
+            AccessibleDescription = "Degrade de gris et pastilles de reference, tels qu'ils "
+                                  + "sortiront apres les reglages en cours.";
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -275,7 +295,15 @@ namespace OpusScreen
                 g.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
         }
 
-        /// <summary>Passe une couleur dans la LUT puis dans la matrice, pour l'apercu.</summary>
+        /// <summary>
+        /// Passe une couleur dans la LUT puis dans la matrice, pour l'apercu.
+        ///
+        /// La matrice est celle du moteur, pas une reecriture : la version precedente
+        /// recopiait a la main la saturation, l'inversion et le sepia, et ne traitait
+        /// AUCUN des filtres pour daltoniens. L'apercu montrait donc une image
+        /// inchangee alors que l'ecran, lui, changeait - exactement pour les reglages
+        /// que l'on a le plus besoin de comparer avant de les appliquer.
+        /// </summary>
         private Color Through(Native.RampTable ramp, int r, int gg, int b)
         {
             double rr = ramp.Red[Clamp255(r)] / 65535.0;
@@ -283,29 +311,7 @@ namespace OpusScreen
             double bv = ramp.Blue[Clamp255(b)] / 65535.0;
 
             if (_s.UseColorMatrix)
-            {
-                double sat = _s.Current.Saturation / 100.0;
-                double lum = 0.2126 * rr + 0.7152 * gv + 0.0722 * bv;
-                rr = lum + (rr - lum) * sat;
-                gv = lum + (gv - lum) * sat;
-                bv = lum + (bv - lum) * sat;
-
-                switch (_s.Current.Filter)
-                {
-                    case ColorFilter.Grayscale:
-                        rr = gv = bv = lum; break;
-                    case ColorFilter.Invert:
-                        rr = 1 - rr; gv = 1 - gv; bv = 1 - bv; break;
-                    case ColorFilter.Sepia:
-                        {
-                            double nr = 0.393 * rr + 0.769 * gv + 0.189 * bv;
-                            double ng = 0.349 * rr + 0.686 * gv + 0.168 * bv;
-                            double nb = 0.272 * rr + 0.534 * gv + 0.131 * bv;
-                            rr = nr; gv = ng; bv = nb;
-                        }
-                        break;
-                }
-            }
+                ColorMatrixEffect.Transform(_s.Current.BuildMatrix(), ref rr, ref gv, ref bv);
 
             return Color.FromArgb(To255(rr), To255(gv), To255(bv));
         }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using OpusScreen;
 
 class MatrixTest
@@ -15,17 +15,16 @@ class MatrixTest
         return outp;
     }
 
+    // La matrice est demandee par l'API publique plutot que par reflexion sur une
+    // methode privee : c'est exactement celle que le compositeur recoit, et le test
+    // ne casse plus des qu'une surcharge s'ajoute a cote.
     static float[] Sat(double s)
     {
-        var mi = typeof(ColorMatrixEffect).GetMethod("SaturationMatrix",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        return (float[])mi.Invoke(null, new object[] { s });
+        return ColorMatrixEffect.BuildMatrix(s * 100, ColorFilter.None, 100, 100, FilterMode.Correction);
     }
     static float[] Filt(ColorFilter f)
     {
-        var mi = typeof(ColorMatrixEffect).GetMethod("FilterMatrix",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        return (float[])mi.Invoke(null, new object[] { f });
+        return ColorMatrixEffect.BuildMatrix(100, f, 100, 100, FilterMode.Correction);
     }
 
     static void Main()

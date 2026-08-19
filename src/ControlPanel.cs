@@ -31,12 +31,19 @@ namespace OpusScreen
 
         public PageDisplay Display1;
         public PageColor ColorPage;
+        public PageVision VisionPage;
         public PageAuto AutoPage;
         public PageApps AppsPage;
         public PageScreens ScreensPage;
         public PageComfort ComfortPage;
         public PageHotkeys HotkeysPage;
         public PageAdvanced AdvancedPage;
+
+        /// <summary>Rang de la page Vision, pour l'ouvrir depuis le menu de la zone de notification.</summary>
+        public const int VisionPageIndex = 2;
+
+        /// <summary>Largeur de la colonne de navigation, referencee par la mise en page de l'en-tete.</summary>
+        private const int NavWidth = 196;
 
         /// <summary>Declenche la suspension ou la reprise depuis le bouton du pied de page.</summary>
         public Action TogglePause;
@@ -130,9 +137,28 @@ namespace OpusScreen
             // l'en-tete est ancre a droite du menu et son espace revient au titre de page.
             _nav = new SideNav();
             _nav.Dock = DockStyle.Left;
-            _nav.Width = 180;
+
+            // 196 plutot que 180 : le logo prend la place a gauche du nom, et
+            // « OpusScreen » ressortait tronque en « OpusScree ».
+            _nav.Width = NavWidth;
             _nav.TopOffset = 62;
             Controls.Add(_nav);
+
+            // Le logo tient a gauche du nom plutot qu'au-dessus : la colonne est
+            // etroite, et chaque ligne prise en hauteur est une ligne de moins pour
+            // les onglets.
+            Image logo = AppIcon.Logo;
+            int textLeft = 20;
+            if (logo != null)
+            {
+                PictureBox mark = new PictureBox();
+                mark.Image = logo;
+                mark.SizeMode = PictureBoxSizeMode.Zoom;
+                mark.BackColor = Color.Transparent;
+                mark.SetBounds(14, 15, 38, 32);
+                _nav.Controls.Add(mark);
+                textLeft = 58;
+            }
 
             Label brand = new Label();
             brand.Text = "OpusScreen";
@@ -140,7 +166,7 @@ namespace OpusScreen
             brand.ForeColor = Theme.Accent;
             brand.AutoSize = false;
             brand.BackColor = Color.Transparent;
-            brand.SetBounds(20, 18, 150, 24);
+            brand.SetBounds(textLeft, 16, NavWidth - textLeft - 6, 24);
             _nav.Controls.Add(brand);
 
             Label version = new Label();
@@ -152,7 +178,7 @@ namespace OpusScreen
             version.ForeColor = Theme.Faint;
             version.AutoSize = false;
             version.BackColor = Color.Transparent;
-            version.SetBounds(21, 40, 150, 16);
+            version.SetBounds(textLeft + 1, 40, NavWidth - textLeft - 6, 16);
             _nav.Controls.Add(version);
 
             // ---------------- contenu ----------------
@@ -166,6 +192,7 @@ namespace OpusScreen
             // ---------------- pages ----------------
             Display1 = new PageDisplay(_s, _display, _push);
             ColorPage = new PageColor(_s, _display, _push);
+            VisionPage = new PageVision(_s, _display, _push);
             AutoPage = new PageAuto(_s, _display, _push);
             AppsPage = new PageApps(_s, _display, _push);
             ScreensPage = new PageScreens(_s, _display, _push);
@@ -175,6 +202,7 @@ namespace OpusScreen
 
             AddPage(Display1, "Ecran", "sun");
             AddPage(ColorPage, "Couleur", "palette");
+            AddPage(VisionPage, "Vision", "vision");
             AddPage(AutoPage, "Automatisme", "clock");
             AddPage(AppsPage, "Applications", "apps");
             AddPage(ScreensPage, "Ecrans", "screens");
@@ -319,11 +347,11 @@ namespace OpusScreen
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            // Ctrl+1..8 : acces direct aux pages, sans quitter le clavier.
+            // Ctrl+1..9 : acces direct aux pages, sans quitter le clavier.
             if ((keyData & Keys.Control) == Keys.Control)
             {
                 Keys k = keyData & Keys.KeyCode;
-                if (k >= Keys.D1 && k <= Keys.D8)
+                if (k >= Keys.D1 && k <= Keys.D9)
                 {
                     _nav.Select(k - Keys.D1);
                     return true;

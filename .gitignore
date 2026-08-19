@@ -4,6 +4,11 @@
 *.pdb
 tests/bin/
 
+# Derives de assets/logo.png par tools/MakeIcon.cs, regeneres par build.cmd.
+# La source, elle, est versionnee : c'est le seul fichier a remplacer pour
+# changer l'identite visuelle.
+assets/logo-embed.png
+
 # Reglages locaux, propres a une machine
 *.ini
 

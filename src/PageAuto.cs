@@ -295,9 +295,17 @@ namespace OpusScreen
     /// </summary>
     public class PageApps : SettingsPage
     {
-        private ToggleRow _enabled, _fullscreen, _battery;
+        private ToggleRow _enabled, _battery;
+        private ComboRow _fullscreen;
         private RuleList _list;
         private Label _current;
+
+        /// <summary>Dans l'ordre de <see cref="FullscreenSuspend"/>.</summary>
+        private static readonly string[] FullscreenChoices = {
+            "Ne rien changer",
+            "Retirer le voile seulement",
+            "Suspendre tous les effets"
+        };
 
         public AppWatcher Watcher;
 
@@ -308,10 +316,21 @@ namespace OpusScreen
         {
             Section("Suspension automatique");
 
-            _fullscreen = new ToggleRow("Suspendre en plein ecran",
-                "Jeux et videos plein ecran retrouvent leurs couleurs d'origine.");
-            _fullscreen.Changed += delegate { S.DisableOnFullscreen = _fullscreen.Checked; Commit(); };
+            _fullscreen = new ComboRow("En plein ecran", FullscreenChoices);
+            _fullscreen.Changed += delegate
+            {
+                if (Loading) return;
+                S.OnFullscreen = (FullscreenSuspend)Math.Max(0, _fullscreen.SelectedIndex);
+                Commit();
+            };
             Add(_fullscreen, Theme.SpaceSm);
+
+            Note("Le voile est une fenetre semi-transparente posee par-dessus l'ecran : il ne "
+               + "sert qu'en dessous de 35 % de luminosite, et c'est le seul etage qu'un jeu ou "
+               + "une video plein ecran supporte mal. La courbe gamma, elle, est appliquee par "
+               + "la carte graphique en sortie et traverse le plein ecran sans dommage - c'est "
+               + "elle qui porte la luminosite au-dela de 100 %, la ou un film sombre en a le "
+               + "plus besoin.");
 
             _battery = new ToggleRow("Ne pas monter au-dessus de 100 % sur batterie",
                 "Le boost pousse le retroeclairage au maximum, ce qui vide l'accumulateur.");
@@ -452,7 +471,7 @@ namespace OpusScreen
             try
             {
                 _enabled.SetCheckedSilent(S.AppRulesEnabled);
-                _fullscreen.SetCheckedSilent(S.DisableOnFullscreen);
+                _fullscreen.SelectedIndex = (int)S.OnFullscreen;
                 _battery.SetCheckedSilent(S.DisableOnBattery);
                 _list.Enabled = S.AppRulesEnabled;
                 _list.Reload();
@@ -484,11 +503,80 @@ namespace OpusScreen
                    | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
             BackColor = Theme.Sunken;
             Cursor = Cursors.Hand;
+
+            // Cette liste ne s'atteignait qu'a la souris : ni tabulation, ni clavier,
+            // ni annonce. Une regle par application se supprime et se modifie depuis
+            // ici - la rendre inaccessible revenait a reserver la fonction entiere a
+            // qui peut viser une ligne de trente pixels.
+            TabStop = true;
+            AccessibleRole = AccessibleRole.List;
+            AccessibleName = "Regles par application";
         }
 
         public int SelectedIndex { get { return _selected; } }
 
         public void Reload() { Invalidate(); }
+
+        protected override bool IsInputKey(Keys key)
+        {
+            if (key == Keys.Up || key == Keys.Down || key == Keys.Home || key == Keys.End) return true;
+            return base.IsInputKey(key);
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+            int count = _s.AppRules.Count;
+            if (count == 0) return;
+
+            switch (e.KeyCode)
+            {
+                case Keys.Up: _selected = Math.Max(0, _selected - 1); e.Handled = true; break;
+                case Keys.Down: _selected = Math.Min(count - 1, _selected + 1); e.Handled = true; break;
+                case Keys.Home: _selected = 0; e.Handled = true; break;
+                case Keys.End: _selected = count - 1; e.Handled = true; break;
+            }
+            if (!e.Handled) return;
+
+            // La ligne choisie doit rester visible : sans cela, la selection sortirait
+            // du cadre des la quatrieme regle et le clavier piloterait a l'aveugle.
+            int top = _selected * RowH, bottom = top + RowH;
+            if (top < _scroll) _scroll = top;
+            else if (bottom > _scroll + Height) _scroll = bottom - Height;
+            _scroll = Math.Max(0, _scroll);
+
+            Invalidate();
+            if (Changed != null) Changed(this, EventArgs.Empty);
+        }
+
+        protected override void OnGotFocus(EventArgs e) { Invalidate(); base.OnGotFocus(e); }
+        protected override void OnLostFocus(EventArgs e) { Invalidate(); base.OnLostFocus(e); }
+
+        protected override AccessibleObject CreateAccessibilityInstance()
+        {
+            return new RuleListAccessibleObject(this);
+        }
+
+        private class RuleListAccessibleObject : Control.ControlAccessibleObject
+        {
+            private readonly RuleList _owner;
+
+            public RuleListAccessibleObject(RuleList owner) : base(owner) { _owner = owner; }
+
+            public override AccessibleRole Role { get { return AccessibleRole.List; } }
+
+            public override string Value
+            {
+                get
+                {
+                    int i = _owner._selected;
+                    if (i < 0 || i >= _owner._s.AppRules.Count) return "";
+                    AppRule r = _owner._s.AppRules[i];
+                    return r.ProcessName + " : " + r.ProfileName;
+                }
+                set { }
+            }
+        }
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
@@ -579,7 +667,9 @@ namespace OpusScreen
                     g.DrawLine(p, 0, y + RowH - 1, Width, y + RowH - 1);
             }
 
-            using (Pen p = new Pen(Theme.Border))
+            // Anneau de focus : la meme convention que la liste des raccourcis, pour
+            // qu'un parcours au clavier montre toujours ou il en est.
+            using (Pen p = new Pen(Focused ? Theme.Focus : Theme.Border))
                 g.DrawRectangle(p, 0, 0, Width - 1, Height - 1);
         }
     }

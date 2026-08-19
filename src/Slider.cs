@@ -34,6 +34,65 @@ namespace OpusScreen
                    | ControlStyles.SupportsTransparentBackColor, true);
             Height = 34;
             TabStop = true;
+            AccessibleRole = AccessibleRole.Slider;
+        }
+
+        /// <summary>
+        /// Intitule et unite, pour que le lecteur d'ecran annonce autre chose qu'un
+        /// nombre nu. Renseignes par SliderRow, qui les connait.
+        /// </summary>
+        public string AccessibleLabel = "";
+        public string AccessibleUnit = "";
+
+        /// <summary>
+        /// Un controle entierement dessine a la main est INVISIBLE pour un lecteur
+        /// d'ecran : Windows ne voit qu'un rectangle sans role, sans nom et sans
+        /// valeur. Une application dont la raison d'etre est l'accessibilite ne peut
+        /// pas se permettre d'etre elle-meme inaccessible - d'ou cet objet, qui
+        /// declare ce que le dessin represente.
+        /// </summary>
+        protected override AccessibleObject CreateAccessibilityInstance()
+        {
+            return new SliderAccessibleObject(this);
+        }
+
+        private class SliderAccessibleObject : Control.ControlAccessibleObject
+        {
+            private readonly Slider _owner;
+
+            public SliderAccessibleObject(Slider owner) : base(owner) { _owner = owner; }
+
+            public override AccessibleRole Role { get { return AccessibleRole.Slider; } }
+
+            public override string Name
+            {
+                get
+                {
+                    return _owner.AccessibleLabel.Length > 0 ? _owner.AccessibleLabel : base.Name;
+                }
+                set { base.Name = value; }
+            }
+
+            public override string Value
+            {
+                get
+                {
+                    string unit = _owner.AccessibleUnit.Length > 0 ? " " + _owner.AccessibleUnit : "";
+                    return _owner.Value.ToString("0.##",
+                        System.Globalization.CultureInfo.CurrentCulture) + unit;
+                }
+                set { double v; if (double.TryParse(value, out v)) _owner.Value = v; }
+            }
+
+            public override AccessibleStates State
+            {
+                get
+                {
+                    AccessibleStates s = base.State;
+                    if (!_owner.Enabled) s |= AccessibleStates.Unavailable;
+                    return s;
+                }
+            }
         }
 
         public double Minimum { get { return _min; } set { _min = value; Invalidate(); } }

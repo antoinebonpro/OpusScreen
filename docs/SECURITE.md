@@ -10,7 +10,8 @@ processus qui l'a écrite**. Elle survit donc à sa mort.
 > application pour le remettre en état.
 
 Le même raisonnement vaut pour la matrice de couleur : un filtre d'inversion laissé en
-place rend l'écran tout aussi inutilisable.
+place rend l'écran tout aussi inutilisable. Et pour la **loupe plein écran** : un bureau
+agrandi huit fois ne se pilote pas mieux qu'un bureau noir.
 
 C'est le risque central de cette catégorie d'outil. Il est traité par cinq protections
 **indépendantes** : chacune couvre un scénario que les autres ne couvrent pas.
@@ -40,7 +41,10 @@ L'ordre des opérations de restauration compte :
    donc cela marche même si le thread propriétaire de la fenêtre est bloqué. C'est aussi
    ce qui masque le plus physiquement l'écran.
 2. **Puis la matrice de couleur** — un filtre inversé est aussi gênant qu'un écran noir.
-3. **Puis les tables de couleurs**, écran par écran.
+3. **Puis la loupe plein écran** — même DLL que la matrice, même geste de remise à zéro.
+   L'anneau du pointeur et l'étiquette de couleur, eux, ne gênent rien et sont laissés
+   en place : la panique ne doit défaire que ce qui empêche de voir.
+4. **Puis les tables de couleurs**, écran par écran.
 
 Chaque étape est isolée dans son propre `try` : un échec n'empêche jamais les suivantes.
 

@@ -10,7 +10,7 @@ au plus engageant : les premières étapes se vérifient, les dernières se déc
 - [ ] `build.cmd` se termine **sans avertissement**
       Un avertissement toléré aujourd'hui est un bug demain ; il n'y en a aucun
       actuellement, cet état doit être conservé.
-- [ ] `tests\run-tests.cmd` affiche `Tests executes : 4 / 4` et `RESULTAT : tous les tests passent`
+- [ ] `tests\run-tests.cmd` affiche `Tests executes : 6 / 6` et `RESULTAT : tous les tests passent`
 - [ ] Aucun fichier temporaire ni binaire dans le dépôt : `git status` est propre
 - [ ] Chaque nouveau réglage est **sauvegardé et rechargé** — vérifié par l'aller-retour
       de configuration dans `SafetyTest`
