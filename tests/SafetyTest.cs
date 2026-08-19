@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using OpusScreen;
 
@@ -78,7 +78,11 @@ class SafetyTest
         Console.WriteLine();
         Console.WriteLine("--- 5. Reglages par defaut coherents ---");
         Settings fresh = new Settings();
-        Check(fresh.Hotkeys.Count == 10, "10 raccourcis presents sans chargement de fichier");
+        // Le nombre suit la liste par defaut plutot qu'une constante recopiee : une
+        // action ajoutee ne doit pas faire echouer un test qui ne la concerne pas.
+        int expected = Settings.DefaultHotkeys().Count;
+        Check(fresh.Hotkeys.Count == expected,
+              expected + " raccourcis presents sans chargement de fichier");
         Check(fresh.Current.IsNeutral(), "profil de depart neutre");
 
         Console.WriteLine();
@@ -98,11 +102,30 @@ class SafetyTest
         Check(back.AdaptiveEnabled && Math.Abs(back.AdaptiveMax - 143) < 0.01, "adaptatif conserve");
         Check(back.CustomProfiles.Count == 1 && back.CustomProfiles[0].Name == "Test", "mode personnalise conserve");
         Check(back.AppRules.Count == 1 && back.AppRules[0].ProcessName == "vlc", "regle d'application conservee");
-        Check(back.Hotkeys.Count == 10, "pas de doublon de raccourcis apres relecture");
+        Check(back.Hotkeys.Count == expected, "pas de doublon de raccourcis apres relecture");
         Check(back.Hotkeys[0].Key == 0x71 && back.Hotkeys[0].Modifiers == 0x6, "raccourci modifie conserve");
 
         Console.WriteLine();
-        Console.WriteLine("--- 7. Contrastes du theme (exigence 4.5:1) ---");
+        Console.WriteLine("--- 7. Politique de plein ecran ---");
+        // Tout suspendre en plein ecran annulait un boost qui, lui, ne gene rien :
+        // seul le voile a une raison d'etre retire.
+        Check(new Settings().OnFullscreen == FullscreenSuspend.OverlayOnly,
+              "par defaut, seul le voile est retire en plein ecran");
+
+        Check(Settings.FromText("disableFullscreen=1").OnFullscreen == FullscreenSuspend.OverlayOnly,
+              "ancienne case cochee -> voile seulement");
+        Check(Settings.FromText("disableFullscreen=0").OnFullscreen == FullscreenSuspend.Never,
+              "ancienne case decochee -> aucune suspension");
+
+        Settings fs = new Settings();
+        fs.OnFullscreen = FullscreenSuspend.Everything;
+        Check(Settings.FromText(fs.Export()).OnFullscreen == FullscreenSuspend.Everything,
+              "reglage conserve par l'aller-retour");
+        Check(Settings.FromText("onFullscreen=0\ndisableFullscreen=1").OnFullscreen == FullscreenSuspend.Never,
+              "la cle recente l'emporte sur l'ancienne");
+
+        Console.WriteLine();
+        Console.WriteLine("--- 8. Contrastes du theme (exigence 4.5:1) ---");
         double c1 = Theme.ContrastRatio(Theme.Fg, Theme.Card);
         double c2 = Theme.ContrastRatio(Theme.Dim, Theme.Card);
         double c3 = Theme.ContrastRatio(Theme.Accent, Theme.Card);
@@ -117,7 +140,7 @@ class SafetyTest
         Check(c4 >= 4.5, "texte sur fond creux conforme");
 
         Console.WriteLine();
-        Console.WriteLine("--- 8. Etat final ---");
+        Console.WriteLine("--- 9. Etat final ---");
         SafetyGuard.EmergencyRestore();
         Console.WriteLine("        ecart LUT final : " + Deviation());
 

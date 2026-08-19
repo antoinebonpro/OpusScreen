@@ -15,6 +15,22 @@ namespace OpusScreen
         FixedHours      // horaires saisis par l'utilisateur
     }
 
+    /// <summary>
+    /// Ce qui doit ceder quand une fenetre passe en plein ecran.
+    ///
+    /// Les quatre etages ne genent pas de la meme facon : le voile est une fenetre
+    /// posee par-dessus l'ecran, que le plein ecran met mal a l'aise ; la LUT gamma,
+    /// elle, est appliquee par la carte graphique en sortie et traverse jeux et videos
+    /// sans dommage. C'est aussi elle qui porte tout le boost au-dela de 100 % - le
+    /// suspendre revenait a retirer la luminosite au moment ou elle sert le plus.
+    /// </summary>
+    public enum FullscreenSuspend
+    {
+        Never = 0,        // rien ne change en plein ecran
+        OverlayOnly,      // seul le voile est retire ; couleur et boost restent
+        Everything        // tous les etages reviennent a la normale
+    }
+
     /// <summary>Reglages propres a un ecran, retrouves par identifiant materiel.</summary>
     public class MonitorSettings
     {
@@ -226,10 +242,35 @@ namespace OpusScreen
         public List<MonitorSettings> Monitors = new List<MonitorSettings>();
         public bool LinkMonitors = true;
 
+        /// <summary>
+        /// Ecran dont les reglages de couleur pilotent la matrice plein ecran.
+        /// Vide = ecran principal. L'API Magnification n'expose qu'un effet pour tout
+        /// le bureau : plutot que de laisser un ecran arbitraire decider, on le nomme.
+        /// </summary>
+        public string MatrixSourceId = "";
+
+        // ---------------- aides a la vision ----------------
+        /// <summary>Etiquette qui nomme la couleur sous le pointeur.</summary>
+        public bool ColorReaderEnabled;
+
+        /// <summary>Anneau de reperage autour du pointeur.</summary>
+        public bool BeaconEnabled;
+        public int BeaconSize = 72;
+        public int BeaconOpacity = 70;
+        public Color BeaconColor = Color.FromArgb(255, 168, 66);
+
+        /// <summary>Loupe plein ecran. Le facteur est conserve meme eteinte.</summary>
+        public bool MagnifierEnabled;
+        public double MagnifierZoom = 2.0;
+
+        /// <summary>Rappel de clignement, contre la secheresse oculaire.</summary>
+        public bool BlinkReminders;
+        public int BlinkIntervalMinutes = 5;
+
         // ---------------- regles par application ----------------
         public bool AppRulesEnabled;
         public List<AppRule> AppRules = new List<AppRule>();
-        public bool DisableOnFullscreen = true;
+        public FullscreenSuspend OnFullscreen = FullscreenSuspend.OverlayOnly;
         public bool DisableOnBattery;
 
         // ---------------- pauses oculaires ----------------
@@ -264,6 +305,9 @@ namespace OpusScreen
 
         /// <summary>Vrai des qu'un raccourci a ete lu depuis un fichier.</summary>
         private bool _hotkeysFromFile;
+
+        /// <summary>Vrai des que la cle recente du plein ecran a ete lue : l'ancienne ne doit plus l'ecraser.</summary>
+        private bool _fullscreenFromFile;
 
         // ------------------------------------------------------------------ ecrans
 
@@ -305,7 +349,42 @@ namespace OpusScreen
             l.Add(new HotkeyBinding("adaptive.toggle", CTRL | ALT, 0x41));     // A
             l.Add(new HotkeyBinding("break.now", CTRL | ALT, 0x42));           // B
             l.Add(new HotkeyBinding("panel.show", CTRL | ALT, 0x4C));          // L
+
+            // --- accessibilite ---
+            l.Add(new HotkeyBinding("vision.toggle", CTRL | ALT, 0x44));       // D, daltonisme
+            l.Add(new HotkeyBinding("color.reader", CTRL | ALT, 0x43));        // C, couleur
+            l.Add(new HotkeyBinding("color.copy", CTRL | ALT | SHIFT, 0x43));  // C
+            l.Add(new HotkeyBinding("magnifier.toggle", CTRL | ALT, 0x5A));    // Z, zoom
+            l.Add(new HotkeyBinding("beacon.toggle", CTRL | ALT, 0x48));       // H, halo
             return l;
+        }
+
+        /// <summary>
+        /// Ajoute les actions apparues apres l'ecriture du fichier de reglages.
+        ///
+        /// Sans cela, une nouvelle fonction pilotable au clavier resterait invisible
+        /// pour tous ceux qui utilisent deja l'application : leur fichier ne contient
+        /// que les actions de l'epoque, et il REMPLACE les valeurs par defaut au lieu
+        /// de s'y ajouter. Une combinaison deja prise n'est jamais volee - l'action
+        /// est alors ajoutee desactivee, prete a etre reglee dans la page Raccourcis.
+        /// </summary>
+        private void MergeMissingHotkeys()
+        {
+            foreach (HotkeyBinding def in DefaultHotkeys())
+            {
+                bool present = false;
+                foreach (HotkeyBinding h in Hotkeys)
+                    if (h.Action == def.Action) { present = true; break; }
+                if (present) continue;
+
+                bool taken = false;
+                foreach (HotkeyBinding h in Hotkeys)
+                    if (h.Enabled && h.Key == def.Key && h.Modifiers == def.Modifiers) { taken = true; break; }
+
+                HotkeyBinding added = new HotkeyBinding(def.Action, def.Modifiers, def.Key);
+                added.Enabled = !taken;
+                Hotkeys.Add(added);
+            }
         }
 
         public static string ActionLabel(string action)
@@ -322,6 +401,11 @@ namespace OpusScreen
                 case "adaptive.toggle": return "Adaptatif on / off";
                 case "break.now": return "Pause pour les yeux";
                 case "panel.show": return "Ouvrir les reglages";
+                case "vision.toggle": return "Correction daltonisme on / off";
+                case "color.reader": return "Identifier la couleur (etiquette)";
+                case "color.copy": return "Copier la couleur sous le pointeur";
+                case "magnifier.toggle": return "Loupe plein ecran on / off";
+                case "beacon.toggle": return "Anneau autour du pointeur";
                 default: return action;
             }
         }
@@ -350,6 +434,7 @@ namespace OpusScreen
             catch { /* fichier illisible : valeurs par defaut */ }
 
             if (s.Hotkeys.Count == 0) s.Hotkeys = DefaultHotkeys();
+            s.MergeMissingHotkeys();
             s.Current.ClampAll();
             return s;
         }
@@ -384,10 +469,33 @@ namespace OpusScreen
 
                 case "monitor": Monitors.Add(MonitorSettings.Deserialize(val)); break;
                 case "linkMonitors": LinkMonitors = val == "1"; break;
+                case "matrixSource": MatrixSourceId = val; break;
+
+                case "colorReader": ColorReaderEnabled = val == "1"; break;
+                case "beacon": BeaconEnabled = val == "1"; break;
+                case "beaconSize": BeaconSize = ParseInt(val); break;
+                case "beaconOpacity": BeaconOpacity = ParseInt(val); break;
+                case "beaconColor": BeaconColor = ParseColor(val, BeaconColor); break;
+                case "magnifier": MagnifierEnabled = val == "1"; break;
+                case "magnifierZoom": double.TryParse(val, NumberStyles.Float, inv, out MagnifierZoom); break;
+                case "blink": BlinkReminders = val == "1"; break;
+                case "blinkInterval": BlinkIntervalMinutes = ParseInt(val); break;
 
                 case "appRules": AppRulesEnabled = val == "1"; break;
                 case "appRule": AppRules.Add(AppRule.Deserialize(val)); break;
-                case "disableFullscreen": DisableOnFullscreen = val == "1"; break;
+                case "onFullscreen":
+                    OnFullscreen = (FullscreenSuspend)ParseInt(val);
+                    _fullscreenFromFile = true;
+                    break;
+                case "disableFullscreen":
+                    // Reglage des versions 2.1 et anterieures, ou le choix se limitait a
+                    // « tout suspendre » ou « ne rien faire ». La case cochee etait le
+                    // defaut, jamais un choix contre le voile en particulier : elle devient
+                    // le nouveau defaut. La case decochee, elle, etait un refus explicite
+                    // de toute suspension - il est respecte tel quel.
+                    if (!_fullscreenFromFile)
+                        OnFullscreen = val == "1" ? FullscreenSuspend.OverlayOnly : FullscreenSuspend.Never;
+                    break;
                 case "disableBattery": DisableOnBattery = val == "1"; break;
 
                 case "breaks": BreaksEnabled = val == "1"; break;
@@ -424,6 +532,21 @@ namespace OpusScreen
             int r;
             int.TryParse(v, NumberStyles.Integer, CultureInfo.InvariantCulture, out r);
             return r;
+        }
+
+        /// <summary>"255,168,66" -> couleur. La valeur d'origine est gardee si la ligne est abimee.</summary>
+        private static Color ParseColor(string v, Color fallback)
+        {
+            try
+            {
+                string[] p = v.Split(',');
+                if (p.Length != 3) return fallback;
+                return Color.FromArgb(
+                    Math.Max(0, Math.Min(255, int.Parse(p[0], CultureInfo.InvariantCulture))),
+                    Math.Max(0, Math.Min(255, int.Parse(p[1], CultureInfo.InvariantCulture))),
+                    Math.Max(0, Math.Min(255, int.Parse(p[2], CultureInfo.InvariantCulture))));
+            }
+            catch { return fallback; }
         }
 
         public void Save()
@@ -469,10 +592,21 @@ namespace OpusScreen
             sb.AppendLine();
             foreach (MonitorSettings m in Monitors) sb.AppendLine("monitor=" + m.Serialize());
             sb.AppendLine("linkMonitors=" + B(LinkMonitors));
+            sb.AppendLine("matrixSource=" + MatrixSourceId);
+            sb.AppendLine();
+            sb.AppendLine("colorReader=" + B(ColorReaderEnabled));
+            sb.AppendLine("beacon=" + B(BeaconEnabled));
+            sb.AppendLine("beaconSize=" + BeaconSize);
+            sb.AppendLine("beaconOpacity=" + BeaconOpacity);
+            sb.AppendLine("beaconColor=" + BeaconColor.R + "," + BeaconColor.G + "," + BeaconColor.B);
+            sb.AppendLine("magnifier=" + B(MagnifierEnabled));
+            sb.AppendLine("magnifierZoom=" + MagnifierZoom.ToString("0.##", inv));
+            sb.AppendLine("blink=" + B(BlinkReminders));
+            sb.AppendLine("blinkInterval=" + BlinkIntervalMinutes);
             sb.AppendLine();
             sb.AppendLine("appRules=" + B(AppRulesEnabled));
             foreach (AppRule r in AppRules) sb.AppendLine("appRule=" + r.Serialize());
-            sb.AppendLine("disableFullscreen=" + B(DisableOnFullscreen));
+            sb.AppendLine("onFullscreen=" + (int)OnFullscreen);
             sb.AppendLine("disableBattery=" + B(DisableOnBattery));
             sb.AppendLine();
             sb.AppendLine("breaks=" + B(BreaksEnabled));
@@ -517,6 +651,7 @@ namespace OpusScreen
                 s.ApplyPair(line.Substring(0, eq).Trim(), line.Substring(eq + 1).Trim());
             }
             if (s.Hotkeys.Count == 0) s.Hotkeys = DefaultHotkeys();
+            s.MergeMissingHotkeys();
             s.Current.ClampAll();
             return s;
         }

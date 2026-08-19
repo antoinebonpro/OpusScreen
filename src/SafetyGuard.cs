@@ -201,6 +201,11 @@ namespace OpusScreen
             //    tout aussi inutilisable qu'un ecran noir.
             try { ColorMatrixEffect.Reset(); } catch { }
 
+            // b bis) la loupe plein ecran, pour la meme raison : un bureau agrandi
+            //    huit fois ne se pilote pas mieux qu'un bureau noir. Elle passe par la
+            //    meme DLL que la matrice et se remet a zero du meme geste.
+            try { ScreenMagnifier.ForceReset(); } catch { }
+
             // c) puis les LUT de chaque ecran.
             try
             {

@@ -19,9 +19,46 @@ namespace OpusScreen
     public static class AppIcon
     {
         private const string ResourceName = "OpusScreen.ico";
+        private const string LogoResourceName = "OpusScreen.logo.png";
 
         private static Icon _icon;
         private static bool _loaded;
+
+        private static Image _logo;
+        private static bool _logoLoaded;
+
+        /// <summary>
+        /// Le logo en pleine resolution, pour l'interface.
+        ///
+        /// Distinct de l'icone : celle-ci est recadree et simplifiee pour rester
+        /// lisible a 16 pixels, alors que la fenetre a la place d'afficher le dessin
+        /// entier. Null si l'executable a ete compile sans - l'interface s'en passe
+        /// alors sans rien casser.
+        /// </summary>
+        public static Image Logo
+        {
+            get
+            {
+                if (_logoLoaded) return _logo;
+                _logoLoaded = true;
+                try
+                {
+                    using (Stream st = Assembly.GetExecutingAssembly().GetManifestResourceStream(LogoResourceName))
+                    {
+                        // Copie en memoire : Image.FromStream garde le flux ouvert
+                        // pendant toute la vie de l'image, et celui d'une ressource
+                        // embarquee ne survit pas au using.
+                        if (st != null)
+                        {
+                            using (Image raw = Image.FromStream(st))
+                                _logo = new Bitmap(raw);
+                        }
+                    }
+                }
+                catch { _logo = null; }
+                return _logo;
+            }
+        }
 
         /// <summary>Icone multi-taille, ou null si l'executable a ete compile sans.</summary>
         public static Icon Window

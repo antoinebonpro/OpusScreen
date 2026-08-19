@@ -25,6 +25,16 @@ namespace OpusScreen
         private readonly ContentAdaptive _adaptive = new ContentAdaptive();
         private readonly AppWatcher _watcher = new AppWatcher();
         private readonly BreakReminder _breaks = new BreakReminder();
+        private readonly ColorReader _reader = new ColorReader();
+        private readonly CursorBeacon _beacon = new CursorBeacon();
+
+        /// <summary>
+        /// Derniere correction de vision utilisee, pour que le raccourci de bascule
+        /// puisse la retablir. Sans memoire, eteindre puis rallumer ferait perdre le
+        /// reglage - et il n'y a aucune raison de demander a quelqu'un de re-choisir
+        /// sa propre deficience a chaque fois.
+        /// </summary>
+        private ColorFilter _lastVisionFilter = ColorFilter.None;
 
         private ControlPanel _panel;
         private HotkeyWindow _hotkeys;
@@ -200,6 +210,11 @@ namespace OpusScreen
             screens.DropDownOpening += delegate { BuildScreenSubmenu(screens); };
             menu.Items.Add(screens);
 
+            // --- vision ---
+            ToolStripMenuItem vision = new ToolStripMenuItem("Vision");
+            vision.DropDownOpening += delegate { BuildVisionSubmenu(vision); };
+            menu.Items.Add(vision);
+
             menu.Items.Add(new ToolStripSeparator());
 
             // --- automatismes rapides ---
@@ -294,6 +309,73 @@ namespace OpusScreen
                 };
                 parent.DropDownItems.Add(black);
             }
+        }
+
+        /// <summary>
+        /// Les aides a la vision atteignables sans ouvrir la fenetre.
+        ///
+        /// Une aide qui demande d'ouvrir un panneau de reglages n'est pas une aide :
+        /// la loupe et l'identificateur de couleur servent justement dans les moments
+        /// ou l'on n'arrive plus a lire l'ecran.
+        /// </summary>
+        private void BuildVisionSubmenu(ToolStripMenuItem parent)
+        {
+            parent.DropDownItems.Clear();
+
+            ToolStripMenuItem none = new ToolStripMenuItem("Aucune correction");
+            none.Checked = !ColorMatrixEffect.IsVisionFilter(_s.Current.Filter);
+            none.Click += delegate
+            {
+                if (ColorMatrixEffect.IsVisionFilter(_s.Current.Filter))
+                {
+                    _lastVisionFilter = _s.Current.Filter;
+                    _s.Current.Filter = ColorFilter.None;
+                    _s.Save();
+                    ApplyAll();
+                }
+            };
+            parent.DropDownItems.Add(none);
+
+            ColorFilter[] kinds = { ColorFilter.Protanopia, ColorFilter.Deuteranopia, ColorFilter.Tritanopia };
+            foreach (ColorFilter k in kinds)
+            {
+                ColorFilter captured = k;
+                ToolStripMenuItem mi = new ToolStripMenuItem(
+                    Vision.PlainName(k) + "   (" + Profile.FilterName(k) + ")");
+                mi.Checked = _s.Current.Filter == k;
+                mi.Click += delegate
+                {
+                    _s.Current.Filter = captured;
+                    _lastVisionFilter = captured;
+                    _s.Save();
+                    ApplyAll();
+                    if (_panel != null && _panel.IsHandleCreated && _panel.Visible) _panel.SyncAll();
+                };
+                parent.DropDownItems.Add(mi);
+            }
+
+            parent.DropDownItems.Add(new ToolStripSeparator());
+
+            ToolStripMenuItem mag = new ToolStripMenuItem("Loupe plein ecran");
+            mag.Checked = _s.MagnifierEnabled;
+            mag.Click += delegate { ToggleMagnifier(); };
+            parent.DropDownItems.Add(mag);
+
+            ToolStripMenuItem ring = new ToolStripMenuItem("Anneau autour du pointeur");
+            ring.Checked = _s.BeaconEnabled;
+            ring.Click += delegate { ToggleBeacon(); };
+            parent.DropDownItems.Add(ring);
+
+            ToolStripMenuItem reader = new ToolStripMenuItem("Identifier les couleurs");
+            reader.Checked = _s.ColorReaderEnabled;
+            reader.Click += delegate { ToggleColorReader(); };
+            parent.DropDownItems.Add(reader);
+
+            parent.DropDownItems.Add(new ToolStripSeparator());
+
+            ToolStripMenuItem more = new ToolStripMenuItem("Reglages de vision...");
+            more.Click += delegate { ShowPanel(); if (_panel != null) _panel.SelectPage(ControlPanel.VisionPageIndex); };
+            parent.DropDownItems.Add(more);
         }
 
         private void OnTrayClick(object sender, MouseEventArgs e)
@@ -402,6 +484,8 @@ namespace OpusScreen
         /// <summary>Applique l'etat courant apres avoir laisse les automatismes s'exprimer.</summary>
         public void ApplyAll()
         {
+            ApplyFullscreenPolicy();
+
             if (!_display.Suspended)
             {
                 ScheduleResult sched = Scheduler.Evaluate(_s, DateTime.Now);
@@ -437,6 +521,100 @@ namespace OpusScreen
             _breaks.DurationSeconds = Math.Max(5, _s.BreakDurationSeconds);
             _breaks.DimDuringBreak = _s.BreakDim;
             _breaks.PlaySound = _s.BreakSound;
+            _breaks.BlinkReminders = _s.BlinkReminders;
+            _breaks.BlinkIntervalMinutes = Math.Max(1, _s.BlinkIntervalMinutes);
+
+            SyncVisionAids();
+        }
+
+        /// <summary>
+        /// Met les aides a la vision en accord avec les reglages.
+        ///
+        /// Chaque aide est isolee : une loupe refusee par le systeme ne doit pas
+        /// empecher l'anneau de s'afficher, et une erreur sur l'une ne doit jamais
+        /// laisser les autres dans un etat indetermine.
+        /// </summary>
+        public void SyncVisionAids()
+        {
+            try
+            {
+                _beacon.Size = _s.BeaconSize;
+                _beacon.Color = _s.BeaconColor;
+                _beacon.Opacity = _s.BeaconOpacity;
+                _beacon.SetVisible(_s.BeaconEnabled);
+            }
+            catch { }
+
+            try
+            {
+                if (_s.ColorReaderEnabled) _reader.Show();
+                else _reader.Hide();
+            }
+            catch { }
+
+            try
+            {
+                if (_s.MagnifierEnabled)
+                {
+                    // Un refus du systeme est enregistre dans les reglages : sans cela
+                    // l'interrupteur resterait allume devant un ecran inchange.
+                    if (!ScreenMagnifier.SetZoom(_s.MagnifierZoom)) _s.MagnifierEnabled = false;
+                }
+                else ScreenMagnifier.Stop();
+            }
+            catch { _s.MagnifierEnabled = false; }
+        }
+
+        // ------------------------------------------------------------------ aides a la vision
+
+        /// <summary>Allume ou eteint la correction daltonisme, en gardant le type choisi.</summary>
+        public void ToggleVisionCorrection()
+        {
+            if (ColorMatrixEffect.IsVisionFilter(_s.Current.Filter))
+            {
+                _lastVisionFilter = _s.Current.Filter;
+                _s.Current.Filter = ColorFilter.None;
+            }
+            else
+            {
+                // Premiere utilisation sans reglage prealable : la deuteranomalie est
+                // de loin la forme la plus repandue, c'est le point de depart le moins
+                // mauvais - et la page Vision permet d'en changer en un clic.
+                _s.Current.Filter = _lastVisionFilter != ColorFilter.None
+                    ? _lastVisionFilter : ColorFilter.Deuteranopia;
+            }
+            _s.Save();
+            ApplyAll();
+            if (_panel != null && _panel.IsHandleCreated && _panel.Visible) _panel.SyncAll();
+        }
+
+        public void ToggleColorReader()
+        {
+            _s.ColorReaderEnabled = !_s.ColorReaderEnabled;
+            _s.Save();
+            SyncVisionAids();
+            if (_panel != null && _panel.IsHandleCreated && _panel.Visible) _panel.RefreshReadouts();
+        }
+
+        public void ToggleMagnifier()
+        {
+            _s.MagnifierEnabled = !_s.MagnifierEnabled;
+            SyncVisionAids();
+            _s.Save();
+            if (_panel != null && _panel.IsHandleCreated && _panel.Visible) _panel.RefreshReadouts();
+        }
+
+        public void ToggleBeacon()
+        {
+            _s.BeaconEnabled = !_s.BeaconEnabled;
+            _s.Save();
+            SyncVisionAids();
+            if (_panel != null && _panel.IsHandleCreated && _panel.Visible) _panel.RefreshReadouts();
+        }
+
+        public string CopyColorUnderCursor()
+        {
+            return _reader.CopyColorUnderCursor();
         }
 
         // ------------------------------------------------------------------ automatismes
@@ -507,12 +685,40 @@ namespace OpusScreen
                 if (p.Name == match.ProfileName) { ApplyMode(p); return; }
         }
 
+        private const string FullscreenReason = "application en plein ecran";
+
         private void OnFullscreenChanged(bool fullscreen)
         {
-            if (!_s.DisableOnFullscreen) return;
-            if (fullscreen) _display.Suspend("application en plein ecran");
-            else if (_display.SuspendReason == "application en plein ecran") _display.Resume();
+            ApplyFullscreenPolicy();
             UpdateIcon();
+        }
+
+        /// <summary>
+        /// Traduit le reglage de plein ecran en actions sur les etages concernes.
+        ///
+        /// Idempotente, et rejouee a chaque application des reglages : entrer en plein
+        /// ecran et changer le reglage sont deux chemins vers le meme etat, et aucun ne
+        /// doit laisser trainer la decision de l'autre.
+        ///
+        /// Une suspension posee pour une autre raison - pause manuelle, pause oculaire,
+        /// regle d'application - n'est jamais reecrite : elle est plus explicite que
+        /// celle-ci, et sa raison sert a savoir qui devra la lever.
+        /// </summary>
+        private void ApplyFullscreenPolicy()
+        {
+            bool full = _watcher.IsFullscreen;
+            bool suspendAll = full && _s.OnFullscreen == FullscreenSuspend.Everything;
+            bool holdOverlay = full && _s.OnFullscreen == FullscreenSuspend.OverlayOnly;
+
+            if (suspendAll)
+            {
+                if (!_display.Suspended || _display.SuspendReason == FullscreenReason)
+                    _display.Suspend(FullscreenReason);
+            }
+            else if (_display.SuspendReason == FullscreenReason) _display.Resume();
+
+            if (holdOverlay) _display.HoldOverlay(FullscreenReason);
+            else if (_display.OverlayHoldReason == FullscreenReason) _display.ReleaseOverlay();
         }
 
         private void OnBreakState(bool inBreak)
@@ -553,6 +759,11 @@ namespace OpusScreen
                 case "adaptive.toggle": ToggleAdaptive(); break;
                 case "break.now": _breaks.TriggerBreak(); break;
                 case "panel.show": ShowPanel(); break;
+                case "vision.toggle": ToggleVisionCorrection(); break;
+                case "color.reader": ToggleColorReader(); break;
+                case "color.copy": CopyColorUnderCursor(); break;
+                case "magnifier.toggle": ToggleMagnifier(); break;
+                case "beacon.toggle": ToggleBeacon(); break;
             }
         }
 
@@ -574,6 +785,8 @@ namespace OpusScreen
                 _panel.AppsPage.Watcher = _watcher;
                 _panel.ComfortPage.Reminder = _breaks;
                 _panel.HotkeysPage.Rebind = RebindHotkeys;
+                _panel.VisionPage.AidsChanged = SyncVisionAids;
+                _panel.VisionPage.CopyColorUnderCursor = CopyColorUnderCursor;
                 PositionNearTray(_panel);
             }
             _panel.SyncAll();
@@ -764,6 +977,12 @@ namespace OpusScreen
                     _s.Schedule = ScheduleMode.Manual;
                     _s.AdaptiveEnabled = false;
                     foreach (MonitorSettings ms in _s.Monitors) { ms.Blackout = false; ms.Enabled = true; }
+
+                    // La loupe fait partie de ce dont il faut pouvoir sortir : un ecran
+                    // agrandi huit fois est aussi difficile a piloter qu'un ecran noir.
+                    // L'anneau et l'etiquette, eux, ne genent pas et sont laisses en place.
+                    _s.MagnifierEnabled = false;
+
                     _s.Save();
                     SyncEnginesFromSettings();
                     UpdateIcon();
@@ -789,6 +1008,9 @@ namespace OpusScreen
             try { if (_wake != null) _wake.Dispose(); } catch { }
             try { _adaptive.Dispose(); } catch { }
             try { _breaks.Dispose(); } catch { }
+            try { ScreenMagnifier.Stop(); } catch { }
+            try { _reader.Dispose(); } catch { }
+            try { _beacon.Dispose(); } catch { }
             try { _display.RestoreAll(); } catch { }
             try { _display.Dispose(); } catch { }
 

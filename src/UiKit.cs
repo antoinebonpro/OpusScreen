@@ -100,6 +100,8 @@ namespace OpusScreen
             Track.Minimum = min;
             Track.Maximum = max;
             Track.BackColor = Color.Transparent;
+            Track.AccessibleLabel = label;
+            Track.AccessibleUnit = unit;
             Track.ValueChanged += delegate
             {
                 UpdateValueLabel();
@@ -192,6 +194,8 @@ namespace OpusScreen
             _desc.BackColor = Color.Transparent;
             Controls.Add(_desc);
 
+            Switch.AccessibleLabel = label;
+            Switch.AccessibleDescription = description ?? "";
             Switch.CheckedChanged += delegate { if (Changed != null) Changed(this, EventArgs.Empty); };
             Controls.Add(Switch);
 
@@ -238,10 +242,56 @@ namespace OpusScreen
             Size = new Size(44, 22);
             Cursor = Cursors.Hand;
             TabStop = true;
+            AccessibleRole = AccessibleRole.CheckButton;
 
             // ~180 ms : en dessous l'oeil percoit un saut, au-dela l'interface traine.
             _timer.Interval = 15;
             _timer.Tick += Animate;
+        }
+
+        /// <summary>Intitule de la ligne, renseigne par ToggleRow qui le connait.</summary>
+        public string AccessibleLabel = "";
+
+        /// <summary>
+        /// Sans cet objet, un lecteur d'ecran ne voit qu'un rectangle : ni le nom du
+        /// reglage, ni le fait qu'il s'agisse d'un interrupteur, ni son etat.
+        /// </summary>
+        protected override AccessibleObject CreateAccessibilityInstance()
+        {
+            return new SwitchAccessibleObject(this);
+        }
+
+        private class SwitchAccessibleObject : Control.ControlAccessibleObject
+        {
+            private readonly ToggleSwitch _owner;
+
+            public SwitchAccessibleObject(ToggleSwitch owner) : base(owner) { _owner = owner; }
+
+            public override AccessibleRole Role { get { return AccessibleRole.CheckButton; } }
+
+            public override string Name
+            {
+                get { return _owner.AccessibleLabel.Length > 0 ? _owner.AccessibleLabel : base.Name; }
+                set { base.Name = value; }
+            }
+
+            public override string DefaultAction
+            {
+                get { return _owner.Checked ? "Desactiver" : "Activer"; }
+            }
+
+            public override void DoDefaultAction() { _owner.Checked = !_owner.Checked; }
+
+            public override AccessibleStates State
+            {
+                get
+                {
+                    AccessibleStates s = base.State;
+                    if (_owner.Checked) s |= AccessibleStates.Checked;
+                    if (!_owner.Enabled) s |= AccessibleStates.Unavailable;
+                    return s;
+                }
+            }
         }
 
         public bool Checked
@@ -457,6 +507,39 @@ namespace OpusScreen
                 _index = index;
                 Cursor = Cursors.Hand;
                 TabStop = true;
+                AccessibleRole = AccessibleRole.PageTab;
+                AccessibleName = label;
+            }
+
+            /// <summary>L'onglet doit s'annoncer comme onglet, et dire s'il est celui affiche.</summary>
+            protected override AccessibleObject CreateAccessibilityInstance()
+            {
+                return new TabAccessibleObject(this);
+            }
+
+            private class TabAccessibleObject : Control.ControlAccessibleObject
+            {
+                private readonly NavItem _owner;
+
+                public TabAccessibleObject(NavItem owner) : base(owner) { _owner = owner; }
+
+                public override AccessibleRole Role { get { return AccessibleRole.PageTab; } }
+                public override string DefaultAction { get { return "Afficher"; } }
+
+                public override void DoDefaultAction()
+                {
+                    if (_owner.Clicked != null) _owner.Clicked(_owner._index);
+                }
+
+                public override AccessibleStates State
+                {
+                    get
+                    {
+                        AccessibleStates s = base.State;
+                        if (_owner.Selected) s |= AccessibleStates.Selected;
+                        return s;
+                    }
+                }
             }
 
             public bool Selected
@@ -577,6 +660,22 @@ namespace OpusScreen
                             g.DrawPath(p, path);
                             g.FillEllipse(b, r.X + 6, r.Y + 6, 4, 4);
                             path.Dispose();
+                        }
+                        break;
+
+                    case "vision":  // accessibilite visuelle : un oeil, et ce qu'on lui ajoute
+                        {
+                            GraphicsPath path = new GraphicsPath();
+                            path.AddBezier(r.X, r.Y + 7, r.X + 3.5f, r.Y + 2.5f, r.X + 8.5f, r.Y + 2.5f, r.X + 12, r.Y + 7);
+                            path.AddBezier(r.X + 12, r.Y + 7, r.X + 8.5f, r.Y + 11.5f, r.X + 3.5f, r.Y + 11.5f, r.X, r.Y + 7);
+                            g.DrawPath(p, path);
+                            g.FillEllipse(b, r.X + 4, r.Y + 5, 4, 4);
+                            path.Dispose();
+
+                            // Le signe plus dit « en mieux » : c'est la convention des
+                            // pictogrammes d'assistance, et elle reste lisible a 16 px.
+                            g.DrawLine(p, r.X + 12.5f, r.Y + 12, r.X + 12.5f, r.Y + 16);
+                            g.DrawLine(p, r.X + 10.5f, r.Y + 14, r.X + 14.5f, r.Y + 14);
                         }
                         break;
 

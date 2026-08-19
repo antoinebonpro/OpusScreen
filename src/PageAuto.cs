@@ -295,9 +295,17 @@ namespace OpusScreen
     /// </summary>
     public class PageApps : SettingsPage
     {
-        private ToggleRow _enabled, _fullscreen, _battery;
+        private ToggleRow _enabled, _battery;
+        private ComboRow _fullscreen;
         private RuleList _list;
         private Label _current;
+
+        /// <summary>Dans l'ordre de <see cref="FullscreenSuspend"/>.</summary>
+        private static readonly string[] FullscreenChoices = {
+            "Ne rien changer",
+            "Retirer le voile seulement",
+            "Suspendre tous les effets"
+        };
 
         public AppWatcher Watcher;
 
@@ -308,10 +316,21 @@ namespace OpusScreen
         {
             Section("Suspension automatique");
 
-            _fullscreen = new ToggleRow("Suspendre en plein ecran",
-                "Jeux et videos plein ecran retrouvent leurs couleurs d'origine.");
-            _fullscreen.Changed += delegate { S.DisableOnFullscreen = _fullscreen.Checked; Commit(); };
+            _fullscreen = new ComboRow("En plein ecran", FullscreenChoices);
+            _fullscreen.Changed += delegate
+            {
+                if (Loading) return;
+                S.OnFullscreen = (FullscreenSuspend)Math.Max(0, _fullscreen.SelectedIndex);
+                Commit();
+            };
             Add(_fullscreen, Theme.SpaceSm);
+
+            Note("Le voile est une fenetre semi-transparente posee par-dessus l'ecran : il ne "
+               + "sert qu'en dessous de 35 % de luminosite, et c'est le seul etage qu'un jeu ou "
+               + "une video plein ecran supporte mal. La courbe gamma, elle, est appliquee par "
+               + "la carte graphique en sortie et traverse le plein ecran sans dommage - c'est "
+               + "elle qui porte la luminosite au-dela de 100 %, la ou un film sombre en a le "
+               + "plus besoin.");
 
             _battery = new ToggleRow("Ne pas monter au-dessus de 100 % sur batterie",
                 "Le boost pousse le retroeclairage au maximum, ce qui vide l'accumulateur.");
@@ -452,7 +471,7 @@ namespace OpusScreen
             try
             {
                 _enabled.SetCheckedSilent(S.AppRulesEnabled);
-                _fullscreen.SetCheckedSilent(S.DisableOnFullscreen);
+                _fullscreen.SelectedIndex = (int)S.OnFullscreen;
                 _battery.SetCheckedSilent(S.DisableOnBattery);
                 _list.Enabled = S.AppRulesEnabled;
                 _list.Reload();

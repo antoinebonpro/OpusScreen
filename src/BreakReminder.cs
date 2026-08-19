@@ -26,6 +26,21 @@ namespace OpusScreen
         public bool DimDuringBreak;        // assombrir doucement pendant la pause
         public bool PlaySound;
 
+        /// <summary>
+        /// Rappel de clignement, contre la secheresse oculaire.
+        ///
+        /// Devant un ecran, la frequence de clignement chute de plus de moitie et le
+        /// clignement devient souvent incomplet : c'est la premiere cause de secheresse
+        /// oculaire liee au travail sur ecran, et elle touche particulierement les
+        /// personnes deja fragiles des yeux. Le rappel est volontairement minuscule et
+        /// bref - un rappel qui interrompt ne sera pas garde plus de deux jours.
+        /// </summary>
+        public bool BlinkReminders;
+        public int BlinkIntervalMinutes = 5;
+
+        private DateTime _lastBlink = DateTime.Now;
+        private BlinkWindow _blink;
+
         /// <summary>Emis au debut et a la fin d'une pause, pour laisser l'appelant assombrir.</summary>
         public event Action<bool> BreakStateChanged;
 
@@ -62,9 +77,28 @@ namespace OpusScreen
 
         private void OnTick(object sender, EventArgs e)
         {
+            CheckBlink();
+
             if (!Enabled || _window != null) return;
             if ((DateTime.Now - _lastBreak).TotalMinutes < IntervalMinutes) return;
             TriggerBreak();
+        }
+
+        private void CheckBlink()
+        {
+            if (!BlinkReminders || _blink != null || _window != null) return;
+            if ((DateTime.Now - _lastBlink).TotalMinutes < Math.Max(1, BlinkIntervalMinutes)) return;
+            TriggerBlink();
+        }
+
+        /// <summary>Affiche le rappel de clignement, qui s'efface tout seul.</summary>
+        public void TriggerBlink()
+        {
+            if (_blink != null) return;
+            _lastBlink = DateTime.Now;
+            _blink = new BlinkWindow();
+            _blink.FormClosed += delegate { _blink = null; _lastBlink = DateTime.Now; };
+            _blink.Show();
         }
 
         /// <summary>Declenche une pause immediatement.</summary>
@@ -97,6 +131,98 @@ namespace OpusScreen
             _tick.Stop();
             _tick.Dispose();
             if (_window != null) { try { _window.Close(); } catch { } }
+            if (_blink != null) { try { _blink.Close(); } catch { } }
+        }
+
+        /// <summary>
+        /// Rappel de clignement : un bandeau minuscule, en haut de l'ecran principal,
+        /// qui s'efface au bout de trois secondes.
+        ///
+        /// Il ne prend pas le focus, ne recoit pas les clics et n'apparait pas dans les
+        /// captures : il peut donc surgir pendant une visioconference ou une saisie sans
+        /// consequence. C'est la condition pour qu'un rappel aussi frequent reste
+        /// supportable.
+        /// </summary>
+        private class BlinkWindow : Form
+        {
+            private readonly Timer _life = new Timer();
+
+            public BlinkWindow()
+            {
+                FormBorderStyle = FormBorderStyle.None;
+                ShowInTaskbar = false;
+                StartPosition = FormStartPosition.Manual;
+                TopMost = true;
+                Enabled = false;
+                BackColor = Theme.Card;
+                ClientSize = new Size(196, 34);
+                SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint
+                       | ControlStyles.OptimizedDoubleBuffer, true);
+
+                Rectangle work = Screen.PrimaryScreen.WorkingArea;
+                Location = new Point(work.Left + (work.Width - Width) / 2, work.Top + 12);
+
+                _life.Interval = 3000;
+                _life.Tick += delegate { _life.Stop(); Close(); };
+                _life.Start();
+            }
+
+            protected override CreateParams CreateParams
+            {
+                get
+                {
+                    CreateParams cp = base.CreateParams;
+                    cp.ExStyle |= Native.WS_EX_LAYERED | Native.WS_EX_TRANSPARENT
+                                | Native.WS_EX_TOPMOST | Native.WS_EX_TOOLWINDOW
+                                | Native.WS_EX_NOACTIVATE;
+                    return cp;
+                }
+            }
+
+            protected override bool ShowWithoutActivation { get { return true; } }
+
+            [System.Runtime.InteropServices.DllImport("user32.dll")]
+            private static extern bool SetWindowDisplayAffinity(IntPtr hwnd, uint affinity);
+
+            protected override void OnHandleCreated(EventArgs e)
+            {
+                base.OnHandleCreated(e);
+                try { SetWindowDisplayAffinity(Handle, 0x11); } catch { }
+                try { Native.SetLayeredWindowAttributes(Handle, 0, 225, Native.LWA_ALPHA); } catch { }
+            }
+
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                Graphics g = e.Graphics;
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.Clear(Theme.Card);
+
+                using (Pen p = new Pen(Theme.Border))
+                    g.DrawRectangle(p, 0, 0, Width - 1, Height - 1);
+
+                // Un oeil ferme, dessine au trait : la meme grammaire graphique que
+                // les icones de navigation, et aucun emoji.
+                using (Pen p = new Pen(Theme.Accent, 1.8f))
+                {
+                    p.StartCap = LineCap.Round;
+                    p.EndCap = LineCap.Round;
+                    g.DrawArc(p, 12, 8, 20, 18, 200, 140);
+                    g.DrawLine(p, 14, 22, 11, 26);
+                    g.DrawLine(p, 22, 25, 22, 29);
+                    g.DrawLine(p, 30, 22, 33, 26);
+                }
+
+                using (Font f = Theme.Body)
+                    TextRenderer.DrawText(g, "Clignez des yeux", f,
+                        new Rectangle(44, 0, Width - 52, Height), Theme.Fg,
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+            }
+
+            protected override void Dispose(bool disposing)
+            {
+                if (disposing) { try { _life.Stop(); _life.Dispose(); } catch { } }
+                base.Dispose(disposing);
+            }
         }
 
         /// <summary>

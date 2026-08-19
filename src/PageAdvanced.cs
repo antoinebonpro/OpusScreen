@@ -477,7 +477,7 @@ namespace OpusScreen
             dst.AdaptiveReactivity = src.AdaptiveReactivity; dst.AdaptiveIntervalMs = src.AdaptiveIntervalMs;
             dst.Monitors = src.Monitors; dst.LinkMonitors = src.LinkMonitors;
             dst.AppRulesEnabled = src.AppRulesEnabled; dst.AppRules = src.AppRules;
-            dst.DisableOnFullscreen = src.DisableOnFullscreen; dst.DisableOnBattery = src.DisableOnBattery;
+            dst.OnFullscreen = src.OnFullscreen; dst.DisableOnBattery = src.DisableOnBattery;
             dst.BreaksEnabled = src.BreaksEnabled; dst.BreakIntervalMinutes = src.BreakIntervalMinutes;
             dst.BreakDurationSeconds = src.BreakDurationSeconds; dst.BreakDim = src.BreakDim;
             dst.BreakSound = src.BreakSound;

@@ -53,6 +53,30 @@ class EngineTest
         Console.WriteLine("  OK");
 
         Console.WriteLine();
+        Console.WriteLine("=== Plein ecran : le boost survit au retrait du voile ===");
+        // Au-dessus de 100 %, la luminosite ne passe que par le retroeclairage, la
+        // courbe gamma et le gain - aucun voile n'est en jeu. Retirer le voile pour
+        // ne pas gener un jeu ou un film ne doit donc rien enlever au boost.
+        foreach (double b in new double[] { 105, 115, 130, 150 })
+        {
+            BrightnessPlan with = GammaEngine.Plan(b, true, true);
+            BrightnessPlan without = GammaEngine.Plan(b, false, true);
+            Check(Math.Abs(with.GammaExponent - without.GammaExponent) < 1e-9
+               && Math.Abs(with.LinearGain - without.LinearGain) < 1e-9
+               && with.HardwareTarget == without.HardwareTarget
+               && without.OverlayTransmission >= 1.0,
+                  "a " + b + " %, le plan est identique sans voile");
+        }
+        // Sous le plancher gamma, retirer le voile assombrit moins - mais assombrit
+        // quand meme, autant que la LUT le permet. Jamais de retour a 100 %.
+        {
+            BrightnessPlan without = GammaEngine.Plan(20, false, true);
+            Check(without.OverlayTransmission >= 1.0, "20 % sans voile : aucune fenetre posee");
+            Check(without.LinearGain < 0.35, "20 % sans voile : la LUT assombrit malgre tout");
+        }
+        Console.WriteLine("  OK");
+
+        Console.WriteLine();
         Console.WriteLine("=== Rampes : bornes et croissance ===");
         foreach (double b in tests)
         {

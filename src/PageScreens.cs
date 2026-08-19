@@ -15,7 +15,9 @@ namespace OpusScreen
     public class PageScreens : SettingsPage
     {
         private ToggleRow _link;
+        private ComboRow _matrixSource;
         private readonly List<Control> _dynamic = new List<Control>();
+        private readonly List<string> _sourceIds = new List<string>();
         private Panel _host;
 
         public override string Title { get { return "Ecrans"; } }
@@ -33,8 +35,27 @@ namespace OpusScreen
             DarkButton refresh = new DarkButton();
             refresh.Text = "Redetecter les ecrans";
             refresh.Height = Theme.MinTarget;
-            refresh.Click += delegate { Display.RefreshMonitors(); Rebuild(); };
+            refresh.Click += delegate { Display.RefreshMonitors(); Sync(); };
             Add(refresh, Theme.SpaceSm);
+
+            Section("Filtres et saturation");
+
+            _matrixSource = new ComboRow("Ecran de reference", new string[] { "Ecran principal" });
+            _matrixSource.Changed += delegate
+            {
+                if (Loading) return;
+                int i = _matrixSource.SelectedIndex;
+                S.MatrixSourceId = (i > 0 && i - 1 < _sourceIds.Count) ? _sourceIds[i - 1] : "";
+                Commit();
+            };
+            Add(_matrixSource, Theme.SpaceSm);
+
+            Note("La saturation et les filtres - dont la correction du daltonisme - passent par "
+               + "une matrice de couleur que Windows n'expose que pour le bureau ENTIER : elle ne "
+               + "peut pas differer d'un ecran a l'autre. C'est une limite de l'API, pas un choix. "
+               + "Plutot que de laisser un ecran quelconque decider pour les autres, on designe "
+               + "ici celui dont les reglages de couleur s'appliquent partout. La luminosite, la "
+               + "temperature et le voile, eux, restent bien reglables ecran par ecran.");
 
             Section("Ecrans detectes");
 
@@ -45,6 +66,31 @@ namespace OpusScreen
 
             Note("Le mode « ecran eteint » reprend le BlackOut de Lunar : l'ecran est "
                + "occulte sans etre deconnecte, les fenetres qui s'y trouvent restent en place.");
+        }
+
+        /// <summary>
+        /// Recharge la liste des ecrans de reference.
+        ///
+        /// Le nom seul ne suffit pas quand deux ecrans sont du meme modele - c'est
+        /// justement le cas ou le choix compte : la sortie et la definition sont donc
+        /// rappelees dans l'intitule.
+        /// </summary>
+        private void RebuildSourceList()
+        {
+            _sourceIds.Clear();
+            _matrixSource.Box.Items.Clear();
+            _matrixSource.Box.Items.Add("Ecran principal (automatique)");
+
+            int selected = 0;
+            foreach (MonitorInfo m in Display.Monitors)
+            {
+                _sourceIds.Add(m.StableId);
+                _matrixSource.Box.Items.Add(string.Format("Ecran {0} - {1} ({2})",
+                    m.Index + 1, m.FriendlyName, m.Detail));
+                if (m.StableId == S.MatrixSourceId) selected = _sourceIds.Count;
+            }
+
+            _matrixSource.SelectedIndex = selected;
         }
 
         private void Rebuild()
@@ -80,6 +126,7 @@ namespace OpusScreen
             try
             {
                 _link.SetCheckedSilent(S.LinkMonitors);
+                RebuildSourceList();
                 Rebuild();
             }
             finally { Loading = false; }
@@ -115,7 +162,14 @@ namespace OpusScreen
             Controls.Add(_title);
 
             _detail = new Label();
-            _detail.Text = string.Format("{0} x {1}  -  {2}", m.Bounds.Width, m.Bounds.Height, m.StableId);
+
+            // L'identifiant materiel etait affiche ici. Il ne dit rien a personne et,
+            // pire, il etait identique pour deux ecrans du meme modele : la seule
+            // information censee les distinguer les confondait. La sortie physique et
+            // le mode de reglage materiel, eux, se verifient d'un coup d'oeil derriere
+            // la machine.
+            string extra = HardwareBacklight.DescribeFor(m);
+            _detail.Text = m.Detail + (extra.Length > 0 ? "  -  " + extra : "");
             _detail.Font = Theme.Small;
             _detail.ForeColor = Theme.Faint;
             _detail.AutoSize = false;
@@ -259,8 +313,8 @@ namespace OpusScreen
     /// <summary>Confort visuel : pauses regulieres et temps d'ecran.</summary>
     public class PageComfort : SettingsPage
     {
-        private ToggleRow _enabled, _dim, _sound;
-        private SliderRow _interval, _duration;
+        private ToggleRow _enabled, _dim, _sound, _blink;
+        private SliderRow _interval, _duration, _blinkInterval;
         private Label _stats;
         private DarkButton _now;
 
@@ -303,6 +357,29 @@ namespace OpusScreen
             _now.Click += delegate { if (Reminder != null) Reminder.TriggerBreak(); };
             Add(_now, Theme.SpaceMd);
 
+            Section("Clignement");
+
+            _blink = new ToggleRow("Rappeler de cligner des yeux",
+                "Un bandeau minuscule, trois secondes, sans interrompre ce qui est en cours.");
+            _blink.Changed += delegate { S.BlinkReminders = _blink.Checked; PushToReminder(); UpdateStates(); Commit(); };
+            Add(_blink, Theme.SpaceSm);
+
+            _blinkInterval = new SliderRow("Intervalle", 1, 30, "min");
+            _blinkInterval.Changed += delegate { S.BlinkIntervalMinutes = (int)_blinkInterval.Value; PushToReminder(); CommitNoSave(); };
+            _blinkInterval.Committed += delegate { Commit(); };
+            Add(_blinkInterval, Theme.SpaceSm);
+
+            DarkButton blinkNow = new DarkButton();
+            blinkNow.Text = "Voir le rappel maintenant";
+            blinkNow.Height = Theme.MinTarget;
+            blinkNow.Click += delegate { if (Reminder != null) Reminder.TriggerBlink(); };
+            Add(blinkNow, Theme.SpaceSm);
+
+            Note("Devant un ecran, la frequence de clignement chute de plus de moitie et le "
+               + "clignement devient souvent incomplet : c'est la premiere cause de secheresse "
+               + "oculaire au travail, et elle pese davantage sur les yeux deja fragiles. "
+               + "Le rappel n'attend aucune reponse et disparait tout seul.");
+
             Section("Suivi");
 
             _stats = UiKit.Caption("");
@@ -327,6 +404,8 @@ namespace OpusScreen
             Reminder.DurationSeconds = Math.Max(5, S.BreakDurationSeconds);
             Reminder.DimDuringBreak = S.BreakDim;
             Reminder.PlaySound = S.BreakSound;
+            Reminder.BlinkReminders = S.BlinkReminders;
+            Reminder.BlinkIntervalMinutes = Math.Max(1, S.BlinkIntervalMinutes);
         }
 
         private void UpdateStates()
@@ -336,6 +415,7 @@ namespace OpusScreen
             _duration.Track.Enabled = on;
             _dim.Enabled = on;
             _sound.Enabled = on;
+            _blinkInterval.Track.Enabled = S.BlinkReminders;
         }
 
         public void UpdateStats()
@@ -363,6 +443,8 @@ namespace OpusScreen
                 _duration.SetValueSilent(S.BreakDurationSeconds);
                 _dim.SetCheckedSilent(S.BreakDim);
                 _sound.SetCheckedSilent(S.BreakSound);
+                _blink.SetCheckedSilent(S.BlinkReminders);
+                _blinkInterval.SetValueSilent(S.BlinkIntervalMinutes);
                 PushToReminder();
                 UpdateStates();
                 UpdateStats();
