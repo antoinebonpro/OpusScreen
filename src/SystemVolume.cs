@@ -205,8 +205,12 @@ namespace OpusScreen
         /// de style : passer 1,5 a SetMasterVolumeLevelScalar ne donne pas 100 %, cela
         /// leve une exception. Mesure sur le materiel de test - plage -65,25 a 0,00 dB.
         /// </summary>
+        /// <summary>Mode a blanc des tests d'interface : le son de la machine n'est jamais touche.</summary>
+        public static bool DryRun;
+
         public static bool SetMaster(double percent)
         {
+            if (DryRun) return false;
             if (percent < 0) percent = 0;
             if (percent > 100) percent = 100;
             try
@@ -329,6 +333,7 @@ namespace OpusScreen
         public static RaiseResult RaiseEverything()
         {
             RaiseResult r = new RaiseResult();
+            if (DryRun) return r;
             r.MasterBefore = GetMaster();
 
             if (r.MasterBefore >= 0 && r.MasterBefore < 99.5)

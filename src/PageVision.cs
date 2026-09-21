@@ -7,181 +7,31 @@ using System.Windows.Forms;
 namespace OpusScreen
 {
     /// <summary>
-    /// Tout ce qui sert a voir, plutot qu'a etre confortable.
+    /// Basse vision, reperage du pointeur et confort de lecture.
     ///
-    /// La separation avec la page Couleur n'est pas cosmetique. Regler une saturation
-    /// est un gout ; regler une correction de daltonisme est un besoin, et cela demande
-    /// des choses que la page Couleur n'offrait pas : dire quelle deficience, a quel
-    /// degre, et - surtout - VERIFIER que le reglage separe bien les couleurs que l'on
-    /// confond. Un curseur sans verification n'aide personne : sans point de comparaison,
-    /// il est impossible de savoir si l'on vient d'ameliorer ou d'aggraver la situation.
+    /// Le daltonisme a son propre onglet (PageColorBlind) : c'est le besoin le plus
+    /// repandu, et le seul qui demande de regler puis de verifier. Il reste ici ce
+    /// qui aide a VOIR - agrandir, retrouver le pointeur, lire plus longtemps - et
+    /// les raccourcis vers l'accessibilite de Windows.
     /// </summary>
     public class PageVision : SettingsPage
     {
-        private ComboRow _type, _mode;
-        private SliderRow _severity, _strength;
-        private Label _clinical, _confusions;
-        private ConfusionBoard _board;
-
-        private ToggleRow _reader, _beaconOn, _magOn;
+        private ToggleRow _beaconOn, _magOn;
         private SliderRow _zoom, _beaconSize, _beaconOpacity;
-        private DarkButton _beaconColor, _copyColor;
+        private DarkButton _beaconColor;
         private Label _magNote;
 
-        /// <summary>Fournis par TrayApp : la page decide, l'application execute.</summary>
+        /// <summary>Fourni par TrayApp : la page decide, l'application execute.</summary>
         public Action AidsChanged;
-        public Func<string> CopyColorUnderCursor;
 
         public override string Title { get { return "Vision"; } }
-        public override string Subtitle { get { return "Daltonisme, basse vision et reperage"; } }
-
-        private static readonly ColorFilter[] Types = {
-            ColorFilter.None, ColorFilter.Protanopia, ColorFilter.Deuteranopia, ColorFilter.Tritanopia
-        };
+        public override string Subtitle { get { return "Basse vision, pointeur et lecture"; } }
 
         public PageVision(Settings s, DisplayController d, Action push) : base(s, d, push)
         {
-            BuildColorVision();
-            BuildComparator();
-            BuildColorIdentifier();
             BuildLowVision();
             BuildReadingTints();
             BuildWindowsLinks();
-        }
-
-        // ------------------------------------------------------------------ daltonisme
-
-        private void BuildColorVision()
-        {
-            Section("Vision des couleurs");
-
-            List<string> names = new List<string>();
-            foreach (ColorFilter f in Types) names.Add(Vision.PlainName(f));
-            _type = new ComboRow("Ce que je distingue mal", names);
-            _type.Changed += delegate
-            {
-                if (Loading) return;
-                ColorFilter chosen = Types[Math.Max(0, _type.SelectedIndex)];
-
-                // Passer d'un filtre esthetique a une correction de vision, ou
-                // l'inverse, ne doit pas effacer l'autre : seuls les filtres de vision
-                // sont pilotes ici.
-                if (chosen == ColorFilter.None && ColorMatrixEffect.IsVisionFilter(S.Current.Filter))
-                    S.Current.Filter = ColorFilter.None;
-                else if (chosen != ColorFilter.None)
-                    S.Current.Filter = chosen;
-
-                UpdateTexts();
-                UpdateStates();
-                Commit();
-            };
-            Add(_type, Theme.SpaceSm);
-
-            _clinical = UiKit.Caption("");
-            _clinical.Height = 32;
-            Add(_clinical, Theme.SpaceXs);
-
-            _confusions = UiKit.Caption("");
-            _confusions.Height = 48;
-            Add(_confusions, Theme.SpaceXs);
-
-            _severity = new SliderRow("Gravite", 0, 100, "%");
-            _severity.MarkAt(100, double.NaN);
-            _severity.Changed += delegate
-            {
-                S.Current.VisionSeverity = _severity.Value;
-                UpdateTexts();
-                Live();
-            };
-            _severity.Committed += delegate { Commit(); };
-            Add(_severity, Theme.SpaceSm);
-
-            Note("La dichromatie - un type de cone totalement absent - est le cas rare. "
-               + "Le cas frequent est l'anomalie : le cone existe mais reagit a cote, et la "
-               + "confusion n'est que partielle. Une correction calibree sur la dichromatie "
-               + "sur-corrige alors, et l'ecran devient criard sans etre plus lisible. "
-               + "Descendez la gravite jusqu'a ce que les paires ci-dessous se separent tout "
-               + "juste : c'est le reglage juste.");
-
-            _strength = new SliderRow("Intensite de la correction", 0, 150, "%");
-            _strength.MarkAt(100, 120);
-            _strength.Changed += delegate
-            {
-                S.Current.FilterStrength = _strength.Value;
-                UpdateTexts();
-                Live();
-            };
-            _strength.Committed += delegate { Commit(); };
-            Add(_strength, Theme.SpaceSm);
-
-            _mode = new ComboRow("Usage", new string[] {
-                "Corriger : ecarter les couleurs que je confonds",
-                "Simuler : montrer ce que percoit cette vision"
-            });
-            _mode.Changed += delegate
-            {
-                if (Loading) return;
-                S.Current.Mode = _mode.SelectedIndex == 1 ? FilterMode.Simulation : FilterMode.Correction;
-                UpdateTexts();
-                UpdateStates();
-                Commit();
-            };
-            Add(_mode, Theme.SpaceSm);
-
-            Note("Le mode simulation ne sert pas la personne daltonienne : il sert a qui "
-               + "concoit une interface, un graphique ou un support de cours et veut verifier "
-               + "qu'il reste lisible. Le raccourci Ctrl + Alt + D bascule la correction sans "
-               + "ouvrir cette fenetre.");
-        }
-
-        // ------------------------------------------------------------------ comparateur
-
-        private void BuildComparator()
-        {
-            Section("Verification");
-
-            _board = new ConfusionBoard(S);
-            _board.HeightChanged += delegate { Relayout(); };
-            Add(_board, Theme.SpaceSm);
-
-            Note("A gauche, deux couleurs telles que vous les percevez aujourd'hui. A droite, "
-               + "les memes une fois la correction appliquee, puis percues par cette meme vision. "
-               + "L'ecart est chiffre en Delta E : en dessous de 2,3 l'oeil humain ne distingue "
-               + "plus rien, au-dela il distingue. Le reglage est bon quand le nombre de droite "
-               + "est nettement plus grand que celui de gauche.");
-        }
-
-        // ------------------------------------------------------------------ identificateur
-
-        private void BuildColorIdentifier()
-        {
-            Section("Identifier une couleur");
-
-            _reader = new ToggleRow("Etiquette qui suit le pointeur",
-                "Nomme en continu la couleur survolee, avec sa valeur exacte.");
-            _reader.Changed += delegate
-            {
-                S.ColorReaderEnabled = _reader.Checked;
-                Aids();
-                Commit();
-            };
-            Add(_reader, Theme.SpaceSm);
-
-            _copyColor = new DarkButton();
-            _copyColor.Text = "Copier la couleur sous le pointeur";
-            _copyColor.Height = Theme.MinTarget;
-            _copyColor.Click += delegate
-            {
-                if (CopyColorUnderCursor == null) return;
-                string what = CopyColorUnderCursor();
-                _copyColor.Text = what.Length > 0 ? "Copie : " + what : "Copier la couleur sous le pointeur";
-            };
-            Add(_copyColor, Theme.SpaceSm);
-
-            Note("La couleur annoncee est celle que l'application a reellement dessinee, "
-               + "avant la table de couleurs de la carte graphique et avant les filtres : "
-               + "les reglages en cours ne faussent donc jamais la reponse. "
-               + "Ctrl + Alt + C affiche l'etiquette, Ctrl + Alt + Maj + C copie la valeur.");
         }
 
         // ------------------------------------------------------------------ basse vision
@@ -369,36 +219,8 @@ namespace OpusScreen
             if (AidsChanged != null) AidsChanged();
         }
 
-        private void Live()
-        {
-            if (_board != null) _board.Rebuild();
-            CommitNoSave();
-        }
-
-        private void UpdateTexts()
-        {
-            ColorFilter f = ColorMatrixEffect.IsVisionFilter(S.Current.Filter) ? S.Current.Filter : ColorFilter.None;
-
-            _clinical.Text = Vision.ClinicalName(f);
-            _confusions.Text = Vision.Confusions(f);
-            _severity.Hint = Vision.SeverityWord(S.Current.VisionSeverity);
-
-            _strength.Hint = S.Current.FilterStrength > 115 ? "couleurs poussees, verifiez le confort"
-                           : (S.Current.FilterStrength < 40 ? "correction discrete" : "");
-
-            if (_board != null) _board.Rebuild();
-        }
-
         private void UpdateStates()
         {
-            bool vision = ColorMatrixEffect.IsVisionFilter(S.Current.Filter);
-            bool matrixReady = S.UseColorMatrix && ColorMatrixEffect.Available;
-
-            _type.Box.Enabled = matrixReady;
-            _severity.Track.Enabled = vision && matrixReady;
-            _mode.Box.Enabled = vision && matrixReady;
-            _strength.Track.Enabled = vision && matrixReady && S.Current.Mode == FilterMode.Correction;
-
             _zoom.Track.Enabled = S.MagnifierEnabled;
             _beaconSize.Track.Enabled = S.BeaconEnabled;
             _beaconOpacity.Track.Enabled = S.BeaconEnabled;
@@ -410,16 +232,6 @@ namespace OpusScreen
             Loading = true;
             try
             {
-                ColorFilter f = ColorMatrixEffect.IsVisionFilter(S.Current.Filter)
-                              ? S.Current.Filter : ColorFilter.None;
-                int idx = Array.IndexOf(Types, f);
-                _type.SelectedIndex = idx >= 0 ? idx : 0;
-
-                _severity.SetValueSilent(S.Current.VisionSeverity);
-                _strength.SetValueSilent(S.Current.FilterStrength);
-                _mode.SelectedIndex = S.Current.Mode == FilterMode.Simulation ? 1 : 0;
-
-                _reader.SetCheckedSilent(S.ColorReaderEnabled);
                 _magOn.SetCheckedSilent(S.MagnifierEnabled);
                 _zoom.SetValueSilent(S.MagnifierZoom);
                 _beaconOn.SetCheckedSilent(S.BeaconEnabled);
@@ -428,7 +240,6 @@ namespace OpusScreen
 
                 UpdateBeaconButton();
                 UpdateMagNote();
-                UpdateTexts();
                 UpdateStates();
             }
             finally { Loading = false; }

@@ -63,9 +63,19 @@ namespace OpusScreen
 
         public List<MonitorInfo> Monitors { get { return _monitors; } }
 
+        /// <summary>
+        /// Mode a blanc, pour les tests d'interface : tout est calcule, rien n'est pose.
+        /// Un test qui clique au hasard ne doit jamais toucher a la gamma, au voile, a
+        /// la matrice de couleur ni au retroeclairage de la machine qui l'execute.
+        /// </summary>
+        public static bool DryRun;
+
+        /// <summary>Ecrans fictifs, pour tester plusieurs ecrans sur une machine qui n'en a qu'un.</summary>
+        public static Func<List<MonitorInfo>> MonitorSource;
+
         public void RefreshMonitors()
         {
-            _monitors = MonitorEnum.All();
+            _monitors = MonitorSource != null ? MonitorSource() : MonitorEnum.All();
             _overlays.PruneMissing(_monitors);
 
             foreach (MonitorInfo m in _monitors)
@@ -205,6 +215,8 @@ namespace OpusScreen
         private void FinishApply()
         {
             // Etage matrice de couleur : global au bureau, pas par ecran.
+            if (DryRun) return;
+
             Profile reference = MatrixProfile();
             if (_settings.UseColorMatrix)
             {
@@ -285,6 +297,8 @@ namespace OpusScreen
 
             _passClip |= plan.Clips;
 
+            if (DryRun) { _displayed[m.StableId] = p.Clone(); return; }
+
             // Consigne NOMINATIVE. La version precedente envoyait un niveau global
             // depuis une boucle par ecran : sur deux ecrans, le dernier traite imposait
             // sa luminosite materielle aux autres.
@@ -345,6 +359,7 @@ namespace OpusScreen
         public void RestoreAll()
         {
             _fade.Stop();
+            if (DryRun) { _displayed.Clear(); return; }
             _overlays.HideAll();
             ColorMatrixEffect.Reset();
             foreach (MonitorInfo m in _monitors)

@@ -373,8 +373,8 @@ namespace OpusScreen
 
             parent.DropDownItems.Add(new ToolStripSeparator());
 
-            ToolStripMenuItem more = new ToolStripMenuItem("Reglages de vision...");
-            more.Click += delegate { ShowPanel(); if (_panel != null) _panel.SelectPage(ControlPanel.VisionPageIndex); };
+            ToolStripMenuItem more = new ToolStripMenuItem("Reglages du daltonisme...");
+            more.Click += delegate { ShowPanel(); if (_panel != null) _panel.SelectPage(ControlPanel.ColorBlindPageIndex); };
             parent.DropDownItems.Add(more);
         }
 
@@ -786,7 +786,8 @@ namespace OpusScreen
                 _panel.ComfortPage.Reminder = _breaks;
                 _panel.HotkeysPage.Rebind = RebindHotkeys;
                 _panel.VisionPage.AidsChanged = SyncVisionAids;
-                _panel.VisionPage.CopyColorUnderCursor = CopyColorUnderCursor;
+                _panel.ColorBlindPage.AidsChanged = SyncVisionAids;
+                _panel.ColorBlindPage.CopyColorUnderCursor = CopyColorUnderCursor;
                 PositionNearTray(_panel);
             }
             _panel.SyncAll();

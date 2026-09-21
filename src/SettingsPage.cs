@@ -105,7 +105,13 @@ namespace OpusScreen
             SuspendLayout();
             try
             {
-                int y = 14;
+                // Dans un panneau qui defile, Top se compte depuis le haut de la zone
+                // VISIBLE, pas depuis le haut du contenu. Empiler depuis 14 sans tenir
+                // compte du defilement posait donc la pile a partir de l'endroit ou l'on
+                // se trouvait : une page defilee de 800 px voyait tout son contenu
+                // descendre de 800 px a chaque redisposition - et rafraichir la page
+                // Ecrans en declenchait une a chaque reglage.
+                int y = 14 + AutoScrollPosition.Y;
                 foreach (Item it in _items)
                 {
                     if (!it.Control.Visible && it.Control.Height == 0) continue;

@@ -4,9 +4,45 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ---
 
-## [Non publie]
+## [3.1.0] — 2026-09-22
+
+La souris redevient fiable, et le daltonisme a son onglet.
 
 ### Ajoute
+
+- **Onglet « Daltonisme »** dans la colonne de gauche. La correction vivait en haut de
+  la page Vision, melee a la loupe et aux teintes de lecture ; c'est pourtant le besoin
+  le plus repandu. L'onglet commence par l'essentiel - un interrupteur « Correction
+  active » et trois tuiles *Rouge / Vert / Bleu mal percu* - puis le reglage fin, le
+  comparateur et l'identification des couleurs. Le menu de l'icone l'ouvre directement ;
+  Ctrl + 0 ouvre la dixieme page.
+- **Page Ecrans : « Synchroniser tous les ecrans »** (tout le monde revient au reglage
+  general) et **« Copier sur les autres ecrans »** sur chaque carte.
+- **Tests d'interface (`UiTest`) et testeur « singe » (`MonkeyTest`)**, dans
+  `run-tests.cmd` : la vraie fenetre, en mode a blanc, avec trois ecrans fictifs. Le
+  singe clique au hasard et verifie neuf invariants apres chaque geste ;
+  `run-tests.cmd singe` le lance avec la vraie souris.
+
+### Corrige
+
+- **La page « tombait » en bas** : redisposer une page defilee reempilait son contenu a
+  partir de la position de defilement, et tout descendait de la hauteur defilee.
+- **Page Ecrans inutilisable a la souris** : elle detruisait et recreait ses cartes a
+  chaque reglage et toutes les 20 s. Le curseur que l'on faisait glisser disparaissait,
+  un double-clic tombait sur un controle detruit, le focus sautait et la page avec.
+- **« Lier tous les ecrans » ne liait pas** un ecran reste en profil independant : il
+  ignorait le reglage general.
+- **La molette modifiait les reglages en faisant defiler** : tout curseur survole
+  changeait de valeur, et une liste deroulante fermee changeait de choix. La molette
+  fait maintenant defiler la page ; elle ne regle un curseur que s'il est choisi et
+  survole, et une liste que si elle est ouverte.
+- **Curseur accroche a la souris** quand la capture est perdue en plein glisser.
+- **Clics avales** : deux clics rapides sur un interrupteur ou un onglet ne comptaient
+  que pour un.
+- **Saut de page en eteignant un ecran** juste apres avoir regle son curseur (trouve
+  par le singe).
+- Les onglets du bas passaient sous le bord d'une fenetre reduite : leur hauteur
+  s'adapte a la place.
 
 - **Section « Son » dans la page Confort** : volume general, et un bouton qui remet au
   maximum le volume general ET celui de chaque application du mixeur de Windows.

@@ -197,14 +197,44 @@ namespace OpusScreen
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
+            EndDrag();
+        }
+
+        /// <summary>
+        /// La capture peut etre perdue en plein glisser : une boite de dialogue qui
+        /// surgit, Alt+Tab, le verrouillage de session. Windows n'envoie alors jamais
+        /// le relachement, et le curseur restait « accroche » a la souris.
+        /// </summary>
+        protected override void OnMouseCaptureChanged(EventArgs e)
+        {
+            base.OnMouseCaptureChanged(e);
+            if (!Capture) EndDrag();
+        }
+
+        private void EndDrag()
+        {
             if (!_dragging) return;
             _dragging = false;
             if (ValueCommitted != null) ValueCommitted(this, EventArgs.Empty);
         }
 
+        /// <summary>
+        /// La molette ne regle le curseur que s'il a ete choisi (focus) ET qu'on le
+        /// survole. Sinon elle revient a la page, qui defile.
+        ///
+        /// Avant, tout curseur survole captait la molette : faire defiler une page
+        /// longue changeait au passage la luminosite, la temperature ou la gravite
+        /// de chaque curseur croise - et la page defilait EN PLUS, puisque le message
+        /// remontait quand meme au parent.
+        /// </summary>
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             base.OnMouseWheel(e);
+            if (!Focused || !Enabled || !ClientRectangle.Contains(e.Location)) return;
+
+            HandledMouseEventArgs h = e as HandledMouseEventArgs;
+            if (h != null) h.Handled = true;       // la page ne defile pas en meme temps
+
             double step = Range / 100.0;
             Value = _value + (e.Delta > 0 ? step : -step) * 3;
             if (ValueCommitted != null) ValueCommitted(this, EventArgs.Empty);
