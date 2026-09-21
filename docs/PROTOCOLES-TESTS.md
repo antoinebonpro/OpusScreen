@@ -6,7 +6,20 @@
 tests\run-tests.cmd
 ```
 
-Six suites, environ deux cents assertions. Code de sortie **0** si tout passe, **1** sinon.
+Huit suites : six sur le moteur et les règles, deux sur l'interface elle-même
+(dont 3000 gestes au hasard). Code de sortie **0** si tout passe, **1** sinon.
+
+```
+tests
+un-tests.cmd singe [n]
+tests
+un-tests.cmd singe-messages [n] [graine]
+```
+
+Le testeur « singe » (voir la suite 8). `singe` emprunte la **vraie** souris et le vrai
+clavier pendant `n` gestes (400 par défaut) ; bouger la souris ou appuyer sur Échap
+l'arrête. `singe-messages` explore sans la souris, avec une graine nouvelle à chaque
+lancement, ou celle donnée pour rejouer un défaut à l'identique.
 
 ```
 tests\run-tests.cmd monitor
@@ -21,7 +34,7 @@ Le script compte les tests **réellement exécutés** et refuse d'annoncer un su
 compte n'y est pas :
 
 ```
-Tests executes : 6 / 6
+Tests executes : 8 / 8
 Echecs         : 0
 RESULTAT : tous les tests passent
 ```
@@ -139,6 +152,57 @@ page qui parle d'accessibilité. Et deux contrôles purement décoratifs — l'a
 couleurs et le comparateur — recevaient le focus sans avoir la moindre action, parce que
 `TabStop` vaut vrai par défaut sur un `Control`.
 
+### 7. UiTest — l'interface, geste par geste
+
+Tourne sur la vraie fenêtre de réglages, en **mode à blanc** (`DisplayController.DryRun`,
+`SystemVolume.DryRun`, dossier de réglages temporaire) avec **trois écrans fictifs** :
+aucun réglage de la machine n'est touché, et le multi-écran se teste sur un poste qui
+n'a qu'un écran. Les gestes sont de vrais messages Windows (clic, double-clic, glisser,
+molette), pas des appels de méthode : ils passent par la capture de la souris et la
+remontée de la molette, là où les défauts se cachaient.
+
+| Vérification | Défaut qu'elle tient fermé |
+|---|---|
+| Un rafraîchissement ne reconstruit pas les cartes d'écran | La page Écrans détruisait ses cartes à chaque réglage et toutes les 20 s : le curseur disparaissait sous la souris |
+| Glisser le curseur d'un écran va jusqu'au bout | Le glisser s'arrêtait au premier mouvement |
+| Cliquer en bas de la page Écrans ne la fait pas sauter | Le focus perdu faisait défiler la page jusqu'en bas |
+| « Lier tous les écrans » relie vraiment chaque écran | Un écran passé une fois en profil indépendant ignorait ensuite le réglage général |
+| Copier un écran sur les autres ; tout synchroniser | Fonctions ajoutées |
+| La molette sur un curseur survolé fait défiler la page, sans changer la valeur | Faire défiler changeait luminosité, température, gravité… au passage |
+| La molette sur une liste fermée ne change pas le choix | Faire défiler après avoir choisi un filtre changeait le filtre |
+| Capture perdue en plein glisser : le curseur s'arrête | Il restait « accroché » à la souris |
+| Deux clics rapides sur un interrupteur = deux bascules | Le second clic était avalé comme double-clic |
+| Redisposer une page défilée ne la décale pas | Le contenu « tombait » de toute la hauteur défilée |
+| Les dix onglets tiennent dans la colonne, Ctrl + 1…0 les ouvre | |
+| Onglet Daltonisme : liste, tuiles, interrupteur, gravité | |
+| Rafraîchir une page ne modifie aucun réglage | |
+
+### 8. MonkeyTest — le testeur « singe »
+
+Clique, glisse, fait tourner la molette, tape, change d'onglet, redimensionne et
+rafraîchit **au hasard**, puis vérifie après **chaque** geste :
+
+1. aucune exception dans l'interface ;
+2. une et une seule page affichée ;
+3. tous les réglages dans leurs bornes, plancher de sécurité tenu sur chaque écran ;
+4. une molette sur un contrôle non choisi ne modifie aucun réglage ;
+5. un clic sur un contrôle entièrement visible ne fait pas défiler la page ;
+6. le haut du contenu reste à sa place (la page ne « tombe » pas) ;
+7. le contrôle qui a le focus n'a pas été détruit ;
+8. une carte par écran, ni plus ni moins ;
+9. les réglages se relisent à l'identique.
+
+Les pages Avancé et Raccourcis sont écartées (registre, raccourcis globaux), ainsi que
+les boutons qui ouvrent d'autres applications ; une sentinelle ferme toute boîte de
+dialogue qui s'ouvre malgré tout. En cas de défaut, le rapport donne les huit derniers
+gestes et la graine qui permet de le rejouer.
+
+Contrôle d'efficacité : lancé sur le code d'avant ces corrections, le singe trouve en
+1 350 gestes les quatre défauts signalés à l'usage - la page qui tombe, la molette qui
+change les réglages, le saut de défilement, et un interrupteur détruit entre les deux
+clics d'un double-clic. Il a aussi trouvé seul un défaut que personne n'avait vu :
+éteindre un écran juste après avoir réglé son curseur faisait sauter la page.
+
 ---
 
 ## Vérifications manuelles
@@ -186,7 +250,7 @@ Ce que l'automatisation ne peut pas juger. À faire avant toute diffusion.
 
 ### E. Interface
 
-- [ ] Parcourir les 9 pages **au clavier seul** (Tab, flèches, Espace) : tout est
+- [ ] Parcourir les 10 pages **au clavier seul** (Tab, flèches, Espace) : tout est
       atteignable et le focus reste visible
 - [ ] `Ctrl + 1` à `Ctrl + 9` ouvrent les pages correspondantes
 - [ ] Le **narrateur de Windows** annonce le nom, le rôle et la valeur des curseurs et

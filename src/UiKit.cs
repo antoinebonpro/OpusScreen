@@ -184,7 +184,7 @@ namespace OpusScreen
             _label.ForeColor = Theme.Fg;
             _label.AutoSize = false;
             _label.BackColor = Color.Transparent;
-            _label.Click += delegate { Switch.Checked = !Switch.Checked; };
+            _label.Cursor = Cursors.Hand;
             Controls.Add(_label);
 
             _desc.Text = description ?? "";
@@ -192,6 +192,7 @@ namespace OpusScreen
             _desc.ForeColor = Theme.Faint;
             _desc.AutoSize = false;
             _desc.BackColor = Color.Transparent;
+            _desc.Cursor = Cursors.Hand;
             Controls.Add(_desc);
 
             Switch.AccessibleLabel = label;
@@ -199,7 +200,21 @@ namespace OpusScreen
             Switch.CheckedChanged += delegate { if (Changed != null) Changed(this, EventArgs.Empty); };
             Controls.Add(Switch);
 
-            Click += delegate { Switch.Checked = !Switch.Checked; };
+            // Toute la ligne bascule l'interrupteur, explication comprise : le curseur
+            // en forme de main l'annoncait deja, mais un clic sur l'explication ne
+            // faisait rien. Le double-clic compte pour deux, comme sur l'interrupteur.
+            foreach (Control c in new Control[] { this, _label, _desc })
+            {
+                c.MouseClick += OnRowClick;
+                c.MouseDoubleClick += OnRowClick;
+            }
+        }
+
+        private void OnRowClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left || !Enabled || !Switch.Enabled) return;
+            Switch.Focus();     // voir ToggleSwitch.OnClick : le focus avant la bascule
+            Switch.Checked = !Switch.Checked;
         }
 
         public bool Checked
@@ -239,6 +254,10 @@ namespace OpusScreen
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint
                    | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw
                    | ControlStyles.SupportsTransparentBackColor, true);
+            // Deux clics rapides sont deux bascules, pas un « double-clic » : sans cela
+            // Windows avalait le second, et un interrupteur clique vite ne changeait
+            // qu'une fois sur deux.
+            SetStyle(ControlStyles.StandardDoubleClick, false);
             Size = new Size(44, 22);
             Cursor = Cursors.Hand;
             TabStop = true;
@@ -321,7 +340,13 @@ namespace OpusScreen
             Invalidate();
         }
 
-        protected override void OnClick(EventArgs e) { Checked = !Checked; Focus(); base.OnClick(e); }
+        /// <summary>
+        /// Le focus d'abord, la bascule ensuite. Dans l'ordre inverse, basculer
+        /// pouvait desactiver le controle qui avait le focus (le curseur d'un ecran
+        /// que l'on eteint) : Windows passait alors le focus au controle suivant et
+        /// faisait defiler la page jusqu'a lui - un saut que le singe a trouve.
+        /// </summary>
+        protected override void OnClick(EventArgs e) { Focus(); Checked = !Checked; base.OnClick(e); }
         protected override void OnMouseEnter(EventArgs e) { _hover = true; Invalidate(); base.OnMouseEnter(e); }
         protected override void OnMouseLeave(EventArgs e) { _hover = false; Invalidate(); base.OnMouseLeave(e); }
         protected override void OnGotFocus(EventArgs e) { Invalidate(); base.OnGotFocus(e); }
@@ -465,13 +490,26 @@ namespace OpusScreen
         public void AddTab(string label, string glyph)
         {
             NavItem it = new NavItem(label, glyph, _items.Count);
-            it.Width = Width;
-            it.Height = 40;
-            it.Top = TopOffset + _items.Count * 40;
             it.Clicked += delegate(int idx) { Select(idx); };
             _items.Add(it);
             Controls.Add(it);
             if (_items.Count == 1) it.Selected = true;
+            LayoutItems();
+        }
+
+        /// <summary>
+        /// Hauteur d'onglet adaptee a la place disponible : 40 px quand il y en a,
+        /// jamais moins que la cible minimale d'un clic. A hauteur fixe, les derniers
+        /// onglets passaient sous le bord de la fenetre reduite - invisibles et
+        /// impossibles a cliquer.
+        /// </summary>
+        private void LayoutItems()
+        {
+            if (_items.Count == 0) return;
+            int avail = ClientSize.Height - TopOffset - 4;
+            int h = Math.Max(Theme.MinTarget, Math.Min(40, avail / _items.Count));
+            for (int i = 0; i < _items.Count; i++)
+                _items[i].SetBounds(0, TopOffset + i * h, Width, h);
         }
 
         public void Select(int index)
@@ -487,7 +525,7 @@ namespace OpusScreen
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
-            foreach (NavItem it in _items) it.Width = Width;
+            LayoutItems();
         }
 
         private class NavItem : Control
@@ -502,6 +540,7 @@ namespace OpusScreen
             {
                 SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint
                        | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+                SetStyle(ControlStyles.StandardDoubleClick, false);
                 Text = label;
                 _glyph = glyph;
                 _index = index;
@@ -677,6 +716,11 @@ namespace OpusScreen
                             g.DrawLine(p, r.X + 12.5f, r.Y + 12, r.X + 12.5f, r.Y + 16);
                             g.DrawLine(p, r.X + 10.5f, r.Y + 14, r.X + 14.5f, r.Y + 14);
                         }
+                        break;
+
+                    case "colorblind": // daltonisme : deux moities d'un meme disque, l'une pleine
+                        g.DrawEllipse(p, r.X + 2, r.Y + 2, 12, 12);
+                        g.FillPie(b, r.X + 2, r.Y + 2, 12, 12, 90, 180);
                         break;
 
                     case "keyboard":

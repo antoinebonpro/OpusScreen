@@ -151,10 +151,17 @@ namespace OpusScreen
     /// </summary>
     public class Settings
     {
+        /// <summary>
+        /// Dossier de remplacement, pour les tests d'interface : ils cliquent partout,
+        /// et ne doivent jamais ecrire dans la configuration reelle de l'utilisateur.
+        /// </summary>
+        public static string DataFolderOverride;
+
         public static string DataFolder
         {
             get
             {
+                if (!string.IsNullOrEmpty(DataFolderOverride)) return DataFolderOverride;
                 return Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     "OpusScreen");
@@ -189,6 +196,7 @@ namespace OpusScreen
         {
             try
             {
+                if (!string.IsNullOrEmpty(DataFolderOverride)) return;
                 if (File.Exists(FilePath)) return;
                 if (!File.Exists(Path.Combine(LegacyDataFolder, "settings.ini"))) return;
 
@@ -327,8 +335,14 @@ namespace OpusScreen
         public Profile EffectiveFor(MonitorInfo m)
         {
             MonitorSettings ms = For(m);
-            Profile p = ms.Independent ? ms.Own.Clone() : Current.Clone();
-            if (!ms.Independent && Math.Abs(ms.BrightnessOffset) > 0.01)
+
+            // Ecrans lies = profil independant ignore. Il etait applique quand meme :
+            // un ecran regle a part une fois restait a part pour toujours, meme apres
+            // avoir coche « Lier tous les ecrans », et le reglage general ne
+            // l'atteignait plus. Le profil reste memorise pour le jour ou l'on delie.
+            bool independent = ms.Independent && !LinkMonitors;
+            Profile p = independent ? ms.Own.Clone() : Current.Clone();
+            if (!independent && Math.Abs(ms.BrightnessOffset) > 0.01)
                 p.Brightness = SafetyGuard.ClampBrightness(p.Brightness + ms.BrightnessOffset);
             return p;
         }

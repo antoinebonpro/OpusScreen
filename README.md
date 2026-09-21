@@ -63,7 +63,7 @@ Et sur le terrain de l'accessibilité, où le tableau devient vite court :
 | 👀 Rappel de clignement | — | — | — | — | **oui** |
 | 🔊 Compatible lecteurs d'écran | — | — | — | — | **oui** |
 
-Plus de **85 réglages** répartis sur 9 pages, 20 modes livrés, 15 raccourcis globaux
+Plus de **85 réglages** répartis sur 10 pages, dont un onglet dédié au daltonisme, 20 modes livrés, 15 raccourcis globaux
 reconfigurables.
 
 ## ⬇️ Télécharger
@@ -80,6 +80,8 @@ double-cliquez.
 > complémentaires* → *Exécuter quand même*. Si vous préférez ne pas faire confiance à un
 > binaire, la section suivante compile le vôtre en une commande.
 
+Version 3.1.0 précisément : [OpusScreen.exe 3.1.0](https://github.com/antoinebonpro/OpusScreen/releases/download/v3.1.0/OpusScreen.exe)
+· [notes de version](https://github.com/antoinebonpro/OpusScreen/releases/tag/v3.1.0).
 Toutes les versions : [page des publications](https://github.com/antoinebonpro/OpusScreen/releases).
 
 ## 🔨 Compiler soi-même

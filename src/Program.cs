@@ -8,8 +8,8 @@ using System.Windows.Forms;
 
 [assembly: AssemblyTitle("OpusScreen")]
 [assembly: AssemblyDescription("Luminosite 5-150 %, temperature de couleur, daltonisme et basse vision")]
-[assembly: AssemblyVersion("3.0.0.0")]
-[assembly: AssemblyFileVersion("3.0.0.0")]
+[assembly: AssemblyVersion("3.1.0.0")]
+[assembly: AssemblyFileVersion("3.1.0.0")]
 
 namespace OpusScreen
 {

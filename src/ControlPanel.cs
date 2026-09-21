@@ -31,6 +31,7 @@ namespace OpusScreen
 
         public PageDisplay Display1;
         public PageColor ColorPage;
+        public PageColorBlind ColorBlindPage;
         public PageVision VisionPage;
         public PageAuto AutoPage;
         public PageApps AppsPage;
@@ -39,8 +40,11 @@ namespace OpusScreen
         public PageHotkeys HotkeysPage;
         public PageAdvanced AdvancedPage;
 
-        /// <summary>Rang de la page Vision, pour l'ouvrir depuis le menu de la zone de notification.</summary>
-        public const int VisionPageIndex = 2;
+        /// <summary>Rang de l'onglet Daltonisme, ouvert depuis le menu de la zone de notification.</summary>
+        public const int ColorBlindPageIndex = 2;
+
+        /// <summary>Rang de la page Vision (basse vision, pointeur, lecture).</summary>
+        public const int VisionPageIndex = 3;
 
         /// <summary>Largeur de la colonne de navigation, referencee par la mise en page de l'en-tete.</summary>
         private const int NavWidth = 196;
@@ -192,6 +196,7 @@ namespace OpusScreen
             // ---------------- pages ----------------
             Display1 = new PageDisplay(_s, _display, _push);
             ColorPage = new PageColor(_s, _display, _push);
+            ColorBlindPage = new PageColorBlind(_s, _display, _push);
             VisionPage = new PageVision(_s, _display, _push);
             AutoPage = new PageAuto(_s, _display, _push);
             AppsPage = new PageApps(_s, _display, _push);
@@ -202,6 +207,7 @@ namespace OpusScreen
 
             AddPage(Display1, "Ecran", "sun");
             AddPage(ColorPage, "Couleur", "palette");
+            AddPage(ColorBlindPage, "Daltonisme", "colorblind");
             AddPage(VisionPage, "Vision", "vision");
             AddPage(AutoPage, "Automatisme", "clock");
             AddPage(AppsPage, "Applications", "apps");
@@ -347,13 +353,19 @@ namespace OpusScreen
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            // Ctrl+1..9 : acces direct aux pages, sans quitter le clavier.
+            // Ctrl+1..9 puis Ctrl+0 : acces direct aux pages, sans quitter le clavier.
+            // Le zero sert la dixieme, comme sur la rangee de chiffres du clavier.
             if ((keyData & Keys.Control) == Keys.Control)
             {
                 Keys k = keyData & Keys.KeyCode;
                 if (k >= Keys.D1 && k <= Keys.D9)
                 {
                     _nav.Select(k - Keys.D1);
+                    return true;
+                }
+                if (k == Keys.D0)
+                {
+                    _nav.Select(9);
                     return true;
                 }
             }

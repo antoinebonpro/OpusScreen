@@ -11,14 +11,22 @@ namespace OpusScreen
     /// PangoBright savait seulement exclure un ecran ; Iris facture les reglages
     /// independants par moniteur. Ici chaque ecran peut suivre le reglage general,
     /// s'en ecarter d'un decalage, ou vivre entierement sa vie.
+    ///
+    /// Les cartes sont construites UNE fois par configuration d'ecrans, puis
+    /// seulement resynchronisees. Elles etaient detruites et recreees a chaque
+    /// rafraichissement - donc a chaque mouvement de curseur, et toutes les vingt
+    /// secondes : le curseur que l'on faisait glisser disparaissait sous la souris,
+    /// le focus sautait au controle suivant et la page defilait jusqu'a lui.
     /// </summary>
     public class PageScreens : SettingsPage
     {
         private ToggleRow _link;
         private ComboRow _matrixSource;
-        private readonly List<Control> _dynamic = new List<Control>();
+        private readonly List<MonitorCard> _cards = new List<MonitorCard>();
         private readonly List<string> _sourceIds = new List<string>();
         private Panel _host;
+        private string _builtFor = null;      // configuration pour laquelle les cartes existent
+        private string _sourcesFor = null;    // idem pour la liste des ecrans de reference
 
         public override string Title { get { return "Ecrans"; } }
         public override string Subtitle { get { return "Regler chaque moniteur separement"; } }
@@ -29,8 +37,18 @@ namespace OpusScreen
 
             _link = new ToggleRow("Lier tous les ecrans",
                 "Un seul reglage pour tous. Decochez pour donner a chacun son propre profil.");
-            _link.Changed += delegate { S.LinkMonitors = _link.Checked; Rebuild(); Commit(); };
+            _link.Changed += delegate { S.LinkMonitors = _link.Checked; Sync(); Commit(); };
             Add(_link, Theme.SpaceSm);
+
+            DarkButton syncAll = new DarkButton();
+            syncAll.Text = "Synchroniser tous les ecrans";
+            syncAll.Height = Theme.MinTarget;
+            syncAll.Click += delegate { SyncAllMonitors(); };
+            Add(syncAll, Theme.SpaceSm);
+
+            Note("Remet chaque ecran sur le reglage general : les ecrans sont relies, les "
+               + "decalages et les profils propres sont retires. Les ecrans eteints ou "
+               + "exclus le restent - c'est un choix, pas un reglage a aligner.");
 
             DarkButton refresh = new DarkButton();
             refresh.Text = "Redetecter les ecrans";
@@ -62,10 +80,56 @@ namespace OpusScreen
             _host = new Panel();
             _host.BackColor = Color.Transparent;
             _host.Height = 10;
+            _host.Resize += delegate { foreach (MonitorCard c in _cards) c.Width = _host.ClientSize.Width; };
             Add(_host, Theme.SpaceSm);
 
             Note("Le mode « ecran eteint » reprend le BlackOut de Lunar : l'ecran est "
                + "occulte sans etre deconnecte, les fenetres qui s'y trouvent restent en place.");
+        }
+
+        // ------------------------------------------------------------------ actions
+
+        /// <summary>Tous les ecrans reviennent au reglage general, en un geste.</summary>
+        private void SyncAllMonitors()
+        {
+            S.LinkMonitors = true;
+            foreach (MonitorInfo m in Display.Monitors)
+            {
+                MonitorSettings ms = S.For(m);
+                ms.Independent = false;
+                ms.BrightnessOffset = 0;
+            }
+            Sync();
+            Commit();
+        }
+
+        /// <summary>Recopie les reglages d'un ecran sur tous les autres.</summary>
+        private void CopyToOthers(MonitorInfo source)
+        {
+            MonitorSettings from = S.For(source);
+            foreach (MonitorInfo m in Display.Monitors)
+            {
+                if (m.StableId == source.StableId) continue;
+                MonitorSettings to = S.For(m);
+                to.Independent = from.Independent;
+                to.Own = from.Own.Clone();
+                to.BrightnessOffset = from.BrightnessOffset;
+                to.Enabled = from.Enabled;
+            }
+            Sync();
+            Commit();
+        }
+
+        // ------------------------------------------------------------------ construction
+
+        /// <summary>Empreinte de ce qui impose de reconstruire : les ecrans, et la liaison.</summary>
+        private string Signature(bool withLink)
+        {
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            if (withLink) sb.Append(S.LinkMonitors ? "L|" : "I|");
+            foreach (MonitorInfo m in Display.Monitors)
+                sb.Append(m.StableId).Append('/').Append(m.FriendlyName).Append('/').Append(m.Detail).Append('|');
+            return sb.ToString();
         }
 
         /// <summary>
@@ -73,51 +137,69 @@ namespace OpusScreen
         ///
         /// Le nom seul ne suffit pas quand deux ecrans sont du meme modele - c'est
         /// justement le cas ou le choix compte : la sortie et la definition sont donc
-        /// rappelees dans l'intitule.
+        /// rappelees dans l'intitule. La liste n'est reconstruite que si les ecrans
+        /// ont change : la vider a chaque rafraichissement refermait la liste ouverte
+        /// sous les yeux de l'utilisateur.
         /// </summary>
         private void RebuildSourceList()
         {
-            _sourceIds.Clear();
-            _matrixSource.Box.Items.Clear();
-            _matrixSource.Box.Items.Add("Ecran principal (automatique)");
-
-            int selected = 0;
-            foreach (MonitorInfo m in Display.Monitors)
+            string sig = Signature(false);
+            if (sig != _sourcesFor)
             {
-                _sourceIds.Add(m.StableId);
-                _matrixSource.Box.Items.Add(string.Format("Ecran {0} - {1} ({2})",
-                    m.Index + 1, m.FriendlyName, m.Detail));
-                if (m.StableId == S.MatrixSourceId) selected = _sourceIds.Count;
+                _sourcesFor = sig;
+                _sourceIds.Clear();
+                _matrixSource.Box.Items.Clear();
+                _matrixSource.Box.Items.Add("Ecran principal (automatique)");
+                foreach (MonitorInfo m in Display.Monitors)
+                {
+                    _sourceIds.Add(m.StableId);
+                    _matrixSource.Box.Items.Add(string.Format("Ecran {0} - {1} ({2})",
+                        m.Index + 1, m.FriendlyName, m.Detail));
+                }
             }
 
-            _matrixSource.SelectedIndex = selected;
+            int selected = 0;
+            for (int i = 0; i < _sourceIds.Count; i++)
+                if (_sourceIds[i] == S.MatrixSourceId) selected = i + 1;
+            if (_matrixSource.SelectedIndex != selected) _matrixSource.SelectedIndex = selected;
         }
 
         private void Rebuild()
         {
-            foreach (Control c in _dynamic) { _host.Controls.Remove(c); c.Dispose(); }
-            _dynamic.Clear();
+            foreach (MonitorCard c in _cards) { _host.Controls.Remove(c); c.Dispose(); }
+            _cards.Clear();
 
-            int y = 0;
+            bool several = Display.Monitors.Count > 1;
             foreach (MonitorInfo m in Display.Monitors)
             {
                 MonitorInfo captured = m;
-                MonitorSettings ms = S.For(m);
-
-                MonitorCard card = new MonitorCard(S, captured, ms, !S.LinkMonitors);
+                MonitorCard card = new MonitorCard(S, captured, S.For(m), !S.LinkMonitors, several);
                 card.Left = 0;
-                card.Top = y;
-                card.Width = ContentWidth;
-                card.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-                card.Changed += delegate { Commit(); };
+                card.Width = Math.Max(160, _host.ClientSize.Width > 20 ? _host.ClientSize.Width : ContentWidth);
+                card.Changed += delegate { LayoutCards(); Commit(); };
                 card.LiveChanged += delegate { CommitNoSave(); };
+                card.CopyRequested += delegate { CopyToOthers(captured); };
                 _host.Controls.Add(card);
-                _dynamic.Add(card);
+                _cards.Add(card);
+            }
+            LayoutCards();
+        }
+
+        /// <summary>Empile les cartes, puis la page : une carte qui grandit repousse la note qui suit.</summary>
+        private void LayoutCards()
+        {
+            int y = 0;
+            foreach (MonitorCard card in _cards)
+            {
+                card.Top = y;
                 y += card.Height + Theme.SpaceSm;
             }
-
-            _host.Height = Math.Max(10, y);
-            Relayout();   // le bloc a change de hauteur : la note qui suit doit redescendre
+            int h = Math.Max(10, y);
+            if (_host.Height != h)
+            {
+                _host.Height = h;
+                Relayout();
+            }
         }
 
         public override void Sync()
@@ -127,7 +209,18 @@ namespace OpusScreen
             {
                 _link.SetCheckedSilent(S.LinkMonitors);
                 RebuildSourceList();
-                Rebuild();
+
+                string sig = Signature(true);
+                if (sig != _builtFor)
+                {
+                    _builtFor = sig;
+                    Rebuild();
+                }
+                else
+                {
+                    foreach (MonitorCard c in _cards) c.Sync();
+                    LayoutCards();
+                }
             }
             finally { Loading = false; }
         }
@@ -141,13 +234,15 @@ namespace OpusScreen
         private readonly MonitorSettings _ms;
         private readonly ToggleRow _enabled, _blackout, _independent;
         private readonly SliderRow _offset, _ownBright, _ownKelvin;
+        private readonly DarkButton _copy;
         private readonly Label _title, _detail;
         private bool _loading;
 
         public event EventHandler Changed;
         public event EventHandler LiveChanged;
+        public event EventHandler CopyRequested;
 
-        public MonitorCard(Settings s, MonitorInfo m, MonitorSettings ms, bool allowIndependent)
+        public MonitorCard(Settings s, MonitorInfo m, MonitorSettings ms, bool allowIndependent, bool canCopy)
         {
             _s = s; _m = m; _ms = ms;
             BackColor = Theme.Sunken;
@@ -178,12 +273,12 @@ namespace OpusScreen
 
             _enabled = new ToggleRow("Appliquer les effets sur cet ecran", null);
             _enabled.BackColor = Color.Transparent;
-            _enabled.Changed += delegate { _ms.Enabled = _enabled.Checked; Fire(); };
+            _enabled.Changed += delegate { _ms.Enabled = _enabled.Checked; UpdateStates(); Fire(); };
             Controls.Add(_enabled);
 
             _blackout = new ToggleRow("Ecran eteint", null);
             _blackout.BackColor = Color.Transparent;
-            _blackout.Changed += delegate { _ms.Blackout = _blackout.Checked; Fire(); };
+            _blackout.Changed += delegate { _ms.Blackout = _blackout.Checked; UpdateStates(); Invalidate(); Fire(); };
             Controls.Add(_blackout);
 
             _independent = new ToggleRow("Profil independant", null);
@@ -196,23 +291,30 @@ namespace OpusScreen
             _offset.MarkAt(0, double.NaN);
             _offset.Format = "+0;-0;0";
             _offset.BackColor = Color.Transparent;
-            _offset.Changed += delegate { _ms.BrightnessOffset = _offset.Value; FireLive(); };
+            _offset.Changed += delegate { if (_loading) return; _ms.BrightnessOffset = _offset.Value; FireLive(); };
             _offset.Committed += delegate { Fire(); };
             Controls.Add(_offset);
 
             _ownBright = new SliderRow("Luminosite propre", GammaEngine.MinBrightness, GammaEngine.MaxBrightness, "%");
             _ownBright.MarkAt(100, 100);
             _ownBright.BackColor = Color.Transparent;
-            _ownBright.Changed += delegate { _ms.Own.Brightness = _ownBright.Value; FireLive(); };
+            _ownBright.Changed += delegate { if (_loading) return; _ms.Own.Brightness = _ownBright.Value; FireLive(); };
             _ownBright.Committed += delegate { Fire(); };
             Controls.Add(_ownBright);
 
             _ownKelvin = new SliderRow("Temperature propre", ColorTemp.MinKelvin, ColorTemp.MaxKelvin, "K");
             _ownKelvin.SetAccent(Theme.Warm);
             _ownKelvin.BackColor = Color.Transparent;
-            _ownKelvin.Changed += delegate { _ms.Own.Kelvin = (int)_ownKelvin.Value; FireLive(); };
+            _ownKelvin.Changed += delegate { if (_loading) return; _ms.Own.Kelvin = (int)_ownKelvin.Value; FireLive(); };
             _ownKelvin.Committed += delegate { Fire(); };
             Controls.Add(_ownKelvin);
+
+            _copy = new DarkButton();
+            _copy.Text = "Copier sur les autres ecrans";
+            _copy.Height = Theme.MinTarget;
+            _copy.Visible = canCopy;
+            _copy.Click += delegate { if (CopyRequested != null) CopyRequested(this, EventArgs.Empty); };
+            Controls.Add(_copy);
 
             Sync();
             Height = ComputeHeight();
@@ -221,8 +323,8 @@ namespace OpusScreen
         private void Fire()
         {
             if (_loading) return;
-            Height = ComputeHeight();
-            if (Parent != null) RepositionSiblings();
+            int h = ComputeHeight();
+            if (Height != h) Height = h;
             if (Changed != null) Changed(this, EventArgs.Empty);
         }
 
@@ -232,33 +334,22 @@ namespace OpusScreen
             if (LiveChanged != null) LiveChanged(this, EventArgs.Empty);
         }
 
-        /// <summary>Quand une carte change de hauteur, les suivantes doivent redescendre.</summary>
-        private void RepositionSiblings()
-        {
-            int y = 0;
-            foreach (Control c in Parent.Controls)
-            {
-                MonitorCard card = c as MonitorCard;
-                if (card == null) continue;
-                card.Top = y;
-                y += card.Height + Theme.SpaceSm;
-            }
-            Parent.Height = Math.Max(10, y);
-        }
+        private bool Indep { get { return _ms.Independent && _independent.Visible; } }
 
         private int ComputeHeight()
         {
             int h = 12 + 20 + 18 + Theme.SpaceSm;
             h += _enabled.Height + _blackout.Height;
             if (_independent.Visible) h += _independent.Height;
-            if (_ms.Independent && _independent.Visible) h += _ownBright.Height + _ownKelvin.Height + Theme.SpaceSm;
+            if (Indep) h += _ownBright.Height + _ownKelvin.Height + Theme.SpaceSm;
             else h += _offset.Height + Theme.SpaceSm;
+            if (_copy.Visible) h += _copy.Height + Theme.SpaceSm;
             return h + 12;
         }
 
         private void UpdateStates()
         {
-            bool indep = _ms.Independent && _independent.Visible;
+            bool indep = Indep;
             _offset.Visible = !indep;
             _ownBright.Visible = indep;
             _ownKelvin.Visible = indep;
@@ -268,6 +359,7 @@ namespace OpusScreen
             _ownBright.Track.Enabled = on;
             _ownKelvin.Track.Enabled = on;
             _independent.Enabled = on;
+            LayoutChildren();
         }
 
         public void Sync()
@@ -282,6 +374,9 @@ namespace OpusScreen
                 _ownBright.SetValueSilent(_ms.Own.Brightness);
                 _ownKelvin.SetValueSilent(_ms.Own.Kelvin);
                 UpdateStates();
+                int h = ComputeHeight();
+                if (Height != h) Height = h;
+                Invalidate();
             }
             finally { _loading = false; }
         }
@@ -289,6 +384,11 @@ namespace OpusScreen
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
+            LayoutChildren();
+        }
+
+        private void LayoutChildren()
+        {
             int w = Width - 28;
             int y = 12;
             _title.SetBounds(14, y, w, 20); y += 20;
@@ -300,6 +400,9 @@ namespace OpusScreen
             _offset.SetBounds(14, y, w, _offset.Height);
             _ownBright.SetBounds(14, y, w, _ownBright.Height);
             _ownKelvin.SetBounds(14, y + _ownBright.Height, w, _ownKelvin.Height);
+            y += Indep ? _ownBright.Height + _ownKelvin.Height : _offset.Height;
+            y += Theme.SpaceSm;
+            _copy.SetBounds(14, y, Math.Min(w, 240), _copy.Height);
         }
 
         protected override void OnPaint(PaintEventArgs e)

@@ -184,6 +184,31 @@ namespace OpusScreen
             ItemHeight = 20;
         }
 
+        private const int WM_MOUSEWHEEL = 0x020A;
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern IntPtr SendMessage(IntPtr h, int msg, IntPtr w, IntPtr l);
+
+        /// <summary>
+        /// Liste FERMEE : la molette revient a la page, qui defile.
+        ///
+        /// Le comportement natif fait defiler les CHOIX d'une liste fermee qui a le
+        /// focus. Apres avoir choisi un filtre, faire defiler la page changeait donc
+        /// le filtre - sans que rien ne le signale, puisque la liste restait fermee.
+        /// Ouverte, elle garde la molette pour parcourir ses elements.
+        /// </summary>
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == WM_MOUSEWHEEL && !DroppedDown)
+            {
+                if (Parent != null && Parent.IsHandleCreated)
+                    SendMessage(Parent.Handle, m.Msg, m.WParam, m.LParam);
+                m.Result = IntPtr.Zero;
+                return;
+            }
+            base.WndProc(ref m);
+        }
+
         protected override void OnDrawItem(DrawItemEventArgs e)
         {
             if (e.Index < 0) return;
