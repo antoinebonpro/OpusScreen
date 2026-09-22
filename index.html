@@ -5,11 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OpusScreen — régler la lumière de votre écran</title>
 <meta name="description" content="Luminosité de 5 à 150 %, température de couleur, correction du daltonisme mesurée par un test guidé. Gratuit, libre, sans compte, sans réseau. Pour Windows.">
-<link rel="icon" href="img/logo.png">
+<link rel="icon" href="img/logo-64.png">
 <meta property="og:title" content="OpusScreen — régler la lumière de votre écran">
 <meta property="og:description" content="Luminosité de 5 à 150 %, température de couleur, daltonisme mesuré plutôt que deviné. Gratuit et libre, pour Windows.">
-<meta property="og:image" content="img/daltonisme.png">
+<meta property="og:image" content="https://antoinebonpro.github.io/OpusScreen/img/social.png">
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://antoinebonpro.github.io/OpusScreen/">
+<meta property="og:site_name" content="OpusScreen">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="OpusScreen : luminosité, température de couleur et correction du daltonisme pour Windows.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="OpusScreen — régler la lumière de votre écran">
+<meta name="twitter:description" content="Luminosité de 5 à 150 %, température de couleur, correction du daltonisme mesurée par un test guidé. Gratuit et libre, pour Windows.">
+<meta name="twitter:image" content="https://antoinebonpro.github.io/OpusScreen/img/social.png">
+<link rel="canonical" href="https://antoinebonpro.github.io/OpusScreen/">
+<link rel="apple-touch-icon" href="img/icon-192.png">
+<link rel="preload" as="font" type="font/woff2" href="fonts/atkinson-02.woff2" crossorigin>
 <link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -21,11 +34,11 @@
 <a class="skip" href="#contenu">Aller au contenu</a>
 
 <header class="top">
-  <a class="brand" href="#"><img src="img/logo.png" alt="" width="30" height="30"><span>OpusScreen</span></a>
+  <a class="brand" href="./"><img src="img/logo-64.png" alt="" width="30" height="30"><span>OpusScreen</span></a>
   <nav aria-label="Sections">
     <a href="#lumiere">La lumière</a>
     <a href="#couleurs">Les couleurs</a>
-    <a href="#test">Le test</a>
+    <a href="#test">Le test de daltonisme</a>
     <a href="#pages">L’application</a>
     <a href="#questions">Questions</a>
   </nav>
@@ -39,8 +52,8 @@
   <div class="hero-text">
     <h1>Régler la lumière<br>de votre écran.</h1>
     <p class="lead">
-      Descendre plus bas que Windows ne le permet. Réchauffer les couleurs quand la nuit
-      tombe. Et, pour qui distingue mal certaines couleurs, mesurer la correction au lieu
+      Descendre plus bas que Windows ne le permet. Réchauffer les couleurs quand la nuit tombe — un filtre à lumière bleue réglable au
+      kelvin près. Et, pour qui distingue mal certaines couleurs, mesurer la correction au lieu
       de la deviner.
     </p>
     <div class="actions">
@@ -49,6 +62,18 @@
       <a class="plain" href="https://github.com/antoinebonpro/OpusScreen">Lire le code</a>
     </div>
     <p class="fine" id="release-meta">Version 3.2, un seul fichier, rien à installer.</p>
+
+    <p class="fine averto">
+      Au premier lancement, Windows affichera «&nbsp;Windows a protégé votre ordinateur&nbsp;».
+      Choisissez <strong>Informations complémentaires</strong>, puis <strong>Exécuter quand
+      même</strong> : le fichier n’est pas signé par un certificat commercial, qui se loue
+      quelques centaines d’euros par an. Le code est public, et se compile en une commande.
+    </p>
+
+    <p class="fine sur-mobile">
+      OpusScreen est un logiciel Windows. Depuis un téléphone, notez l’adresse pour la
+      rouvrir sur votre ordinateur.
+    </p>
   </div>
 
   <figure class="bench" id="bench">
@@ -56,7 +81,7 @@
 
     <div class="dial">
       <label for="kelvin">Température</label>
-      <output id="kelvin-out">5200 K</output>
+      <output id="kelvin-out" aria-live="polite">5200 K</output>
       <input type="range" id="kelvin" min="1200" max="6500" step="100" value="5200"
              aria-describedby="kelvin-note">
       <p class="scale" aria-hidden="true"><span>1200 K bougie</span><span>6500 K jour</span></p>
@@ -65,7 +90,7 @@
 
     <div class="dial">
       <label for="lum">Luminosité</label>
-      <output id="lum-out">100 %</output>
+      <output id="lum-out" aria-live="polite">100 %</output>
       <input type="range" id="lum" min="35" max="150" step="5" value="100"
              aria-describedby="lum-note">
       <p class="scale" aria-hidden="true"><span>35 %</span><span>100 %</span><span>150 %</span></p>
@@ -122,9 +147,9 @@
 
   <div class="bench-controls">
     <div class="choice" role="group" aria-label="Déficience">
-      <button type="button" data-vision="deuteranopia" class="on">Vert mal perçu</button>
-      <button type="button" data-vision="protanopia">Rouge mal perçu</button>
-      <button type="button" data-vision="tritanopia">Bleu mal perçu</button>
+      <button type="button" data-vision="deuteranopia" class="on" aria-pressed="true">Vert mal perçu<span class="clinique">deutéranopie</span></button>
+      <button type="button" data-vision="protanopia" aria-pressed="false">Rouge mal perçu<span class="clinique">protanopie</span></button>
+      <button type="button" data-vision="tritanopia" aria-pressed="false">Bleu mal perçu<span class="clinique">tritanopie</span></button>
     </div>
     <div class="dial inline">
       <label for="sev">Gravité</label>
@@ -145,7 +170,7 @@
 
 <!-- ============================================================ test -->
 <section id="test">
-  <h2>Le test de vision</h2>
+  <h2>Le test de daltonisme, en deux minutes</h2>
   <p class="lead narrow">
     Choisir « deutéranopie, gravité 100 % » dans une liste, c’est se ranger dans une case.
     Une correction calibrée sur une déficience complète rend l’écran criard à qui n’en a
@@ -201,7 +226,7 @@
 
 <!-- ============================================================ l'application -->
 <section id="pages" class="dark">
-  <h2>L’application</h2>
+  <h2>Le logiciel, page par page</h2>
   <p class="lead narrow">
     Dix pages, dont une seule sert tous les jours. Ces captures sortent de la fenêtre
     réelle : elles sont reprises par un outil à chaque version, pour que le site ne
@@ -226,7 +251,7 @@
     <figure>
       <img src="img/ecrans.png" alt="Onglet Écrans : une carte de réglages par moniteur détecté." width="984" height="721" loading="lazy">
       <figcaption>
-        <h3>Écrans</h3>
+        <h3>Écrans externes : un réglage par moniteur</h3>
         <p>Un bloc par moniteur. Liés, décalés de quelques points, ou chacun son profil. Copier un écran sur les autres tient en un bouton ; éteindre un écran n’en déconnecte aucun.</p>
       </figcaption>
     </figure>
@@ -323,7 +348,7 @@
 
 <footer>
   <div class="foot-inner">
-    <p class="foot-brand"><img src="img/logo.png" alt="" width="26" height="26"> OpusScreen</p>
+    <p class="foot-brand"><img src="img/logo-64.png" alt="" width="26" height="26"> OpusScreen</p>
     <nav aria-label="Le logiciel">
       <a href="https://github.com/antoinebonpro/OpusScreen/releases/latest/download/OpusScreen.exe">Télécharger</a>
       <a href="https://github.com/antoinebonpro/OpusScreen/releases">Toutes les versions</a>
@@ -341,12 +366,110 @@
     </nav>
   </div>
   <p class="foot-note">
-    Aucun traqueur, aucune police distante, aucune bibliothèque : cette page tient la
-    promesse qu’elle décrit. Titres en Fraunces, texte en Atkinson Hyperlegible, dessinée
-    par le Braille Institute pour la basse vision.
+    Aucun traqueur, aucune police distante, aucune bibliothèque. Une seule requête
+    extérieure, facultative : le numéro de la dernière version, lu chez GitHub ; si elle
+    échoue, la page reste juste. Titres en Fraunces, texte en Atkinson Hyperlegible,
+    dessinée par le Braille Institute pour la basse vision.
   </p>
 </footer>
 
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "SoftwareApplication",
+ "name": "OpusScreen",
+ "applicationCategory": "UtilitiesApplication",
+ "applicationSubCategory": "Accessibilité et confort visuel",
+ "operatingSystem": "Windows 7, Windows 8, Windows 10, Windows 11",
+ "url": "https://antoinebonpro.github.io/OpusScreen/",
+ "downloadUrl": "https://github.com/antoinebonpro/OpusScreen/releases/latest/download/OpusScreen.exe",
+ "softwareHelp": "https://github.com/antoinebonpro/OpusScreen#readme",
+ "screenshot": "https://antoinebonpro.github.io/OpusScreen/img/ecran.png",
+ "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+ "isAccessibleForFree": true,
+ "inLanguage": "fr",
+ "offers": {
+  "@type": "Offer",
+  "price": "0",
+  "priceCurrency": "EUR"
+ },
+ "featureList": [
+  "Luminosité de 5 % à 150 %",
+  "Température de couleur de 1200 à 6500 K",
+  "Correction du daltonisme mesurée par un test guidé",
+  "Réglage indépendant par écran",
+  "Pauses oculaires et rappel de clignement"
+ ],
+ "author": {
+  "@type": "Person",
+  "name": "Antoine Bon"
+ }
+}
+</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "FAQPage",
+ "mainEntity": [
+  {
+   "@type": "Question",
+   "name": "Est-ce vraiment gratuit ?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Oui, et libre : licence AGPL v3. Pas de version payante, pas de fonctionnalité réservée, pas de période d’essai."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Windows affiche un avertissement au lancement.",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Le fichier n’est pas signé par un certificat commercial, qui se loue quelques centaines d’euros par an. SmartScreen annonce « Windows a protégé votre ordinateur » : choisissez Informations complémentaires, puis Exécuter quand même. Le dépôt se compile aussi en une commande, si vous préférez ne pas faire confiance à un binaire."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Quelle différence avec f.lux ou l’éclairage nocturne ?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "La température de couleur est le point commun. Au-delà : la luminosité va de 5 à 150 %, chaque écran se règle séparément, et la partie daltonisme — correction réglable et test de mesure — n’existe nulle part ailleurs gratuitement."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Est-ce que ça marche sur un écran externe ?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Oui. Luminosité, température et voile se règlent écran par écran. La saturation et les filtres, eux, s’appliquent à tout le bureau : c’est une limite de l’interface de Windows, et l’application désigne l’écran de référence plutôt que de la masquer."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Le test de vision remplace-t-il un ophtalmologue ?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Non, et il le dit. Il règle un logiciel ; un diagnostic demande un examen clinique. Si le test trouve quelque chose d’inattendu, parlez-en à un professionnel plutôt qu’à un logiciel."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Où sont stockés les réglages ?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Dans %LOCALAPPDATA%\\OpusScreen\\settings.ini. Un fichier texte, qui se sauvegarde par copie et s’exporte depuis l’onglet Avancé."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Quelle version de Windows faut-il ?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Windows 7 à 11. L’application s’appuie sur le .NET Framework 4, présent partout depuis : rien à installer."
+   }
+  }
+ ]
+}
+</script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -318,8 +318,12 @@
 
   [].slice.call(document.querySelectorAll('[data-vision]')).forEach(function (btn) {
     btn.addEventListener('click', function () {
-      [].slice.call(document.querySelectorAll('[data-vision]')).forEach(function (b) { b.classList.remove('on'); });
+      [].slice.call(document.querySelectorAll('[data-vision]')).forEach(function (b) {
+        b.classList.remove('on');
+        b.setAttribute('aria-pressed', 'false');   // l'etat doit s'entendre, pas seulement se voir
+      });
       btn.classList.add('on');
+      btn.setAttribute('aria-pressed', 'true');
       state.vision = btn.getAttribute('data-vision');
       render();
     });

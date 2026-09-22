@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://antoinebonpro.github.io/OpusScreen/sitemap.xml

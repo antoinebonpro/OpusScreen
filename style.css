@@ -133,6 +133,22 @@ section.dark { background: var(--creux); }
 .hero-text .lead { margin-bottom: 2.2rem; font-size: 1.18rem; }
 .actions { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin-bottom: 1.2rem; }
 
+/* L'obstacle reel du parcours - l'avertissement de Windows - annonce AVANT le clic
+   plutot qu'enfoui dans les questions : le visiteur surpris abandonne, le visiteur
+   prevenu continue. */
+.averto {
+  border-left: 2px solid var(--k2700); padding-left: 16px; max-width: 34rem;
+  margin-top: 1.4rem;
+}
+.averto strong { color: var(--texte); }
+
+.sur-mobile { display: none; }
+@media (max-width: 760px) {
+  .sur-mobile {
+    display: block; border-left: 2px solid var(--k6500); padding-left: 16px; margin-top: 1.2rem;
+  }
+}
+
 .bench {
   margin: 0; border: 1px solid var(--trait-f); padding: clamp(20px, 3vw, 30px);
   background: var(--creux);
@@ -190,11 +206,17 @@ section.dark { background: var(--creux); }
 .choice button:last-child { border-right: 0; }
 .choice button:hover { color: var(--texte); background: var(--trait); }
 .choice button.on { background: var(--k4200); color: #16110a; font-weight: 700; }
+/* Le terme medical sous le nom courant : les deux se cherchent dans un moteur. */
+.choice .clinique { display: block; font-size: .74rem; opacity: .72; font-weight: 400; }
 
 /* Au-dessus du voile : une demonstration de couleur teintee par le reglage de la
    page mesurerait autre chose que ce qu'elle annonce. Les captures aussi - montrer
    l'application a travers un filtre ambre serait mentir sur ses couleurs. */
 .pairs, .plates img, .specimens img { position: relative; z-index: 950; }
+
+/* Le bouton de telechargement aussi : baisser la luminosite de demonstration ne
+   doit pas eteindre la seule action de la page. */
+.actions .get, .last .get, .top .get { position: relative; z-index: 950; }
 
 .pairs { display: grid; gap: 30px; max-width: 48rem; }
 .pair-block { display: grid; gap: 4px; }
