@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Question d'usage
+    url: https://github.com/antoinebonpro/OpusScreen/discussions
+    about: Pour demander comment faire quelque chose, plutôt que signaler un défaut.

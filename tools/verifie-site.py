@@ -21,6 +21,7 @@ import re
 import ssl
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 
 RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -95,7 +96,7 @@ def verifie_page(base):
         d = desc.group(1).strip()
         verifie(70 <= len(d) <= 175, u"description de longueur utile (%d caracteres)" % len(d))
 
-    verifie('lang="fr"' in html, u"la langue de la page est declaree")
+    verifie('lang="fr"' in html or 'lang="en"' in html, u"la langue de la page est declaree")
     verifie('rel="canonical"' in html, u"une adresse canonique")
     for balise in ["og:title", "og:description", "og:image", "og:url", "og:type"]:
         verifie(balise in html, u"balise %s" % balise)
@@ -129,22 +130,38 @@ def verifie_page(base):
     return html
 
 
+def racine_de(base):
+    """Racine du site : « .../OpusScreen/en/ » se rapporte a « .../OpusScreen/ »."""
+    base = base if base.endswith("/") else base + "/"
+    if base.rstrip("/").endswith("/en"):
+        return base.rstrip("/")[: -len("en")]
+    return base
+
+
 def verifie_ressources(base, html):
     print(u"\n--- Les ressources et les liens")
     base = base if base.endswith("/") else base + "/"
+    racine = racine_de(base)
 
     locales = set(re.findall(r'(?:src|href)="(?!https?://|#|mailto:)([^"]+)"', html))
     for chemin in sorted(locales):
-        c = code(base + chemin.lstrip("./"))
+        # urljoin, et non une concatenation : la version anglaise remonte d'un
+        # dossier (« ../style.css ») pour partager les fichiers de la francaise.
+        c = code(urllib.parse.urljoin(base, chemin))
         verifie(c == 200, u"ressource %s" % chemin, u"code %d" % c)
 
     externes = sorted(set(re.findall(r'href="(https?://[^"]+)"', html)))
     for lien in externes:
-        c = code(lien)
+        # Un lien vers le site lui-meme se verifie sur la version TESTEE : avant
+        # publication, la page anglaise n'existe pas encore a l'adresse publique.
+        cible = lien
+        if lien.startswith(SITE) and not base.startswith(SITE):
+            cible = urllib.parse.urljoin(racine, lien[len(SITE):])
+        c = code(cible)
         verifie(c in (200, 301, 302), u"lien %s" % lien, u"code %d" % c)
 
     for chemin in ("robots.txt", "sitemap.xml"):
-        c = code(base + chemin)
+        c = code(racine + chemin)
         verifie(c == 200, u"presence de %s" % chemin, u"code %d" % c)
 
 
@@ -175,16 +192,18 @@ def verifie_affirmations(html):
     verifie(total is not None, u"le script de tests annonce un total")
     if total:
         n = int(total.group(1))
-        mots = {8: u"uit suites", 9: u"euf suites", 10: u"ix suites"}
-        attendu = mots.get(n, u"%d suites" % n)
-        verifie(attendu in html or (u"%d suites" % n) in html,
+        # Les deux langues disent le meme nombre, avec leurs mots.
+        mots = {8: [u"uit suites", u"ight suites"], 9: [u"euf suites", u"ine suites"],
+                10: [u"ix suites", u"en suites"]}
+        attendus = mots.get(n, []) + [u"%d suites" % n]
+        verifie(any(m in html for m in attendus),
                 u"le nombre de suites annonce sur la page correspond au script (%d)" % n)
 
     panneau = fichier("src/ControlPanel.cs")
     # Les APPELS seulement : la declaration de la methode s'ecrit « void AddPage( ».
     pages = len(re.findall(r"(?<!void )AddPage\(", panneau))
     verifie(pages == 10, u"l'application a bien dix pages", u"%d trouvees" % pages)
-    verifie(u"Dix pages" in html or u"dix pages" in html,
+    verifie(any(m in html for m in (u"Dix pages", u"dix pages", u"Ten pages", u"ten pages")),
             u"la page annonce le bon nombre de pages")
 
     cites = set(re.findall(r"\b([A-Z][a-zA-Z]+Test)\b", html))
