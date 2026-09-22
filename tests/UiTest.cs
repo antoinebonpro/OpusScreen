@@ -42,6 +42,8 @@ class UiTest
         Run("Ecrans : copier les reglages d'un ecran sur les autres", TestScreensCopyToOthers);
         Run("Ecrans : remettre tous les ecrans sur le reglage general", TestScreensSyncAll);
         Run("Ecrans : « Lier tous les ecrans » relie vraiment chaque ecran", TestLinkReallyLinks);
+        Run("Ecrans : un mode choisi atteint meme un ecran regle a part", TestModeReachesEveryScreen);
+        Run("Ecrans : un ecran verrouille ne suit aucun mode", TestLockedScreenIgnoresModes);
         Run("Molette : survoler un curseur ne le modifie pas, la page defile", TestWheelScrollsPage);
         Run("Molette : un curseur actif et survole se regle a la molette", TestWheelFocusedSlider);
         Run("Molette : une liste deroulante fermee ne change pas de choix", TestWheelCombo);
@@ -98,7 +100,7 @@ class UiTest
         {
             MonitorSettings ms = Ui.S.For(m);
             ms.Independent = false; ms.BrightnessOffset = 0; ms.Own = new Profile();
-            ms.Blackout = false; ms.Enabled = true;
+            ms.Blackout = false; ms.Enabled = true; ms.Locked = false;
         }
         Ui.P.RefreshReadouts(); Ui.Pump();
     }
@@ -284,6 +286,98 @@ class UiTest
         Check(Math.Abs(eff.Brightness - 85) < 0.01, "l'ecran 3 ignore le reglage general alors que les ecrans sont lies ("
             + eff.Brightness + " %)");
         Ui.S.Current.Brightness = 100;
+        ResetMonitors();
+    }
+
+    /// <summary>Clique la pastille du mode nomme, dans la vraie bande de modes.</summary>
+    static Profile ClickMode(string name)
+    {
+        SettingsPage page = Ui.Show(Ui.P.Display1);
+        Ui.ScrollTo(page, 0);
+        ModeStrip strip = Ui.AllOf<ModeStrip>(page)[0];
+
+        List<Profile> modes = new List<Profile>(Profile.BuiltInModes());
+        modes.AddRange(Ui.S.CustomProfiles);
+        int index = -1;
+        for (int i = 0; i < modes.Count; i++) if (modes[i].Name == name) index = i;
+        Check(index >= 0, "mode « " + name + " » introuvable");
+        if (index < 0) return null;
+
+        // La bande deborde de la fenetre et defile a la molette : on balaie chaque
+        // position de defilement jusqu'a tomber sur la pastille visee, plutot que de
+        // cliquer a une coordonnee calculee qui pourrait etre hors cadre.
+        Ui.S.ActiveModeName = "";
+        for (int notch = 0; notch <= modes.Count; notch++)
+        {
+            for (int x = 4; x < strip.Width; x += 8)
+            {
+                Ui.Click(strip, new Point(x, 20));
+                if (Ui.S.ActiveModeName == name) return modes[index];
+            }
+            Ui.Wheel(strip, new Point(10, 10), -120);
+            Ui.Pump();
+        }
+        Check(false, "la pastille « " + name + " » n'a pas pu etre cliquee");
+        return null;
+    }
+
+    /// <summary>
+    /// Le defaut qui a motive ce test : un ecran en profil independant ignorait la
+    /// page Ecran. Choisir « Soiree » ne changeait RIEN sur lui, sans aucun message,
+    /// et il ne bougeait que si l'on tirait ses curseurs propres a la main.
+    /// </summary>
+    static void TestModeReachesEveryScreen()
+    {
+        ResetMonitors();
+        Ui.S.LinkMonitors = false;
+        MonitorSettings ms = Ui.S.For(Ui.D.Monitors[2]);
+        ms.Independent = true;
+        ms.Own.Brightness = 45.85;
+        ms.Own.Kelvin = 2394;
+        Ui.P.RefreshReadouts(); Ui.Pump();
+
+        Profile mode = ClickMode("Soiree");
+        if (mode == null) { ResetMonitors(); return; }
+
+        Profile eff = Ui.S.EffectiveFor(Ui.D.Monitors[2]);
+        Check(Math.Abs(eff.Brightness - mode.Brightness) < 0.01 && eff.Kelvin == mode.Kelvin,
+              "le mode n'atteint pas l'ecran en profil independant : il reste a "
+              + (int)eff.Brightness + " % / " + eff.Kelvin + " K");
+
+        // Le reglage pris ecran par ecran tient jusqu'au prochain mode : descendre
+        // la luminosite generale ne doit pas effacer la temperature propre.
+        ms.Own.Kelvin = 2394;
+        Ui.S.Current.Brightness = 88;
+        Ui.D.Apply();
+        eff = Ui.S.EffectiveFor(Ui.D.Monitors[2]);
+        Check(eff.Kelvin == 2394, "la temperature reglee sur cet ecran a ete effacee par la luminosite generale");
+        Check(Math.Abs(eff.Brightness - 88) < 0.01, "la luminosite generale n'a pas suivi");
+
+        ResetMonitors();
+    }
+
+    /// <summary>L'exception explicite : la dalle calibree que rien ne doit toucher.</summary>
+    static void TestLockedScreenIgnoresModes()
+    {
+        ResetMonitors();
+        MonitorSettings ms = Ui.S.For(Ui.D.Monitors[1]);
+        ms.Locked = true;
+        ms.Own.Brightness = 62;
+        ms.Own.Kelvin = 5000;
+        Ui.P.RefreshReadouts(); Ui.Pump();
+
+        Profile mode = ClickMode("Bougie");
+        if (mode == null) { ms.Locked = false; ResetMonitors(); return; }
+
+        Profile eff = Ui.S.EffectiveFor(Ui.D.Monitors[1]);
+        Check(Math.Abs(eff.Brightness - 62) < 0.01 && eff.Kelvin == 5000,
+              "l'ecran verrouille a suivi le mode : " + (int)eff.Brightness + " % / " + eff.Kelvin + " K");
+
+        Profile other = Ui.S.EffectiveFor(Ui.D.Monitors[0]);
+        Check(Math.Abs(other.Brightness - mode.Brightness) < 0.01,
+              "les autres ecrans doivent, eux, avoir suivi le mode");
+
+        ms.Locked = false;
         ResetMonitors();
     }
 

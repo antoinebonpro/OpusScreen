@@ -47,8 +47,8 @@ namespace OpusScreen
             Add(syncAll, Theme.SpaceSm);
 
             Note("Remet chaque ecran sur le reglage general : les ecrans sont relies, les "
-               + "decalages et les profils propres sont retires. Les ecrans eteints ou "
-               + "exclus le restent - c'est un choix, pas un reglage a aligner.");
+               + "decalages et les profils propres sont retires. Les ecrans eteints, exclus "
+               + "ou verrouilles le restent - c'est un choix, pas un reglage a aligner.");
 
             DarkButton refresh = new DarkButton();
             refresh.Text = "Redetecter les ecrans";
@@ -85,6 +85,14 @@ namespace OpusScreen
 
             Note("Le mode « ecran eteint » reprend le BlackOut de Lunar : l'ecran est "
                + "occulte sans etre deconnecte, les fenetres qui s'y trouvent restent en place.");
+
+            Note("« Profil independant » donne a l'ecran ses propres valeurs, mais il reste "
+               + "une machine : choisir un mode dans la page Ecran les rafraichit, parce qu'un "
+               + "mode est une commande pour tout le poste. Seul un reglage pris ICI, ecran par "
+               + "ecran, ne se propage pas - et il tient jusqu'au prochain mode. Un ecran qui ne "
+               + "doit JAMAIS bouger - une dalle calibree pour un travail de couleur - se coche "
+               + "« ne pas suivre les reglages generaux » : plus rien ne l'atteint, ni les modes, "
+               + "ni l'horaire, ni les raccourcis.");
         }
 
         // ------------------------------------------------------------------ actions
@@ -96,6 +104,9 @@ namespace OpusScreen
             foreach (MonitorInfo m in Display.Monitors)
             {
                 MonitorSettings ms = S.For(m);
+                // Un ecran verrouille l'a ete expressement, pour une raison que ce
+                // bouton ne connait pas : il n'est pas aligne de force.
+                if (ms.Locked) continue;
                 ms.Independent = false;
                 ms.BrightnessOffset = 0;
             }
@@ -115,6 +126,7 @@ namespace OpusScreen
                 to.Own = from.Own.Clone();
                 to.BrightnessOffset = from.BrightnessOffset;
                 to.Enabled = from.Enabled;
+                to.Locked = from.Locked;
             }
             Sync();
             Commit();
@@ -232,7 +244,7 @@ namespace OpusScreen
         private readonly Settings _s;
         private readonly MonitorInfo _m;
         private readonly MonitorSettings _ms;
-        private readonly ToggleRow _enabled, _blackout, _independent;
+        private readonly ToggleRow _enabled, _blackout, _independent, _locked;
         private readonly SliderRow _offset, _ownBright, _ownKelvin;
         private readonly DarkButton _copy;
         private readonly Label _title, _detail;
@@ -284,8 +296,29 @@ namespace OpusScreen
             _independent = new ToggleRow("Profil independant", null);
             _independent.BackColor = Color.Transparent;
             _independent.Visible = allowIndependent;
-            _independent.Changed += delegate { _ms.Independent = _independent.Checked; UpdateStates(); Fire(); };
+            _independent.Changed += delegate
+            {
+                // Partir de ce que l'ecran affiche a cet instant. Sans cela, cocher
+                // la case le faisait sauter au dernier profil propre memorise -
+                // souvent un profil neutre jamais regle, donc un changement brutal
+                // que personne n'avait demande.
+                if (_independent.Checked) _ms.Own.CopyFrom(_s.EffectiveFor(_m));
+                _ms.Independent = _independent.Checked;
+                UpdateStates();
+                Fire();
+            };
             Controls.Add(_independent);
+
+            _locked = new ToggleRow("Ne pas suivre les reglages generaux", null);
+            _locked.BackColor = Color.Transparent;
+            _locked.Changed += delegate
+            {
+                if (_locked.Checked) _ms.Own.CopyFrom(_s.EffectiveFor(_m));
+                _ms.Locked = _locked.Checked;
+                UpdateStates();
+                Fire();
+            };
+            Controls.Add(_locked);
 
             _offset = new SliderRow("Decalage de luminosite", -50, 50, "pts");
             _offset.MarkAt(0, double.NaN);
@@ -334,12 +367,17 @@ namespace OpusScreen
             if (LiveChanged != null) LiveChanged(this, EventArgs.Empty);
         }
 
-        private bool Indep { get { return _ms.Independent && _independent.Visible; } }
+        /// <summary>
+        /// Vrai quand cet ecran affiche ses propres valeurs plutot que le reglage
+        /// general : soit parce qu'il a un profil independant, soit parce qu'il est
+        /// verrouille - et le verrou vaut meme quand les ecrans sont lies.
+        /// </summary>
+        private bool Indep { get { return _ms.Locked || (_ms.Independent && _independent.Visible); } }
 
         private int ComputeHeight()
         {
             int h = 12 + 20 + 18 + Theme.SpaceSm;
-            h += _enabled.Height + _blackout.Height;
+            h += _enabled.Height + _blackout.Height + _locked.Height;
             if (_independent.Visible) h += _independent.Height;
             if (Indep) h += _ownBright.Height + _ownKelvin.Height + Theme.SpaceSm;
             else h += _offset.Height + Theme.SpaceSm;
@@ -358,7 +396,11 @@ namespace OpusScreen
             _offset.Track.Enabled = on;
             _ownBright.Track.Enabled = on;
             _ownKelvin.Track.Enabled = on;
-            _independent.Enabled = on;
+            _locked.Enabled = on;
+
+            // Un ecran verrouille garde ses valeurs quoi qu'il arrive : le profil
+            // independant n'a plus rien a decider pour lui.
+            _independent.Enabled = on && !_ms.Locked;
             LayoutChildren();
         }
 
@@ -370,6 +412,7 @@ namespace OpusScreen
                 _enabled.SetCheckedSilent(_ms.Enabled);
                 _blackout.SetCheckedSilent(_ms.Blackout);
                 _independent.SetCheckedSilent(_ms.Independent);
+                _locked.SetCheckedSilent(_ms.Locked);
                 _offset.SetValueSilent(_ms.BrightnessOffset);
                 _ownBright.SetValueSilent(_ms.Own.Brightness);
                 _ownKelvin.SetValueSilent(_ms.Own.Kelvin);
@@ -396,6 +439,7 @@ namespace OpusScreen
             _enabled.SetBounds(14, y, w, _enabled.Height); y += _enabled.Height;
             _blackout.SetBounds(14, y, w, _blackout.Height); y += _blackout.Height;
             if (_independent.Visible) { _independent.SetBounds(14, y, w, _independent.Height); y += _independent.Height; }
+            _locked.SetBounds(14, y, w, _locked.Height); y += _locked.Height;
             y += Theme.SpaceSm;
             _offset.SetBounds(14, y, w, _offset.Height);
             _ownBright.SetBounds(14, y, w, _ownBright.Height);

@@ -4,6 +4,37 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ---
 
+## [3.2.1] - 2026-09-22
+
+Un mode choisi s'applique a tous les ecrans, y compris celui qui est regle a part.
+
+### Corrige
+
+- **Un ecran en « profil independant » ignorait toute la page Ecran.** Choisir un mode -
+  « Soiree », « Nuit profonde » - ne changeait RIEN sur cet ecran : pas de couleur, pas
+  de temperature, et aucun message pour le dire. Le seul moyen de le faire bouger etait
+  d'aller tirer ses curseurs propres a la main dans la page Ecrans. Le symptome etait
+  indiscernable d'une panne, et il touchait la configuration a deux ecrans la plus
+  courante : un ecran regle une fois a part restait sourd pour toujours.
+
+  Un mode est desormais ce qu'il annonce - une commande pour tout le poste : il atteint
+  chaque ecran, profil propre compris. Un reglage pris ecran par ecran n'est pas perdu
+  pour autant : seuls les champs reellement modifies par la commande generale sont
+  repercutes, si bien que descendre la luminosite generale ne remet pas la temperature
+  qu'on avait reglee a part sur un ecran.
+
+### Ajoute
+
+- **« Ne pas suivre les reglages generaux »**, par ecran, dans la page Ecrans. L'exception
+  explicite : une dalle calibree pour un travail de couleur que ni les modes, ni
+  l'horaire, ni les raccourcis ne doivent toucher. Cocher la case part de ce que l'ecran
+  affiche a cet instant, plutot que de le faire sauter a un ancien reglage.
+
+- **La page Ecran nomme les ecrans qu'elle n'atteint pas**, et pourquoi : verrouille,
+  effets desactives, ecran eteint. Un ecran qui ne change pas le dit maintenant lui-meme.
+
+---
+
 ## [3.2.0] - 2026-09-22
 
 L'onglet Daltonisme trouve votre reglage au lieu de vous le faire deviner.

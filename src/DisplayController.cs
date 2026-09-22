@@ -134,6 +134,8 @@ namespace OpusScreen
         /// <summary>Applique l'etat courant, avec fondu si l'option est active.</summary>
         public void Apply()
         {
+            SyncFollowers();
+
             if (!_settings.SmoothTransitions || _settings.TransitionSpeedMs < 60)
             {
                 ApplyNow(false);
@@ -183,9 +185,26 @@ namespace OpusScreen
             if (t >= 1.0) FinishApply();
         }
 
+        /// <summary>
+        /// Repercute le reglage general sur les ecrans qui le suivent, avant de
+        /// resoudre quoi que ce soit.
+        ///
+        /// Ce point de passage est unique et volontairement place ici : toute
+        /// commande generale - un mode, un curseur, un raccourci, l'horaire,
+        /// l'adaptation au contenu - finit par demander une application, et aucune
+        /// ne peut donc oublier de faire suivre les ecrans. Les reglages pris ecran
+        /// par ecran, eux, ne touchent pas au profil general : ils traversent ce
+        /// point sans rien y declencher.
+        /// </summary>
+        private void SyncFollowers()
+        {
+            _settings.SyncFollowingScreens();
+        }
+
         /// <summary>Applique immediatement, sans fondu.</summary>
         public void ApplyNow(bool fromSuspend)
         {
+            SyncFollowers();
             _fade.Stop();
             BeginPass();
             foreach (MonitorInfo m in _monitors)
@@ -376,6 +395,7 @@ namespace OpusScreen
         public void ReapplyIfNeeded()
         {
             if (_fade.Enabled) return;
+            SyncFollowers();
             BeginPass();
             bool touched = false;
             foreach (MonitorInfo m in _monitors)

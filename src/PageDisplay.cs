@@ -16,7 +16,7 @@ namespace OpusScreen
     {
         private ModeStrip _modes;
         private SliderRow _brightness, _temperature, _contrast, _saturation;
-        private Label _planLabel;
+        private Label _planLabel, _reachLabel;
         private DarkButton _saveProfile;
 
         public override string Title { get { return "Ecran"; } }
@@ -30,6 +30,14 @@ namespace OpusScreen
             _modes.Height = 96;
             _modes.ModeChosen += OnModeChosen;
             Add(_modes, Theme.SpaceSm);
+
+            // Ce que cette page atteint reellement. Un mode s'applique a tous les
+            // ecrans, mais trois reglages pris ailleurs peuvent en soustraire un -
+            // et un ecran qui ne change pas sans que rien ne le dise ressemble a une
+            // panne.
+            _reachLabel = UiKit.Caption("");
+            _reachLabel.Height = 34;
+            Add(_reachLabel, Theme.SpaceXs);
 
             Section("Reglages");
 
@@ -132,6 +140,25 @@ namespace OpusScreen
             _planLabel.Text = Display.DescribeCurrentPlan();
         }
 
+        /// <summary>
+        /// Nomme les ecrans que cette page n'atteint pas, et pourquoi.
+        ///
+        /// Un ecran regle a part ignorait en silence tout ce qui se decide ici :
+        /// choisir un mode ne changeait rien chez lui, et rien ne disait lequel ni
+        /// pourquoi. Les modes s'appliquent desormais partout ; les seules exceptions
+        /// sont celles que l'on a demandees, et elles se lisent ici.
+        /// </summary>
+        private void UpdateReach()
+        {
+            if (Display.Monitors.Count < 2) { _reachLabel.Text = ""; return; }
+
+            List<string> apart = S.ScreensNotFollowing(Display.Monitors);
+            _reachLabel.Text = apart.Count == 0
+                ? "Ces reglages s'appliquent a tous les ecrans."
+                : "Ces reglages n'atteignent pas :  " + string.Join("   -   ", apart.ToArray())
+                  + "   (page Ecrans)";
+        }
+
         private void UpdateHints()
         {
             // En mode automatique, le curseur n'est pas manoeuvrable : le dire vaut mieux
@@ -162,6 +189,7 @@ namespace OpusScreen
                 _temperature.Track.Enabled = S.Schedule == ScheduleMode.Manual;
                 UpdateHints();
                 UpdatePlan();
+                UpdateReach();
             }
             finally { Loading = false; }
         }

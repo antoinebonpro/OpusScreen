@@ -75,6 +75,37 @@ namespace OpusScreen
             VisionSeverity = o.VisionSeverity; FilterStrength = o.FilterStrength; Mode = o.Mode;
         }
 
+        /// <summary>
+        /// Recopie ici les SEULS champs qui ont change entre deux etats d'un autre
+        /// profil, et dit si quelque chose a bouge.
+        ///
+        /// Sert a repercuter un reglage general sur un ecran qui tient par ailleurs
+        /// ses propres valeurs : bouger la luminosite generale ne doit pas remettre
+        /// la temperature que cet ecran gardait a part. Recopier le profil entier
+        /// serait plus court d'une ligne, et effacerait ce reglage a chaque passage -
+        /// plusieurs fois par minute des que la luminosite adaptative tourne.
+        /// </summary>
+        public bool CopyChanged(Profile before, Profile after)
+        {
+            bool any = false;
+            if (Differs(before.Brightness, after.Brightness)) { Brightness = after.Brightness; any = true; }
+            if (before.Kelvin != after.Kelvin) { Kelvin = after.Kelvin; any = true; }
+            if (Differs(before.Contrast, after.Contrast)) { Contrast = after.Contrast; any = true; }
+            if (Differs(before.GammaCurve, after.GammaCurve)) { GammaCurve = after.GammaCurve; any = true; }
+            if (Differs(before.RedGain, after.RedGain)) { RedGain = after.RedGain; any = true; }
+            if (Differs(before.GreenGain, after.GreenGain)) { GreenGain = after.GreenGain; any = true; }
+            if (Differs(before.BlueGain, after.BlueGain)) { BlueGain = after.BlueGain; any = true; }
+            if (Differs(before.Saturation, after.Saturation)) { Saturation = after.Saturation; any = true; }
+            if (before.Filter != after.Filter) { Filter = after.Filter; any = true; }
+            if (Differs(before.VisionSeverity, after.VisionSeverity)) { VisionSeverity = after.VisionSeverity; any = true; }
+            if (Differs(before.FilterStrength, after.FilterStrength)) { FilterStrength = after.FilterStrength; any = true; }
+            if (before.Mode != after.Mode) { Mode = after.Mode; any = true; }
+            if (before.Tint != after.Tint) { Tint = after.Tint; any = true; }
+            return any;
+        }
+
+        private static bool Differs(double a, double b) { return Math.Abs(a - b) > 0.005; }
+
         public bool IsNeutral()
         {
             return Math.Abs(Brightness - 100) < 0.01

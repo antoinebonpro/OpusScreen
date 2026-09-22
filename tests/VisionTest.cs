@@ -64,6 +64,7 @@ class VisionTest
         TestSliderRangeIsNeverZero();
         TestEveryCustomControlIsAnnounced();
         TestMonitorIdsAreUnique();
+        TestGeneralSettingsReachEveryScreen();
         TestPlatesHideTheirDigit();
         TestControlPlatesAreVisibleToEveryone();
         TestPlateChoicesAreUsable();
@@ -706,6 +707,102 @@ class VisionTest
            && three[1].StableId != three[2].StableId
            && three[0].StableId != three[2].StableId,
               "trois ecrans identiques doivent recevoir trois identifiants distincts");
+
+        Console.WriteLine("  OK");
+    }
+
+    /// <summary>
+    /// Un mode choisi dans la page Ecran doit atteindre TOUS les ecrans.
+    ///
+    /// Le defaut corrige se voyait a deux ecrans : celui regle en « profil
+    /// independant » ignorait purement et simplement la page Ecran. Choisir
+    /// « Soiree » ou « Nuit profonde » ne changeait rien chez lui, sans aucun
+    /// message, et le seul moyen de le faire bouger etait de tirer ses curseurs
+    /// propres a la main. Le symptome etait indiscernable d'une panne.
+    ///
+    /// Les trois regles qui doivent tenir ensemble :
+    ///   1. une commande generale atteint tous les ecrans, profil propre compris ;
+    ///   2. un reglage pris ecran par ecran survit aux commandes generales qui ne
+    ///      portent pas sur le meme champ ;
+    ///   3. un ecran verrouille ne bouge jamais, et le simple chargement du fichier
+    ///      de configuration ne repercute rien du tout.
+    /// </summary>
+    static void TestGeneralSettingsReachEveryScreen()
+    {
+        Console.WriteLine();
+        Console.WriteLine("=== Les reglages generaux atteignent chaque ecran ===");
+
+        List<MonitorInfo> screens = new List<MonitorInfo>();
+        screens.Add(Fake(0, "\\\\.\\DISPLAY1", "HW:AAA1111"));
+        screens.Add(Fake(1, "\\\\.\\DISPLAY2", "HW:BBB2222"));
+
+        Settings s = new Settings();
+        s.LinkMonitors = false;
+        MonitorSettings second = s.For(screens[1]);
+        second.Independent = true;
+        second.Own.Brightness = 45.85;
+        second.Own.Kelvin = 2394;
+        s.MarkGeneralAsPushed();
+
+        // 1. Un mode est choisi : il doit arriver sur les deux ecrans.
+        Profile soiree = null;
+        foreach (Profile p in Profile.BuiltInModes()) if (p.Name == "Soiree") soiree = p;
+        Check(soiree != null, "le mode Soiree doit exister");
+        s.Current.CopyFrom(soiree);
+        s.SyncFollowingScreens();
+
+        Profile got = s.EffectiveFor(screens[1]);
+        Check(Math.Abs(got.Brightness - soiree.Brightness) < 0.01 && got.Kelvin == soiree.Kelvin,
+              "un mode doit atteindre l'ecran en profil independant, et non le laisser a "
+              + got.Brightness + " % / " + got.Kelvin + " K");
+
+        // 2. Reglage propre a cet ecran, puis commande generale sur un AUTRE champ :
+        //    le reglage propre doit survivre.
+        second.Own.Kelvin = 2394;
+        s.Current.Brightness = 90;
+        s.SyncFollowingScreens();
+        got = s.EffectiveFor(screens[1]);
+        Check(got.Kelvin == 2394, "une temperature reglee ecran par ecran ne doit pas etre effacee "
+                                + "par un changement de luminosite generale (obtenu " + got.Kelvin + " K)");
+        Check(Math.Abs(got.Brightness - 90) < 0.01, "la luminosite generale doit, elle, bien suivre");
+
+        // 3. Ecran verrouille : plus rien ne l'atteint, meme les ecrans lies.
+        second.Locked = true;
+        second.Own.Brightness = 30;
+        second.Own.Kelvin = 2000;
+        s.Current.CopyFrom(soiree);
+        s.Current.Brightness = 120;
+        s.SyncFollowingScreens();
+        got = s.EffectiveFor(screens[1]);
+        Check(Math.Abs(got.Brightness - 30) < 0.01 && got.Kelvin == 2000,
+              "un ecran verrouille ne doit suivre aucun reglage general");
+        s.LinkMonitors = true;
+        got = s.EffectiveFor(screens[1]);
+        Check(Math.Abs(got.Brightness - 30) < 0.01 && got.Kelvin == 2000,
+              "« lier tous les ecrans » ne doit pas defaire un verrou demande ecran par ecran");
+
+        // 4. Le verrou traverse le fichier de configuration.
+        Settings reread = Settings.FromText(s.Export());
+        Check(reread.For(screens[1]).Locked, "le verrou doit survivre au fichier de configuration");
+        Check(!reread.For(screens[0]).Locked, "un ecran non verrouille ne doit pas le devenir en relisant");
+
+        // 5. Un fichier ecrit par une version anterieure - sans le champ de verrou -
+        //    se relit tel quel plutot que de perdre la fiche entiere.
+        MonitorSettings old = MonitorSettings.Deserialize(
+            "HW:CCC3333~Ancien ecran~1~1~0~0~Personnalise;45;2700;100;100;100;100;100;100;0;0,0,0;100;100;0");
+        Check(old.StableId == "HW:CCC3333" && old.Independent && !old.Locked
+              && Math.Abs(old.Own.Brightness - 45) < 0.01 && old.Own.Kelvin == 2700,
+              "un reglage d'ecran ecrit par une version anterieure doit se relire intact");
+
+        // 6. Charger le fichier ne doit RIEN repercuter : le profil propre memorise
+        //    doit survivre au demarrage, quelle que soit la valeur du profil general.
+        Settings loaded = Settings.FromText(
+            "current=Personnalise;100;6500;100;100;100;100;100;100;0;0,0,0;100;100;0\n"
+          + "linkMonitors=0\n"
+          + "monitor=HW:BBB2222~Ecran~1~1~0~0~Personnalise;45.85;2394;100;100;100;100;100;100;0;0,0,0;100;100;0");
+        Profile atStartup = loaded.EffectiveFor(screens[1]);
+        Check(Math.Abs(atStartup.Brightness - 45.85) < 0.01 && atStartup.Kelvin == 2394,
+              "le seul chargement des reglages ne doit rien repercuter sur les profils propres");
 
         Console.WriteLine("  OK");
     }

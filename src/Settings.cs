@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
@@ -42,12 +42,25 @@ namespace OpusScreen
         public double BrightnessOffset;      // decalage applique au profil global, en points
         public bool Blackout;                // ecran eteint (equivalent du BlackOut de Lunar)
 
+        /// <summary>
+        /// Vrai = cet ecran ne suit plus du tout les reglages generaux.
+        ///
+        /// A distinguer du profil independant, qui donne seulement a l'ecran ses
+        /// propres valeurs : celles-ci sont rafraichies des qu'un mode est choisi,
+        /// parce qu'un mode est une commande pour toute la machine. Le verrou est
+        /// l'exception explicite - l'ecran calibre que rien ne doit bouger.
+        /// </summary>
+        public bool Locked;
+
         public string Serialize()
         {
             return string.Join("~", new string[] {
                 Esc(StableId), Esc(FriendlyName), Enabled ? "1" : "0", Independent ? "1" : "0",
                 BrightnessOffset.ToString("0.##", CultureInfo.InvariantCulture),
-                Blackout ? "1" : "0", Esc(Own.Serialize())
+                Blackout ? "1" : "0", Esc(Own.Serialize()),
+                // Champ ajoute apres coup, donc place en DERNIER : un fichier ecrit par
+                // une version anterieure se relit tel quel, verrou a faux.
+                Locked ? "1" : "0"
             });
         }
 
@@ -64,6 +77,7 @@ namespace OpusScreen
                 if (f.Length > 4) double.TryParse(f[4], NumberStyles.Float, CultureInfo.InvariantCulture, out m.BrightnessOffset);
                 if (f.Length > 5) m.Blackout = f[5] == "1";
                 if (f.Length > 6) m.Own = Profile.Deserialize(Unesc(f[6]));
+                if (f.Length > 7) m.Locked = f[7] == "1";
             }
             catch { }
             return m;
@@ -352,11 +366,79 @@ namespace OpusScreen
             // un ecran regle a part une fois restait a part pour toujours, meme apres
             // avoir coche « Lier tous les ecrans », et le reglage general ne
             // l'atteignait plus. Le profil reste memorise pour le jour ou l'on delie.
-            bool independent = ms.Independent && !LinkMonitors;
+            //
+            // Le verrou, lui, passe avant la liaison : il est demande ecran par ecran
+            // et pour une raison precise - un ecran calibre - qu'une case cochee
+            // ailleurs n'a pas a defaire.
+            bool independent = ms.Locked || (ms.Independent && !LinkMonitors);
             Profile p = independent ? ms.Own.Clone() : Current.Clone();
             if (!independent && Math.Abs(ms.BrightnessOffset) > 0.01)
                 p.Brightness = SafetyGuard.ClampBrightness(p.Brightness + ms.BrightnessOffset);
             return p;
+        }
+
+        /// <summary>
+        /// Etat general au moment de la derniere repercussion sur les ecrans.
+        /// Nul tant qu'aucune n'a eu lieu : le chargement du fichier ne doit rien
+        /// repercuter du tout, sinon les profils propres memorises seraient ecrases
+        /// par le profil general au premier demarrage venu.
+        /// </summary>
+        private Profile _lastGeneral;
+
+        /// <summary>
+        /// Prend acte de l'etat general courant sans rien repercuter. Appelee apres
+        /// un chargement ou un import : ce qui vient du fichier n'est pas un geste
+        /// de l'utilisateur.
+        /// </summary>
+        public void MarkGeneralAsPushed()
+        {
+            _lastGeneral = Current.Clone();
+        }
+
+        /// <summary>
+        /// Repercute sur chaque ecran qui le suit ce qui vient de changer dans le
+        /// reglage general.
+        ///
+        /// Le defaut corrige : un ecran en profil independant ignorait purement et
+        /// simplement la page Ecran. Choisir un mode - « Soiree », « Nuit profonde » -
+        /// ne changeait RIEN sur cet ecran, sans le moindre message, et le seul moyen
+        /// de le faire bouger etait de tirer ses curseurs propres a la main. Un mode
+        /// est pourtant une commande pour toute la machine.
+        ///
+        /// Seuls les champs REELLEMENT modifies depuis la derniere fois sont recopies.
+        /// C'est ce qui permet aux deux gestes de coexister : descendre la luminosite
+        /// generale ne remet pas la temperature qu'on avait reglee a part sur cet
+        /// ecran, et la luminosite adaptative - qui ne touche qu'un champ, plusieurs
+        /// fois par minute - n'efface plus rien au passage.
+        ///
+        /// Un ecran verrouille est saute : c'est la seule facon de ne jamais suivre.
+        /// </summary>
+        public bool SyncFollowingScreens()
+        {
+            if (_lastGeneral == null) { MarkGeneralAsPushed(); return false; }
+
+            bool touched = false;
+            foreach (MonitorSettings ms in Monitors)
+            {
+                if (ms.Locked) continue;
+                if (ms.Own.CopyChanged(_lastGeneral, Current)) touched = true;
+            }
+            MarkGeneralAsPushed();
+            return touched;
+        }
+
+        /// <summary>Ecrans que le reglage general n'atteint pas, et pourquoi.</summary>
+        public List<string> ScreensNotFollowing(List<MonitorInfo> monitors)
+        {
+            List<string> reasons = new List<string>();
+            foreach (MonitorInfo m in monitors)
+            {
+                MonitorSettings ms = For(m);
+                if (ms.Locked) reasons.Add(m.Label + " : profil verrouille");
+                else if (!ms.Enabled) reasons.Add(m.Label + " : effets desactives");
+                else if (ms.Blackout) reasons.Add(m.Label + " : ecran eteint");
+            }
+            return reasons;
         }
 
         // ------------------------------------------------------------------ raccourcis
@@ -462,6 +544,9 @@ namespace OpusScreen
             if (s.Hotkeys.Count == 0) s.Hotkeys = DefaultHotkeys();
             s.MergeMissingHotkeys();
             s.Current.ClampAll();
+            // Ce qui sort du fichier est un etat deja etabli, pas un geste : il ne doit
+            // rien repercuter sur les profils propres des ecrans.
+            s.MarkGeneralAsPushed();
             return s;
         }
 
@@ -684,6 +769,9 @@ namespace OpusScreen
             if (s.Hotkeys.Count == 0) s.Hotkeys = DefaultHotkeys();
             s.MergeMissingHotkeys();
             s.Current.ClampAll();
+            // Ce qui sort du fichier est un etat deja etabli, pas un geste : il ne doit
+            // rien repercuter sur les profils propres des ecrans.
+            s.MarkGeneralAsPushed();
             return s;
         }
 
