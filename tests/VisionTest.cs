@@ -64,6 +64,13 @@ class VisionTest
         TestSliderRangeIsNeverZero();
         TestEveryCustomControlIsAnnounced();
         TestMonitorIdsAreUnique();
+        TestPlatesHideTheirDigit();
+        TestControlPlatesAreVisibleToEveryone();
+        TestPlateChoicesAreUsable();
+        TestThresholdGrowsWithSeverity();
+        TestStaircaseFindsTheSeverity();
+        TestExamNamesTheRightDeficiency();
+        TestPresetRoundTrip();
 
         Console.WriteLine();
         Console.WriteLine(fails == 0 ? ">>> TOUS LES TESTS PASSENT" : ">>> " + fails + " ECHEC(S)");
@@ -712,4 +719,202 @@ class VisionTest
         m.FriendlyName = "Ecran de test";
         return m;
     }
+    // ------------------------------------------------------------------ test guide
+
+    /// <summary>
+    /// Une planche n'a de valeur que si elle separe VRAIMENT les deux visions : le
+    /// chiffre doit sauter aux yeux d'une vision normale, et s'effacer pour la
+    /// deficience visee. Une planche jolie mais lisible par tout le monde ne
+    /// diagnostique rien - elle donne seulement l'impression d'un test.
+    /// </summary>
+    static void TestPlatesHideTheirDigit()
+    {
+        List<VisionPlate> plates = VisionExam.Plates(7);
+        Check(plates.Count >= 8, "au moins huit planches attendues, " + plates.Count + " trouvees");
+
+        int perAxis = 0;
+        foreach (VisionPlate p in plates)
+        {
+            if (p.Axis == ColorFilter.None) continue;
+            perAxis++;
+
+            // Une planche subtile ne peut pas avoir un chiffre franc : elle doit
+            // s'effacer des une anomalie moderee. L'ecart minimal depend donc de la
+            // gravite visee.
+            double wanted = p.Level >= 100 ? 12 : 8;
+            double normal = Vision.DeltaE(p.Figure, p.Background);
+            Check(normal > wanted, "planche " + p.Digit + " (" + Vision.PlainName(p.Axis)
+                + ", gravite " + p.Level + " %) : ecart de seulement " + normal.ToString("0.0")
+                + " pour une vision normale");
+
+            float[] sim = ColorMatrixEffect.BuildMatrix(100, p.Axis, p.Level, 100, FilterMode.Simulation);
+            double seen = Vision.DeltaE(ColorMatrixEffect.Transform(sim, p.Figure),
+                                        ColorMatrixEffect.Transform(sim, p.Background));
+            Check(seen < VisionExam.JustNoticeable, "planche " + p.Digit + " : la deficience visee la lit encore ("
+                + seen.ToString("0.0") + ")");
+        }
+        Check(perAxis >= 6, "trop peu de planches ciblees : " + perAxis);
+    }
+
+    /// <summary>
+    /// Les planches de controle valident la PASSATION, pas la vision : si on les rate,
+    /// c'est qu'on a repondu au hasard. Sans elles, un test bacle rendrait un
+    /// diagnostic que l'on croirait mesure.
+    /// </summary>
+    static void TestControlPlatesAreVisibleToEveryone()
+    {
+        List<VisionPlate> plates = VisionExam.Plates(7);
+        int controls = 0;
+        foreach (VisionPlate p in plates)
+        {
+            if (p.Axis != ColorFilter.None) continue;
+            controls++;
+            foreach (ColorFilter f in Kinds)
+            {
+                float[] sim = ColorMatrixEffect.BuildMatrix(100, f, 100, 100, FilterMode.Simulation);
+                double seen = Vision.DeltaE(ColorMatrixEffect.Transform(sim, p.Figure),
+                                            ColorMatrixEffect.Transform(sim, p.Background));
+                Check(seen > 8, "planche de controle illisible pour " + Vision.PlainName(f)
+                    + " (" + seen.ToString("0.0") + ")");
+            }
+        }
+        Check(controls >= 2, "au moins deux planches de controle attendues, " + controls);
+    }
+
+    /// <summary>Le chiffre attendu doit figurer parmi les reponses proposees, et une seule fois.</summary>
+    static void TestPlateChoicesAreUsable()
+    {
+        foreach (VisionPlate p in VisionExam.Plates(3))
+        {
+            Check(p.Choices.Length == 4, "quatre reponses attendues");
+            int found = 0;
+            List<int> seen = new List<int>();
+            foreach (int c in p.Choices)
+            {
+                if (c == p.Digit) found++;
+                Check(!seen.Contains(c), "reponse " + c + " proposee deux fois");
+                seen.Add(c);
+            }
+            Check(found == 1, "la bonne reponse doit figurer une fois exactement");
+        }
+    }
+
+    /// <summary>
+    /// Plus la deficience est grave, plus il faut ecarter deux couleurs pour qu'elle
+    /// les distingue. Sans cette monotonie, remonter du seuil mesure a la gravite
+    /// n'aurait aucun sens.
+    /// </summary>
+    static void TestThresholdGrowsWithSeverity()
+    {
+        foreach (ColorFilter f in Kinds)
+        {
+            double previous = -1;
+            foreach (double sev in new double[] { 0, 25, 50, 75, 100 })
+            {
+                double t = VisionExam.SeparationThreshold(f, sev);
+                Check(t > previous, Vision.PlainName(f) + " : seuil " + t.ToString("0.000")
+                    + " a " + sev + " % apres " + previous.ToString("0.000"));
+                previous = t;
+            }
+        }
+    }
+
+    /// <summary>
+    /// L'escalier est confronte a un observateur SIMULE dont on connait la gravite :
+    /// il repond juste tant que l'ecart depasse ce que cette vision percoit. Le test
+    /// verifie que la mesure retrouve la gravite de depart - seule facon de savoir si
+    /// le test guide mesure quelque chose, ou produit un nombre decoratif.
+    /// </summary>
+    static void TestStaircaseFindsTheSeverity()
+    {
+        foreach (ColorFilter f in Kinds)
+        {
+            foreach (double real in new double[] { 0, 40, 70, 100 })
+            {
+                VisionExam.Staircase st = new VisionExam.Staircase(f);
+                int guard = 0;
+                while (!st.Done && guard++ < 200)
+                {
+                    Color[] pair = VisionExam.PairAt(f, st.Separation);
+                    bool sees = VisionExam.PerceivedDelta(f, real, pair[0], pair[1]) >= VisionExam.JustNoticeable;
+                    st.Answer(sees);
+                }
+                Check(st.Done, "l'escalier doit s'arreter tout seul");
+                double found = VisionExam.SeverityFromThreshold(f, st.Threshold);
+                Check(Math.Abs(found - real) <= 15, Vision.PlainName(f) + " : gravite reelle " + real
+                    + " %, mesuree " + found.ToString("0") + " % (seuil " + st.Threshold.ToString("0.000") + ")");
+            }
+        }
+    }
+
+    /// <summary>Les planches doivent nommer la bonne deficience, et ne rien nommer quand tout va bien.</summary>
+    static void TestExamNamesTheRightDeficiency()
+    {
+        foreach (ColorFilter f in Kinds)
+        {
+            // Les planches ne visent que la deficience COMPLETE, et c'est verifie a
+            // l'image : un chiffre assez efface pour tromper une anomalie partielle ne
+            // se lit plus du tout une fois disperse en pastilles, meme avec une vision
+            // normale. Les cas partiels se MESURENT - la fenetre du test compare alors
+            // les trois axes, et UiTest verifie ce chemin de bout en bout.
+            foreach (double severity in new double[] { 100 })
+            {
+                List<VisionPlate> plates = VisionExam.Plates(11);
+                List<bool> answers = new List<bool>();
+                foreach (VisionPlate p in plates)
+                {
+                    float[] sim = ColorMatrixEffect.BuildMatrix(100, f, severity, 100, FilterMode.Simulation);
+                    double seen = Vision.DeltaE(ColorMatrixEffect.Transform(sim, p.Figure),
+                                                ColorMatrixEffect.Transform(sim, p.Background));
+                    answers.Add(seen >= VisionExam.JustNoticeable);
+                }
+                // Le rouge et le vert ont des axes de confusion voisins : une planche
+                // cachee a l'un l'est parfois presque a l'autre. On exige donc que
+                // l'axe vise soit le plus rate - l'egalite est permise, c'est la
+                // mesure qui la departage ensuite, dans la fenetre du test.
+                Dictionary<ColorFilter, int> missed = VisionExam.Misses(plates, answers);
+                int best = 0;
+                foreach (ColorFilter k in VisionExam.Axes) if (missed[k] > best) best = missed[k];
+                Check(missed[f] == best && best > 0, "planches lues par " + Vision.PlainName(f)
+                    + " a " + severity + " % : " + missed[f] + " ratee(s) sur cet axe, " + best
+                    + " sur le plus rate");
+                Check(VisionExam.ControlsMissed(plates, answers) == 0,
+                    "les planches de controle doivent rester lisibles");
+            }
+        }
+
+        // Vision normale : toutes les planches sont lues, aucune deficience annoncee.
+        List<VisionPlate> all = VisionExam.Plates(11);
+        List<bool> perfect = new List<bool>();
+        foreach (VisionPlate p in all) perfect.Add(true);
+        int c2;
+        Check(VisionExam.TypeFromPlates(all, perfect, out c2) == ColorFilter.None,
+            "aucune deficience ne doit etre annoncee quand tout est lu");
+    }
+
+    /// <summary>Un reglage enregistre doit se relire a l'identique, sinon il ne sert a rien.</summary>
+    static void TestPresetRoundTrip()
+    {
+        VisionPreset p = new VisionPreset();
+        p.Name = "Mon ecran ~ de jour | test";
+        p.Filter = ColorFilter.Protanopia;
+        p.Severity = 62.5;
+        p.Strength = 118;
+        p.Mode = FilterMode.Correction;
+
+        VisionPreset back = VisionPreset.Deserialize(p.Serialize());
+        Check(back.Name == p.Name, "nom perdu : " + back.Name);
+        Check(back.Filter == p.Filter && Math.Abs(back.Severity - p.Severity) < 0.01
+              && Math.Abs(back.Strength - p.Strength) < 0.01 && back.Mode == p.Mode,
+              "reglage enregistre deforme par l'ecriture");
+
+        Settings s = new Settings();
+        s.VisionPresets.Add(p);
+        s.LastExamSummary = "22/09/2026 - rouge mal percu, 62 %";
+        Settings reread = Settings.FromText(s.Export());
+        Check(reread.VisionPresets.Count == 1 && reread.VisionPresets[0].Name == p.Name,
+              "les reglages enregistres ne survivent pas au fichier de configuration");
+        Check(reread.LastExamSummary == s.LastExamSummary, "le resultat du dernier test n'est pas conserve");
+    }
+
 }

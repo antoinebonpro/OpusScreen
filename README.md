@@ -80,8 +80,8 @@ double-cliquez.
 > complémentaires* → *Exécuter quand même*. Si vous préférez ne pas faire confiance à un
 > binaire, la section suivante compile le vôtre en une commande.
 
-Version 3.1.0 précisément : [OpusScreen.exe 3.1.0](https://github.com/antoinebonpro/OpusScreen/releases/download/v3.1.0/OpusScreen.exe)
-· [notes de version](https://github.com/antoinebonpro/OpusScreen/releases/tag/v3.1.0).
+Version 3.2.0 précisément : [OpusScreen.exe 3.2.0](https://github.com/antoinebonpro/OpusScreen/releases/download/v3.2.0/OpusScreen.exe)
+· [notes de version](https://github.com/antoinebonpro/OpusScreen/releases/tag/v3.2.0).
 Toutes les versions : [page des publications](https://github.com/antoinebonpro/OpusScreen/releases).
 
 ## 🔨 Compiler soi-même

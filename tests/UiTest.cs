@@ -51,6 +51,10 @@ class UiTest
         Run("Navigation : tous les onglets tiennent dans la colonne", TestNavFits);
         Run("Navigation : Ctrl + chiffre ouvre chaque page", TestNavShortcuts);
         Run("Daltonisme : onglet dedie, reglages relies", TestColorBlindPage);
+        Run("Daltonisme : le test guide trouve la deficience et l'applique", TestGuidedExam);
+        Run("Daltonisme : le test guide rend l'ecran a la sortie", TestExamRestoresScreen);
+        Run("Daltonisme : enregistrer, appliquer et supprimer un reglage", TestPresets);
+        Run("Daltonisme : l'interrupteur de demarrage suit les reglages", TestStartupToggle);
         Run("Pages : un rafraichissement ne modifie aucun reglage", TestSyncIsPure);
         Run("Pages : chaque interrupteur repond au clic et revient", TestEveryToggleResponds);
 
@@ -582,4 +586,202 @@ class UiTest
         }
         ResetMonitors();
     }
+    // ------------------------------------------------------------------ test guide
+
+    /// <summary>
+    /// Fait passer le test a un observateur SIMULE dont on connait la vision : il
+    /// repond comme le ferait cette personne - il ne lit pas les planches qui lui
+    /// sont invisibles, et ne distingue les paires que lorsque l'ecart depasse ce
+    /// que sa vision percoit.
+    /// </summary>
+    static void RunExamAs(VisionExamDialog dlg, ColorFilter vision, double severity)
+    {
+        dlg.Begin();
+
+        int guard = 0;
+        while (dlg.CurrentStep == VisionExamDialog.Step.Plates && guard++ < 40)
+        {
+            VisionPlate plate = dlg.CurrentPlate;
+            if (plate == null) break;
+            float[] sim = ColorMatrixEffect.BuildMatrix(100, vision, severity, 100, FilterMode.Simulation);
+            bool readable = Vision.DeltaE(ColorMatrixEffect.Transform(sim, plate.Figure),
+                                          ColorMatrixEffect.Transform(sim, plate.Background))
+                            >= VisionExam.JustNoticeable;
+            dlg.AnswerPlate(readable ? plate.Digit : -1);
+        }
+
+        guard = 0;
+        while (dlg.CurrentStep == VisionExamDialog.Step.Pairs && guard++ < 60)
+        {
+            Color[] pair = VisionExam.PairAt(dlg.Staircase.Axis, dlg.Staircase.Separation);
+            bool sees = VisionExam.PerceivedDelta(vision, severity, pair[0], pair[1]) >= VisionExam.JustNoticeable;
+            dlg.AnswerPair(sees);
+        }
+    }
+
+    static bool RedGreen(ColorFilter f)
+    {
+        return f == ColorFilter.Protanopia || f == ColorFilter.Deuteranopia;
+    }
+
+    static void TestGuidedExam()
+    {
+        ColorFilter[] visions = { ColorFilter.Protanopia, ColorFilter.Deuteranopia, ColorFilter.Tritanopia };
+        foreach (ColorFilter vision in visions)
+        foreach (double severity in new double[] { 100, 65, 45 })
+        {
+            Ui.S.Current.Filter = ColorFilter.None;
+            using (VisionExamDialog dlg = new VisionExamDialog(Ui.S, Ui.D, 4242))
+            {
+                RunExamAs(dlg, vision, severity);
+                Check(dlg.CurrentStep == VisionExamDialog.Step.Result,
+                    Vision.PlainName(vision) + " : le test ne va pas jusqu'au resultat");
+                // Distinguer une protanomalie d'une deuteranomalie LEGERE demande un
+                // anomaloscope : leurs axes de confusion sont trop voisins. Le test
+                // doit donc nommer la bonne famille - rouge-vert ou bleu-jaune - et
+                // le bon type des que la deficience est marquee.
+                bool exact = dlg.FoundFilter == vision;
+                bool family = RedGreen(vision) && RedGreen(dlg.FoundFilter);
+                Check(exact || (severity < 60 && family), "deficience trouvee : " + Vision.PlainName(dlg.FoundFilter)
+                    + " au lieu de " + Vision.PlainName(vision) + " (gravite reelle " + severity
+                    + " %, trouvee " + dlg.FoundSeverity + " %, confiance " + dlg.Confidence + ")");
+                Check(Math.Abs(dlg.FoundSeverity - severity) <= 15, "gravite trouvee " + dlg.FoundSeverity
+                    + " % pour " + severity + " % reels");
+                Check(dlg.Confidence > 0, "confiance nulle malgre un depistage net");
+
+                dlg.Apply();
+                Check(Ui.S.Current.Filter == dlg.FoundFilter
+                      && Math.Abs(Ui.S.Current.VisionSeverity - dlg.FoundSeverity) < 0.01,
+                    "le resultat n'a pas ete applique aux reglages");
+                Check(Ui.S.LastExamSummary.Length > 0, "le resultat du test n'est pas memorise");
+            }
+        }
+
+        // Une vision normale lit tout : le test ne doit rien diagnostiquer.
+        using (VisionExamDialog dlg = new VisionExamDialog(Ui.S, Ui.D, 99))
+        {
+            RunExamAs(dlg, ColorFilter.Deuteranopia, 0);
+            Check(dlg.FoundFilter == ColorFilter.None, "une vision normale ne doit rien faire diagnostiquer (trouve "
+                + Vision.PlainName(dlg.FoundFilter) + ", gravite " + dlg.FoundSeverity + " %)");
+        }
+
+        Ui.S.Current.Filter = ColorFilter.None;
+        Ui.S.Current.VisionSeverity = 100;
+        Ui.S.LastExamSummary = "";
+        Ui.P.RefreshReadouts(); Ui.Pump();
+    }
+
+    /// <summary>
+    /// Le test retire la correction pendant sa duree - sinon il mesurerait l'ecran
+    /// corrige et non l'oeil. Il doit donc la rendre en sortant, y compris quand on
+    /// ferme la fenetre en plein milieu.
+    /// </summary>
+    static void TestExamRestoresScreen()
+    {
+        Check(!Ui.D.Suspended, "les effets devraient etre actifs avant le test");
+
+        VisionExamDialog dlg = new VisionExamDialog(Ui.S, Ui.D, 7);
+        Check(Ui.D.Suspended, "les effets devraient etre suspendus pendant le test");
+        dlg.AnswerPlate(-1);              // on abandonne en plein test
+        dlg.Close();
+        dlg.Dispose();
+        Ui.Pump();
+        Check(!Ui.D.Suspended, "l'ecran n'a pas ete rendu apres un test interrompu");
+
+        // Et lorsque les effets etaient DEJA suspendus, le test ne doit pas les rallumer.
+        Ui.D.Suspend("pause de l'utilisateur");
+        VisionExamDialog dlg2 = new VisionExamDialog(Ui.S, Ui.D, 7);
+        dlg2.Close();
+        dlg2.Dispose();
+        Ui.Pump();
+        Check(Ui.D.Suspended, "une pause en cours ne doit pas etre levee par le test");
+        Ui.D.Resume();
+    }
+
+    // ------------------------------------------------------------------ reglages enregistres
+
+    static void TestPresets()
+    {
+        SettingsPage page = Ui.Show(Ui.PageTitled("Daltonisme"));
+        Ui.S.VisionPresets.Clear();
+        Ui.S.Current.Filter = ColorFilter.Tritanopia;
+        Ui.S.Current.VisionSeverity = 44;
+        Ui.S.Current.FilterStrength = 130;
+        Ui.P.RefreshReadouts(); Ui.Pump();
+
+        PageColorBlind cb = (PageColorBlind)page;
+        cb.SavePreset("Bureau");
+        Check(Ui.S.VisionPresets.Count == 1, "le reglage n'a pas ete enregistre");
+
+        bool listed = false;
+        foreach (DarkComboBox b in Ui.AllOf<DarkComboBox>(page))
+            foreach (object item in b.Items) if (item.ToString() == "Bureau") listed = true;
+        Check(listed, "le reglage enregistre n'apparait pas dans la liste");
+
+        // On change tout, puis on rappelle le reglage : la correction revient, et elle seule.
+        Ui.S.Current.Filter = ColorFilter.Protanopia;
+        Ui.S.Current.VisionSeverity = 100;
+        Ui.S.Current.Brightness = 62;
+        Ui.P.RefreshReadouts(); Ui.Pump();
+
+        DarkButton apply = ButtonStarting(page, "Appliquer");
+        Check(apply != null, "bouton Appliquer absent");
+        if (apply != null)
+        {
+            Reveal(page, apply);
+            Ui.Click(apply);
+            Check(Ui.S.Current.Filter == ColorFilter.Tritanopia
+                  && Math.Abs(Ui.S.Current.VisionSeverity - 44) < 0.01
+                  && Math.Abs(Ui.S.Current.FilterStrength - 130) < 0.01,
+                  "le reglage rappele n'a pas ete applique");
+            Check(Math.Abs(Ui.S.Current.Brightness - 62) < 0.01,
+                  "rappeler un reglage de vision a change la luminosite");
+        }
+
+        Settings reread = Settings.FromText(Ui.S.Export());
+        Check(reread.VisionPresets.Count == 1 && reread.VisionPresets[0].Name == "Bureau",
+              "le reglage enregistre ne survit pas au fichier de configuration");
+
+        Ui.S.VisionPresets.Clear();
+        Ui.S.Current.Filter = ColorFilter.None;
+        Ui.S.Current.VisionSeverity = 100;
+        Ui.S.Current.FilterStrength = 100;
+        Ui.S.Current.Brightness = 100;
+        Ui.P.RefreshReadouts(); Ui.Pump();
+        Ui.ScrollTo(page, 0);
+    }
+
+    // ------------------------------------------------------------------ demarrage
+
+    static void TestStartupToggle()
+    {
+        SettingsPage page = Ui.Show(Ui.PageTitled("Daltonisme"));
+        Ui.ScrollTo(page, 0);
+
+        ToggleSwitch startup = null;
+        foreach (ToggleSwitch sw in Ui.AllOf<ToggleSwitch>(page))
+            if (sw.AccessibleLabel.StartsWith("Lancer OpusScreen")) startup = sw;
+        Check(startup != null, "interrupteur de demarrage absent de l'onglet Daltonisme");
+        if (startup == null) return;
+
+        bool before = Ui.S.StartWithWindows;
+        Reveal(page, startup);
+        Ui.Click(startup);
+        Check(Ui.S.StartWithWindows != before, "l'interrupteur de demarrage ne change rien");
+
+        // Et l'onglet Avance dit la meme chose : un seul reglage, deux endroits.
+        Ui.Show(Ui.P.AdvancedPage);
+        ToggleSwitch other = null;
+        foreach (ToggleSwitch sw in Ui.AllOf<ToggleSwitch>(Ui.P.AdvancedPage))
+            if (sw.AccessibleLabel.StartsWith("Lancer au demarrage")) other = sw;
+        Check(other != null && other.Checked == Ui.S.StartWithWindows,
+            "les deux interrupteurs de demarrage ne disent pas la meme chose");
+
+        Ui.Show(page);
+        Reveal(page, startup);
+        Ui.Click(startup);
+        Check(Ui.S.StartWithWindows == before, "l'interrupteur ne revient pas a son etat");
+        Ui.ScrollTo(page, 0);
+    }
+
 }
