@@ -66,6 +66,14 @@ Et sur le terrain de l'accessibilité, où le tableau devient vite court :
 Plus de **85 réglages** répartis sur 10 pages, dont un onglet dédié au daltonisme, 20 modes livrés, 15 raccourcis globaux
 reconfigurables.
 
+## 🌐 Site
+
+Présentation, démonstration interactive du daltonisme et captures d’écran :
+**[antoinebonpro.github.io/OpusScreen](https://antoinebonpro.github.io/OpusScreen/)**
+
+Les sources du site vivent dans [](site/) et les captures se régénèrent d’une
+commande : `testsun-tests.cmd captures`.
+
 ## ⬇️ Télécharger
 
 **[OpusScreen.exe — dernière version](https://github.com/antoinebonpro/OpusScreen/releases/latest/download/OpusScreen.exe)**
