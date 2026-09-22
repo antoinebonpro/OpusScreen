@@ -3,430 +3,348 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OpusScreen — votre écran, réglé pour vos yeux</title>
+<title>OpusScreen — régler la lumière de votre écran</title>
 <meta name="description" content="Luminosité de 5 à 150 %, température de couleur, correction du daltonisme mesurée par un test guidé. Gratuit, libre, sans compte, sans réseau. Pour Windows.">
 <link rel="icon" href="img/logo.png">
-<meta property="og:title" content="OpusScreen — votre écran, réglé pour vos yeux">
-<meta property="og:description" content="Luminosité 5–150 %, température de couleur, daltonisme mesuré plutôt que deviné. Gratuit et libre, pour Windows.">
+<meta property="og:title" content="OpusScreen — régler la lumière de votre écran">
+<meta property="og:description" content="Luminosité de 5 à 150 %, température de couleur, daltonisme mesuré plutôt que deviné. Gratuit et libre, pour Windows.">
 <meta property="og:image" content="img/daltonisme.png">
 <meta property="og:type" content="website">
+<link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+<div class="veil" id="veil" aria-hidden="true"></div>
+<div class="veil gain" id="gain" aria-hidden="true"></div>
+
 <a class="skip" href="#contenu">Aller au contenu</a>
 
-<header class="nav" id="nav">
-  <div class="wrap nav-inner">
-    <a class="brand" href="#">
-      <img src="img/logo.png" alt="" width="32" height="32">
-      <span>OpusScreen</span>
-    </a>
-
-    <nav class="nav-links" aria-label="Navigation principale">
-      <a href="#demo">Démonstration</a>
-      <a href="#fonctions">Fonctionnalités</a>
-      <a href="#test">Test de vision</a>
-      <a href="#confidentialite">Confidentialité</a>
-      <a href="#faq">Questions</a>
-    </nav>
-
-    <div class="nav-actions">
-      <button class="icon-btn" id="theme" type="button" aria-label="Changer de thème" title="Changer de thème">
-        <svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg>
-      </button>
-      <a class="ghost" href="https://github.com/antoinebonpro/OpusScreen">GitHub</a>
-      <a class="cta" href="https://github.com/antoinebonpro/OpusScreen/releases/latest/download/OpusScreen.exe">Télécharger</a>
-    </div>
-  </div>
+<header class="top">
+  <a class="brand" href="#"><img src="img/logo.png" alt="" width="30" height="30"><span>OpusScreen</span></a>
+  <nav aria-label="Sections">
+    <a href="#lumiere">La lumière</a>
+    <a href="#couleurs">Les couleurs</a>
+    <a href="#test">Le test</a>
+    <a href="#pages">L’application</a>
+    <a href="#questions">Questions</a>
+  </nav>
+  <a class="get" href="https://github.com/antoinebonpro/OpusScreen/releases/latest/download/OpusScreen.exe">Télécharger</a>
 </header>
 
 <main id="contenu">
 
-<!-- ------------------------------------------------------------------ accroche -->
+<!-- ============================================================ l'instrument -->
 <section class="hero">
-  <div class="wrap hero-inner">
-    <p class="eyebrow">Windows · gratuit · code ouvert</p>
-    <h1>Votre écran,<br>réglé pour <em>vos</em> yeux.</h1>
+  <div class="hero-text">
+    <h1>Régler la lumière<br>de votre écran.</h1>
     <p class="lead">
-      Descendez la luminosité plus bas que Windows ne l'autorise, montez-la plus haut,
-      réchauffez les couleurs le soir — et si vous distinguez mal certaines couleurs,
-      laissez un test de deux minutes trouver votre réglage au lieu de le deviner.
+      Descendre plus bas que Windows ne le permet. Réchauffer les couleurs quand la nuit
+      tombe. Et, pour qui distingue mal certaines couleurs, mesurer la correction au lieu
+      de la deviner.
     </p>
+    <div class="actions">
+      <a class="get big" href="https://github.com/antoinebonpro/OpusScreen/releases/latest/download/OpusScreen.exe">
+        Télécharger pour Windows</a>
+      <a class="plain" href="https://github.com/antoinebonpro/OpusScreen">Lire le code</a>
+    </div>
+    <p class="fine" id="release-meta">Version 3.2, un seul fichier, rien à installer.</p>
+  </div>
 
-    <div class="hero-cta">
-      <a class="cta big" href="https://github.com/antoinebonpro/OpusScreen/releases/latest/download/OpusScreen.exe">
-        Télécharger pour Windows
-        <span class="cta-sub" id="release-meta">version 3.2 · un seul fichier</span>
-      </a>
-      <a class="ghost big" href="https://github.com/antoinebonpro/OpusScreen">Lire le code</a>
+  <figure class="bench" id="bench">
+    <figcaption>Cette page est votre écran. Réglez-la.</figcaption>
+
+    <div class="dial">
+      <label for="kelvin">Température</label>
+      <output id="kelvin-out">5200 K</output>
+      <input type="range" id="kelvin" min="1200" max="6500" step="100" value="5200"
+             aria-describedby="kelvin-note">
+      <p class="scale" aria-hidden="true"><span>1200 K bougie</span><span>6500 K jour</span></p>
+      <p class="fine" id="kelvin-note">La même formule que l’application, appliquée par-dessus la page.</p>
     </div>
 
-    <ul class="hero-facts">
-      <li>Rien à installer</li>
-      <li>Aucun compte</li>
-      <li>Aucune connexion réseau</li>
-      <li>Licence AGPL v3</li>
-    </ul>
+    <div class="dial">
+      <label for="lum">Luminosité</label>
+      <output id="lum-out">100 %</output>
+      <input type="range" id="lum" min="35" max="150" step="5" value="100"
+             aria-describedby="lum-note">
+      <p class="scale" aria-hidden="true"><span>35 %</span><span>100 %</span><span>150 %</span></p>
+      <p class="fine" id="lum-note">Sur votre écran l’application descend à 5 %. Ici la page s’arrête à 35 %, pour rester lisible.</p>
+    </div>
 
-    <figure class="shot hero-shot">
-      <img src="img/ecran.png" alt="La fenêtre de réglages d'OpusScreen, onglet Écran : curseurs de luminosité, température de couleur, contraste et saturation." width="984" height="721">
-    </figure>
-  </div>
+    <button type="button" class="plain small" id="reset">Remettre la page à 6500 K</button>
+  </figure>
 </section>
 
-<!-- ------------------------------------------------------------------ demonstration -->
-<section class="band" id="demo">
-  <div class="wrap">
-    <h2>Ce que change une correction bien réglée</h2>
-    <p class="section-lead">
-      Les deux colonnes montrent les mêmes couleurs, vues par la même personne.
-      À gauche, son écran d'aujourd'hui. À droite, le même écran corrigé par OpusScreen.
-      Le calcul est celui de l'application, pas une illustration&nbsp;: mêmes matrices,
-      même écart perçu en Delta&nbsp;E.
-    </p>
-    <p class="section-lead strong-hint">
-      Regardez le milieu de chaque bande&nbsp;: à gauche les deux moitiés se fondent,
-      à droite une frontière apparaît.
-    </p>
-
-    <div class="demo-controls">
-      <div class="seg" role="group" aria-label="Type de vision">
-        <button type="button" data-vision="deuteranopia" class="on">Vert mal perçu</button>
-        <button type="button" data-vision="protanopia">Rouge mal perçu</button>
-        <button type="button" data-vision="tritanopia">Bleu mal perçu</button>
-      </div>
-      <label class="range">
-        Gravité <output id="sev-out">70 %</output>
-        <input type="range" id="sev" min="20" max="100" step="5" value="70">
-      </label>
-    </div>
-
-    <div class="demo-grid">
-      <div class="demo-col">
-        <h3>Sans correction</h3>
-        <div class="swatches" id="before"></div>
-        <p class="delta">Écart perçu, paire par paire&nbsp;: <strong id="delta-before">—</strong></p>
-      </div>
-      <div class="demo-col accent">
-        <h3>Avec OpusScreen</h3>
-        <div class="swatches" id="after"></div>
-        <p class="delta">Écart perçu&nbsp;: <strong id="delta-after">—</strong></p>
-      </div>
-    </div>
-
-    <p class="note">
-      En dessous de 2,3 Delta&nbsp;E, l'œil humain ne distingue plus deux couleurs&nbsp;;
-      au-delà, il les distingue. La correction n'invente pas de couleurs&nbsp;: elle écarte
-      celles que vous confondez, sur les canaux que vous percevez encore.
-      La simulation reste une approximation publiée — elle ne remplace pas votre œil,
-      elle donne un point de départ que le test affine.
-    </p>
-  </div>
-</section>
-
-<!-- ------------------------------------------------------------------ fonctionnalites -->
-<section class="wrap" id="fonctions">
-  <h2>Quatre pages pour l'essentiel, six autres pour le reste</h2>
-  <p class="section-lead">
-    Le geste quotidien tient sur une page. Les quarante autres réglages attendent
-    qu'on aille les chercher.
+<!-- ============================================================ quatre etages -->
+<section id="lumiere">
+  <h2>Quatre étages, du rétroéclairage au voile</h2>
+  <p class="lead narrow">
+    Windows n’offre qu’un curseur, et seulement sur les écrans qui l’acceptent. Une image
+    passe en réalité par quatre étages avant d’atteindre l’œil, et chacun se règle
+    séparément — c’est ce qui permet d’aller de 5 % à 150 %.
   </p>
 
-  <div class="tabs" role="tablist" aria-label="Pages de l'application">
-    <button role="tab" aria-selected="true" aria-controls="tab-ecran" id="t-ecran">Écran</button>
-    <button role="tab" aria-selected="false" aria-controls="tab-couleur" id="t-couleur">Couleur</button>
-    <button role="tab" aria-selected="false" aria-controls="tab-daltonisme" id="t-daltonisme">Daltonisme</button>
-    <button role="tab" aria-selected="false" aria-controls="tab-ecrans" id="t-ecrans">Écrans</button>
-    <button role="tab" aria-selected="false" aria-controls="tab-confort" id="t-confort">Confort</button>
-  </div>
+  <ol class="chain">
+    <li>
+      <h3>Rétroéclairage</h3>
+      <p>La vraie lumière de la dalle, par WMI sur un portable ou par DDC/CI sur un moniteur externe. Quand il répond, c’est le meilleur étage : moins de lumière émise, pas seulement moins de lumière montrée.</p>
+      <p class="range-note">Tout ou rien, selon l’écran</p>
+    </li>
+    <li>
+      <h3>Rampe gamma</h3>
+      <p>La table de couleurs de la carte graphique, réécrite canal par canal. C’est là que vivent la température, le contraste, la courbe et la balance — et c’est le seul étage qui sache multiplier, donc dépasser 100 %.</p>
+      <p class="range-note">De 35 % à 150 %</p>
+    </li>
+    <li>
+      <h3>Matrice de couleur</h3>
+      <p>La saturation et les filtres, dont la correction du daltonisme. Windows ne l’expose que pour le bureau entier : l’application désigne donc explicitement l’écran de référence plutôt que d’en choisir un au hasard.</p>
+      <p class="range-note">Tout le bureau</p>
+    </li>
+    <li>
+      <h3>Voile</h3>
+      <p>Une fenêtre noire semi-transparente, qui ne reçoit aucun clic. Sous 35 %, c’est elle qui prend le relais, là où la rampe gamma commencerait à écraser les noirs. C’est aussi ce que fait cette page en ce moment même.</p>
+      <p class="range-note">De 5 % à 35 %</p>
+    </li>
+  </ol>
+</section>
 
-  <div class="panel" role="tabpanel" id="tab-ecran" aria-labelledby="t-ecran">
-    <figure class="shot"><img src="img/ecran.png" alt="Onglet Écran : modes, luminosité, température, contraste, saturation." width="984" height="721" loading="lazy"></figure>
-    <div class="panel-text">
-      <h3>De 5 % à 150 %</h3>
-      <p>
-        Sous 35 %, un voile prend le relais de la table de couleurs&nbsp;: c'est ce qui
-        permet de descendre bien plus bas que le curseur de Windows, sans écraser les
-        noirs. Au-dessus de 100 %, la carte graphique multiplie&nbsp;— l'écran devient
-        lisible en plein soleil, et l'application prévient quand les hautes lumières
-        commencent à s'écrêter.
-      </p>
-      <p>Vingt modes livrés, et les vôtres, enregistrés d'un clic.</p>
+<!-- ============================================================ couleurs -->
+<section id="couleurs" class="dark">
+  <h2>Deux couleurs qu’on ne distingue pas, écartées jusqu’à ce qu’on les distingue</h2>
+  <p class="lead narrow">
+    À gauche, deux couleurs telles que les perçoit une personne daltonienne aujourd’hui.
+    À droite, les mêmes une fois corrigées, puis perçues par cette même vision. Les
+    couleurs ne sont pas choisies pour l’effet : elles sont construites le long de l’axe
+    de confusion, avec les matrices de l’application, et l’écart est chiffré en Delta E
+    comme elle le fait.
+  </p>
+
+  <div class="bench-controls">
+    <div class="choice" role="group" aria-label="Déficience">
+      <button type="button" data-vision="deuteranopia" class="on">Vert mal perçu</button>
+      <button type="button" data-vision="protanopia">Rouge mal perçu</button>
+      <button type="button" data-vision="tritanopia">Bleu mal perçu</button>
+    </div>
+    <div class="dial inline">
+      <label for="sev">Gravité</label>
+      <output id="sev-out">70 %</output>
+      <input type="range" id="sev" min="20" max="100" step="5" value="70">
     </div>
   </div>
 
-  <div class="panel" role="tabpanel" id="tab-couleur" aria-labelledby="t-couleur" hidden>
-    <figure class="shot"><img src="img/couleur.png" alt="Onglet Couleur : balance des canaux, saturation, filtres." width="984" height="721" loading="lazy"></figure>
-    <div class="panel-text">
-      <h3>La couleur, jusqu'au canal</h3>
-      <p>
-        Température de 1 200 à 6 500 K, balance rouge / vert / bleu réglée séparément,
-        saturation de zéro à deux cents pour cent, courbe gamma, contraste.
-      </p>
-      <p>
-        L'inversion conserve les teintes&nbsp;: le rouge sombre devient rouge clair au lieu
-        de virer au cyan, et une photo reste regardable.
-      </p>
-    </div>
+  <div class="pairs" id="pairs"></div>
+
+  <p class="fine wide">
+    En dessous de 2,3, l’œil ne sépare plus deux couleurs ; au-delà, il les sépare. La
+    correction n’invente aucune couleur : elle déplace l’écart vers les canaux encore
+    perçus. La simulation reste une approximation publiée — un point de départ que le
+    test affine.
+  </p>
+</section>
+
+<!-- ============================================================ test -->
+<section id="test">
+  <h2>Le test de vision</h2>
+  <p class="lead narrow">
+    Choisir « deutéranopie, gravité 100 % » dans une liste, c’est se ranger dans une case.
+    Une correction calibrée sur une déficience complète rend l’écran criard à qui n’en a
+    qu’une partie — et c’est le cas de la plupart des personnes concernées. Deux minutes
+    suffisent à mesurer plutôt qu’à supposer.
+  </p>
+
+  <ol class="plates">
+    <li>
+      <img src="img/test-planche.png" alt="Une planche du test : un chiffre caché dans un semis de pastilles colorées." width="700" height="620" loading="lazy">
+      <div>
+        <h3>Les planches trouvent le type</h3>
+        <p>
+          Un chiffre caché dans un semis de pastilles. Les couleurs sont cherchées par le
+          calcul parmi des centaines de candidates, et retenues seulement si le chiffre
+          disparaît pour la déficience visée en restant franc pour les deux autres. Deux
+          planches lisibles par tout le monde repèrent les réponses au hasard.
+        </p>
+      </div>
+    </li>
+    <li>
+      <img src="img/test-comparaison.png" alt="Deux couleurs jointives, à dire identiques ou différentes." width="700" height="620" loading="lazy">
+      <div>
+        <h3>La mesure trouve la gravité</h3>
+        <p>
+          L’écart se resserre à chaque bonne réponse, s’élargit à chaque erreur, et
+          converge vers la limite de la personne. C’est la méthode des seuils en
+          psychophysique. Quand les planches hésitent entre deux axes voisins, les trois
+          sont mesurés et c’est le profil des mesures qui tranche.
+        </p>
+      </div>
+    </li>
+    <li>
+      <img src="img/test-resultat.png" alt="L’écran de résultat : type trouvé, gravité mesurée, confiance du dépistage." width="700" height="620" loading="lazy">
+      <div>
+        <h3>Le résultat s’applique et s’enregistre</h3>
+        <p>
+          Sous le nom que vous voulez, et il ne touche que les couleurs : rappeler
+          « cartes » ne changera jamais votre luminosité. Si rien ne ressort clairement,
+          le test le dit plutôt que d’inventer un diagnostic.
+        </p>
+      </div>
+    </li>
+  </ol>
+
+  <p class="caveat">
+    Ce test ne remplace pas un examen médical. Il règle un logiciel à partir de ce que vous
+    voyez sur cet écran-ci, dont la luminosité et le profil de couleur influencent le
+    résultat. Séparer une protanomalie d’une deutéranomalie légère demande un anomaloscope,
+    et l’application le dit quand le doute existe.
+  </p>
+</section>
+
+<!-- ============================================================ l'application -->
+<section id="pages" class="dark">
+  <h2>L’application</h2>
+  <p class="lead narrow">
+    Dix pages, dont une seule sert tous les jours. Ces captures sortent de la fenêtre
+    réelle : elles sont reprises par un outil à chaque version, pour que le site ne
+    puisse pas prendre du retard sur le logiciel.
+  </p>
+
+  <div class="specimens">
+    <figure>
+      <img src="img/ecran.png" alt="Onglet Écran : modes, luminosité, température, contraste, saturation." width="984" height="721" loading="lazy">
+      <figcaption>
+        <h3>Écran</h3>
+        <p>Les quatre curseurs du quotidien, vingt modes livrés, et les vôtres. L’état du plan de luminosité est écrit sous les curseurs : gain, courbe, voile, écrêtage.</p>
+      </figcaption>
+    </figure>
+    <figure>
+      <img src="img/daltonisme.png" alt="Onglet Daltonisme : test guidé, correction, réglage fin, réglages enregistrés." width="984" height="721" loading="lazy">
+      <figcaption>
+        <h3>Daltonisme</h3>
+        <p>Le test, la correction en un clic, le réglage fin, la vérification sur des paires confondues, et vos réglages nommés. Le démarrage automatique se règle là aussi, avec son état en clair.</p>
+      </figcaption>
+    </figure>
+    <figure>
+      <img src="img/ecrans.png" alt="Onglet Écrans : une carte de réglages par moniteur détecté." width="984" height="721" loading="lazy">
+      <figcaption>
+        <h3>Écrans</h3>
+        <p>Un bloc par moniteur. Liés, décalés de quelques points, ou chacun son profil. Copier un écran sur les autres tient en un bouton ; éteindre un écran n’en déconnecte aucun.</p>
+      </figcaption>
+    </figure>
+    <figure>
+      <img src="img/confort.png" alt="Onglet Confort : pauses pour les yeux, rappel de clignement, temps d’écran." width="984" height="721" loading="lazy">
+      <figcaption>
+        <h3>Confort</h3>
+        <p>La règle 20-20-20, un rappel de clignement qui ne prend jamais le focus, le temps passé depuis ce matin, et le volume général quand une vidéo reste trop faible.</p>
+      </figcaption>
+    </figure>
   </div>
 
-  <div class="panel" role="tabpanel" id="tab-daltonisme" aria-labelledby="t-daltonisme" hidden>
-    <figure class="shot"><img src="img/daltonisme.png" alt="Onglet Daltonisme : test guidé, interrupteur de correction, choix rouge / vert / bleu, réglage fin." width="984" height="721" loading="lazy"></figure>
-    <div class="panel-text">
-      <h3>Mesuré, pas deviné</h3>
-      <p>
-        Un test de deux minutes trouve le type et la gravité, puis le réglage s'applique
-        d'un clic. Vous pouvez aussi choisir directement la couleur que vous distinguez
-        mal, et affiner ensuite.
-      </p>
-      <p>
-        Vos réglages s'enregistrent sous le nom que vous voulez&nbsp;— «&nbsp;cartes&nbsp;»,
-        «&nbsp;jeux&nbsp;», «&nbsp;travail&nbsp;» — et ne touchent que les couleurs&nbsp;:
-        jamais votre luminosité.
-      </p>
-    </div>
-  </div>
+  <p class="fine wide">
+    Et aussi : coucher de soleil calculé hors ligne, adaptation à ce qui est affiché,
+    règles par application, loupe plein écran, anneau autour du pointeur, quinze
+    raccourcis reconfigurables, et une ligne de commande —
+    <code>OpusScreen.exe --brightness 60 --temp 3400</code>.
+  </p>
+</section>
 
-  <div class="panel" role="tabpanel" id="tab-ecrans" aria-labelledby="t-ecrans" hidden>
-    <figure class="shot"><img src="img/ecrans.png" alt="Onglet Écrans : une carte de réglages par moniteur détecté." width="984" height="721" loading="lazy"></figure>
-    <div class="panel-text">
-      <h3>Chaque écran, à sa place</h3>
-      <p>
-        Un bloc par moniteur. Liez-les tous, décalez-en un de quelques points, ou donnez
-        à chacun son profil complet. Un bouton copie un écran sur les autres, un autre
-        remet tout le monde d'accord.
-      </p>
-      <p>
-        Le mode «&nbsp;écran éteint&nbsp;» occulte un moniteur sans le déconnecter&nbsp;:
-        les fenêtres qui s'y trouvent restent en place.
-      </p>
-    </div>
-  </div>
+<!-- ============================================================ garanties -->
+<section id="garanties">
+  <h2>Ce qui est tenu, et par quel test</h2>
+  <p class="lead narrow">
+    Un logiciel qui touche à la lumière peut rendre un écran inutilisable. Ces garde-fous
+    ne sont pas des intentions : chacun échoue bruyamment si on le casse.
+  </p>
 
-  <div class="panel" role="tabpanel" id="tab-confort" aria-labelledby="t-confort" hidden>
-    <figure class="shot"><img src="img/confort.png" alt="Onglet Confort : pauses pour les yeux, rappel de clignement, suivi du temps d'écran." width="984" height="721" loading="lazy"></figure>
-    <div class="panel-text">
-      <h3>Des yeux qui tiennent la journée</h3>
-      <p>
-        La règle 20-20-20, un rappel de clignement qui n'attend aucune réponse et
-        disparaît tout seul, et le temps passé devant l'écran depuis ce matin.
-      </p>
-      <p>
-        Le rappel s'affiche sans jamais prendre le focus&nbsp;: il ne peut ni interrompre
-        une frappe, ni faire perdre une saisie.
-      </p>
-    </div>
+  <table class="certificate">
+    <caption>Huit suites, lancées avant chaque publication par <code>tests\run-tests.cmd</code>.</caption>
+    <tbody>
+      <tr><th scope="row">Aucun réglage ne descend sous 5 % de luminance</th><td>SafetyTest</td></tr>
+      <tr><th scope="row">L’écran redevient normal après un plantage</th><td>SafetyTest</td></tr>
+      <tr><th scope="row">La correction du daltonisme sépare vraiment les paires confondues</th><td>MatrixTest, VisionTest</td></tr>
+      <tr><th scope="row">Le test guidé retrouve la gravité d’un œil simulé, à 15 % près</th><td>VisionTest, UiTest</td></tr>
+      <tr><th scope="row">La molette fait défiler la page sans modifier les réglages survolés</th><td>UiTest</td></tr>
+      <tr><th scope="row">Chaque contrôle dessiné à la main s’annonce aux lecteurs d’écran</th><td>VisionTest</td></tr>
+      <tr><th scope="row">Trois mille gestes au hasard ne cassent aucun des neuf invariants</th><td>MonkeyTest</td></tr>
+    </tbody>
+  </table>
+
+  <div class="promises">
+    <p><strong>Rien ne sort de votre machine.</strong> Aucun serveur contacté, aucun compte, aucune statistique d’usage. Un pare-feu n’a rien à bloquer.</p>
+    <p><strong>Un fichier, et c’est tout.</strong> Les réglages tiennent dans un fichier texte lisible au bloc-notes. Supprimer l’exécutable suffit à désinstaller.</p>
+    <p><strong>Vérifiable.</strong> Code public, commenté en français, sous licence AGPL v3, compilable en une commande sans rien installer.</p>
   </div>
 </section>
 
-<!-- ------------------------------------------------------------------ test de vision -->
-<section class="band" id="test">
-  <div class="wrap">
-    <h2>Le test de vision, en deux minutes</h2>
-    <p class="section-lead">
-      Choisir «&nbsp;deutéranopie, gravité 100&nbsp;%&nbsp;» dans une liste, c'est se ranger
-      dans une case. Or une correction calibrée sur une déficience complète rend l'écran
-      criard à qui n'en a qu'une partie — et c'est le cas de la plupart des gens concernés.
-    </p>
-
-    <div class="steps">
-      <figure class="shot step">
-        <img src="img/test-planche.png" alt="Une planche du test : un chiffre caché dans un semis de pastilles colorées." width="700" height="620" loading="lazy">
-        <figcaption><strong>1. Des planches</strong> trouvent le type. Les couleurs sont cherchées
-        par le calcul&nbsp;: le chiffre doit s'effacer pour la déficience visée et rester franc
-        pour les deux autres. Deux planches de contrôle repèrent les réponses au hasard.</figcaption>
-      </figure>
-
-      <figure class="shot step">
-        <img src="img/test-comparaison.png" alt="Deux couleurs côte à côte, à distinguer ou non." width="700" height="620" loading="lazy">
-        <figcaption><strong>2. Une mesure</strong> détermine la gravité. L'écart se resserre à chaque
-        bonne réponse et s'élargit à chaque erreur, jusqu'à converger vers votre limite.
-        C'est la méthode des seuils en psychophysique.</figcaption>
-      </figure>
-
-      <figure class="shot step">
-        <img src="img/test-resultat.png" alt="L'écran de résultat du test : type trouvé, gravité mesurée, confiance." width="700" height="620" loading="lazy">
-        <figcaption><strong>3. Le résultat</strong> s'applique en un clic, et s'enregistre sous le nom
-        que vous voulez. Si rien ne ressort clairement, le test le dit plutôt que d'inventer
-        un diagnostic.</figcaption>
-      </figure>
-    </div>
-
-    <p class="note warn">
-      <strong>Ce test ne remplace pas un examen médical.</strong> Il règle un logiciel, il ne pose
-      pas de diagnostic&nbsp;: un écran, sa luminosité et son profil de couleur influencent le
-      résultat. Distinguer une protanomalie d'une deutéranomalie légère demande un anomaloscope,
-      et l'application le dit quand le doute existe.
-    </p>
-  </div>
-</section>
-
-<!-- ------------------------------------------------------------------ confidentialite -->
-<section class="wrap" id="confidentialite">
-  <h2>Ce qui se passe sur votre machine y reste</h2>
-
-  <div class="cards three">
-    <article class="card">
-      <h3>Aucune connexion</h3>
-      <p>
-        L'application ne contacte aucun serveur, ni au lancement ni ensuite. Pas de compte,
-        pas de mise à jour automatique, pas de statistiques d'usage. Un pare-feu n'a rien
-        à bloquer.
-      </p>
-    </article>
-    <article class="card">
-      <h3>Un fichier, et c'est tout</h3>
-      <p>
-        Vos réglages tiennent dans un fichier texte de votre dossier utilisateur, lisible au
-        bloc-notes. Supprimer l'exécutable suffit à désinstaller&nbsp;; aucun pilote, aucun
-        service, aucune entrée cachée.
-      </p>
-    </article>
-    <article class="card">
-      <h3>Vérifiable</h3>
-      <p>
-        Le code est public et documenté en français, sous licence AGPL&nbsp;v3. Vous pouvez le
-        lire, le compiler vous-même en une commande, et vérifier que ce paragraphe dit vrai.
-      </p>
-    </article>
-  </div>
-</section>
-
-<!-- ------------------------------------------------------------------ garanties -->
-<section class="band tight">
-  <div class="wrap">
-    <h2>Ce qui est tenu, et par quoi</h2>
-    <p class="section-lead">
-      Un logiciel qui touche à la lumière de l'écran peut le rendre inutilisable. Ces
-      garde-fous ne sont pas des intentions&nbsp;: chacun est tenu par un test qui échoue
-      si on le casse.
-    </p>
-
-    <ul class="facts">
-      <li><strong>Plancher à 5 %</strong><span>Aucune combinaison de réglages ne peut noircir l'écran au point de le rendre illisible.</span></li>
-      <li><strong>Retour après plantage</strong><span>Un témoin sur le disque permet de retrouver un écran normal au lancement suivant.</span></li>
-      <li><strong>Secours au clavier</strong><span>Ctrl + Alt + Maj + R rétablit tout, même si l'application ne répond plus.</span></li>
-      <li><strong>Contrastes WCAG AA</strong><span>Texte à 4,5:1 au minimum, cibles de clic d'au moins 36 pixels.</span></li>
-      <li><strong>Lecteurs d'écran</strong><span>Chaque curseur et chaque interrupteur dessiné à la main s'annonce avec son rôle et son état.</span></li>
-      <li><strong>Huit suites de tests</strong><span>Dont un «&nbsp;singe&nbsp;» qui clique au hasard et vérifie neuf invariants après chaque geste.</span></li>
-    </ul>
-  </div>
-</section>
-
-<!-- ------------------------------------------------------------------ details -->
-<section class="wrap">
-  <h2>Et aussi</h2>
-  <div class="cards">
-    <article class="card">
-      <h3>Coucher de soleil automatique</h3>
-      <p>La température suit l'heure et votre position, calculée hors ligne. Ou vos propres horaires, si le soleil ne vous concerne pas.</p>
-    </article>
-    <article class="card">
-      <h3>Adaptation au contenu</h3>
-      <p>La luminosité suit ce qui est affiché&nbsp;: une page blanche n'éblouit plus, une vidéo sombre ne disparaît plus.</p>
-    </article>
-    <article class="card">
-      <h3>Règles par application</h3>
-      <p>Un mode par logiciel au premier plan, et le voile qui s'efface tout seul quand un jeu ou une vidéo passe en plein écran.</p>
-    </article>
-    <article class="card">
-      <h3>Loupe et repérage</h3>
-      <p>Agrandissement plein écran, anneau de couleur franche autour du pointeur, et une étiquette qui nomme la couleur survolée.</p>
-    </article>
-    <article class="card">
-      <h3>Quinze raccourcis</h3>
-      <p>Tous reconfigurables, actifs même fenêtre fermée&nbsp;: luminosité, température, mode suivant, correction, pause.</p>
-    </article>
-    <article class="card">
-      <h3>Ligne de commande</h3>
-      <p><code>OpusScreen.exe --brightness 60 --temp 3400</code> — de quoi scripter vos réglages ou les déclencher depuis un autre outil.</p>
-    </article>
-  </div>
-</section>
-
-<!-- ------------------------------------------------------------------ faq -->
-<section class="wrap" id="faq">
+<!-- ============================================================ questions -->
+<section id="questions" class="dark">
   <h2>Questions</h2>
 
   <div class="faq">
     <details>
-      <summary>Est-ce vraiment gratuit&nbsp;?</summary>
-      <p>Oui, et libre&nbsp;: licence AGPL v3. Pas de version payante, pas de fonctionnalité réservée, pas de période d'essai. Le code entier est public.</p>
+      <summary>Est-ce vraiment gratuit ?</summary>
+      <p>Oui, et libre : licence AGPL v3. Pas de version payante, pas de fonctionnalité réservée, pas de période d’essai.</p>
     </details>
     <details>
-      <summary>Windows affiche un avertissement au lancement. C'est normal&nbsp;?</summary>
-      <p>Oui. Le fichier n'est pas signé par un certificat commercial — ceux-ci se louent quelques centaines d'euros par an. SmartScreen affiche «&nbsp;Windows a protégé votre ordinateur&nbsp;»&nbsp;: cliquez sur <em>Informations complémentaires</em> puis <em>Exécuter quand même</em>. Si vous préférez ne pas faire confiance à un binaire, le dépôt se compile en une commande, sans rien installer.</p>
+      <summary>Windows affiche un avertissement au lancement.</summary>
+      <p>Le fichier n’est pas signé par un certificat commercial, qui se loue quelques centaines d’euros par an. SmartScreen annonce « Windows a protégé votre ordinateur » : choisissez <em>Informations complémentaires</em>, puis <em>Exécuter quand même</em>. Le dépôt se compile aussi en une commande, si vous préférez ne pas faire confiance à un binaire.</p>
     </details>
     <details>
-      <summary>Quelle différence avec f.lux ou l'éclairage nocturne de Windows&nbsp;?</summary>
-      <p>La température de couleur est le point commun. Au-delà&nbsp;: la luminosité descend à 5&nbsp;% et monte à 150&nbsp;%, chaque écran se règle séparément, et surtout la partie daltonisme — correction réglable et test de mesure — n'existe nulle part ailleurs gratuitement.</p>
+      <summary>Quelle différence avec f.lux ou l’éclairage nocturne ?</summary>
+      <p>La température de couleur est le point commun. Au-delà : la luminosité va de 5 à 150 %, chaque écran se règle séparément, et la partie daltonisme — correction réglable et test de mesure — n’existe nulle part ailleurs gratuitement.</p>
     </details>
     <details>
-      <summary>Ça fonctionne sur un écran externe&nbsp;?</summary>
-      <p>Oui. La luminosité, la température et le voile se règlent écran par écran. La saturation et les filtres de couleur, eux, s'appliquent à tout le bureau&nbsp;: c'est une limite de l'interface de Windows, pas un choix — l'application désigne donc explicitement l'écran de référence.</p>
+      <summary>Est-ce que ça marche sur un écran externe ?</summary>
+      <p>Oui. Luminosité, température et voile se règlent écran par écran. La saturation et les filtres, eux, s’appliquent à tout le bureau : c’est une limite de l’interface de Windows, et l’application désigne l’écran de référence plutôt que de la masquer.</p>
     </details>
     <details>
-      <summary>Le test de vision remplace-t-il un ophtalmologue&nbsp;?</summary>
-      <p>Non, et il le dit. Il règle un logiciel à partir de ce que vous voyez sur <em>cet</em> écran. Un diagnostic demande un examen clinique&nbsp;; si le test trouve quelque chose d'inattendu, parlez-en à un professionnel plutôt qu'à un logiciel.</p>
+      <summary>Le test de vision remplace-t-il un ophtalmologue ?</summary>
+      <p>Non, et il le dit. Il règle un logiciel ; un diagnostic demande un examen clinique. Si le test trouve quelque chose d’inattendu, parlez-en à un professionnel plutôt qu’à un logiciel.</p>
     </details>
     <details>
-      <summary>Où sont stockés mes réglages&nbsp;?</summary>
-      <p>Dans un fichier texte, sous <code>%LOCALAPPDATA%\OpusScreen\settings.ini</code>. Il se lit et se modifie au bloc-notes, se sauvegarde par copie, et s'exporte depuis l'onglet Avancé.</p>
+      <summary>Où sont stockés les réglages ?</summary>
+      <p>Dans <code>%LOCALAPPDATA%\OpusScreen\settings.ini</code>. Un fichier texte, qui se sauvegarde par copie et s’exporte depuis l’onglet Avancé.</p>
     </details>
     <details>
-      <summary>Comment désinstaller&nbsp;?</summary>
-      <p>Supprimez le fichier. Si vous aviez activé le démarrage automatique, décochez-le d'abord pour retirer l'entrée correspondante.</p>
-    </details>
-    <details>
-      <summary>Quelle version de Windows faut-il&nbsp;?</summary>
-      <p>Windows 7 à 11. L'application s'appuie sur le .NET Framework 4, présent sur toutes ces versions&nbsp;: rien à installer.</p>
+      <summary>Quelle version de Windows faut-il ?</summary>
+      <p>Windows 7 à 11. L’application s’appuie sur le .NET Framework 4, présent partout depuis : rien à installer.</p>
     </details>
   </div>
 </section>
 
-<!-- ------------------------------------------------------------------ appel final -->
-<section class="final">
-  <div class="wrap">
-    <h2>Un fichier, deux minutes, et votre écran vous laisse tranquille.</h2>
-    <a class="cta big" href="https://github.com/antoinebonpro/OpusScreen/releases/latest/download/OpusScreen.exe">
-      Télécharger OpusScreen
-      <span class="cta-sub" id="release-meta-2">version 3.2 · Windows</span>
-    </a>
-    <p class="note">Posez-le où vous voulez et double-cliquez. Aucun installateur.</p>
-  </div>
+<!-- ============================================================ fin -->
+<section class="last">
+  <h2>Un fichier. Deux minutes. Un écran qui vous laisse tranquille.</h2>
+  <a class="get big" href="https://github.com/antoinebonpro/OpusScreen/releases/latest/download/OpusScreen.exe">
+    Télécharger OpusScreen</a>
+  <p class="fine" id="release-meta-2">Version 3.2, pour Windows. Posez le fichier où vous voulez et double-cliquez.</p>
 </section>
 
 </main>
 
-<footer class="footer">
-  <div class="wrap footer-inner">
-    <div>
-      <a class="brand" href="#"><img src="img/logo.png" alt="" width="28" height="28"><span>OpusScreen</span></a>
-      <p class="muted">Luminosité, couleur et accessibilité visuelle, pour Windows.</p>
-    </div>
-    <nav aria-label="Liens du pied de page">
-      <h3>Le logiciel</h3>
+<footer>
+  <div class="foot-inner">
+    <p class="foot-brand"><img src="img/logo.png" alt="" width="26" height="26"> OpusScreen</p>
+    <nav aria-label="Le logiciel">
       <a href="https://github.com/antoinebonpro/OpusScreen/releases/latest/download/OpusScreen.exe">Télécharger</a>
       <a href="https://github.com/antoinebonpro/OpusScreen/releases">Toutes les versions</a>
-      <a href="https://github.com/antoinebonpro/OpusScreen/blob/main/CHANGELOG.md">Journal des versions</a>
+      <a href="https://github.com/antoinebonpro/OpusScreen/blob/main/CHANGELOG.md">Journal</a>
     </nav>
-    <nav aria-label="Documentation">
-      <h3>Le code</h3>
-      <a href="https://github.com/antoinebonpro/OpusScreen">Dépôt GitHub</a>
+    <nav aria-label="Le code">
+      <a href="https://github.com/antoinebonpro/OpusScreen">Dépôt</a>
       <a href="https://github.com/antoinebonpro/OpusScreen/blob/main/docs/ARCHITECTURE.md">Architecture</a>
       <a href="https://github.com/antoinebonpro/OpusScreen/blob/main/docs/PROTOCOLES-TESTS.md">Protocoles de tests</a>
       <a href="https://github.com/antoinebonpro/OpusScreen/issues">Signaler un problème</a>
     </nav>
     <nav aria-label="Légal">
-      <h3>Légal</h3>
       <a href="https://github.com/antoinebonpro/OpusScreen/blob/main/LICENSE">Licence AGPL v3</a>
       <a href="https://github.com/antoinebonpro/OpusScreen/blob/main/docs/SECURITE.md">Sécurité</a>
     </nav>
   </div>
-  <div class="wrap footer-bottom">
-    <p>Aucun traqueur sur cette page, aucune ressource extérieure chargée.</p>
-  </div>
+  <p class="foot-note">
+    Aucun traqueur, aucune police distante, aucune bibliothèque : cette page tient la
+    promesse qu’elle décrit. Titres en Fraunces, texte en Atkinson Hyperlegible, dessinée
+    par le Braille Institute pour la basse vision.
+  </p>
 </footer>
 
 <script src="app.js"></script>
