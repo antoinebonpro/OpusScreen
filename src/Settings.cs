@@ -224,6 +224,18 @@ namespace OpusScreen
         public string ActiveModeName = "Normal";
         public List<Profile> CustomProfiles = new List<Profile>();
 
+        /// <summary>
+        /// Reglages de daltonisme enregistres par l'utilisateur, nommes par lui.
+        ///
+        /// Distincts des modes : un mode change tout l'ecran, un reglage de vision ne
+        /// touche que la correction des couleurs. Rappeler « Mon ecran de jour » ne
+        /// doit pas remettre la luminosite de la veille.
+        /// </summary>
+        public List<VisionPreset> VisionPresets = new List<VisionPreset>();
+
+        /// <summary>Resume du dernier test guide, affiche dans l'onglet Daltonisme.</summary>
+        public string LastExamSummary = "";
+
         // ---------------- automatisme horaire ----------------
         public ScheduleMode Schedule = ScheduleMode.Manual;
         public string PresetName = "Couleurs recommandees";
@@ -461,6 +473,8 @@ namespace OpusScreen
                 case "current": Current = Profile.Deserialize(val); break;
                 case "activeMode": ActiveModeName = val; break;
                 case "customProfile": CustomProfiles.Add(Profile.Deserialize(val)); break;
+                case "visionPreset": VisionPresets.Add(VisionPreset.Deserialize(val)); break;
+                case "lastExam": LastExamSummary = val; break;
 
                 case "schedule": Schedule = (ScheduleMode)ParseInt(val); break;
                 case "preset": PresetName = val; break;
@@ -584,6 +598,8 @@ namespace OpusScreen
             sb.AppendLine("current=" + Current.Serialize());
             sb.AppendLine("activeMode=" + ActiveModeName);
             foreach (Profile p in CustomProfiles) sb.AppendLine("customProfile=" + p.Serialize());
+            foreach (VisionPreset v in VisionPresets) sb.AppendLine("visionPreset=" + v.Serialize());
+            if (LastExamSummary.Length > 0) sb.AppendLine("lastExam=" + LastExamSummary);
             sb.AppendLine();
             sb.AppendLine("schedule=" + (int)Schedule);
             sb.AppendLine("preset=" + PresetName);
@@ -655,6 +671,7 @@ namespace OpusScreen
             Settings s = new Settings();
             s.Monitors.Clear();
             s.CustomProfiles.Clear();
+            s.VisionPresets.Clear();
             s.AppRules.Clear();
             foreach (string raw in text.Replace("\r\n", "\n").Split('\n'))
             {
@@ -674,6 +691,11 @@ namespace OpusScreen
 
         public void ApplyStartupRegistration()
         {
+            // Les tests d'interface cliquent partout, y compris sur l'interrupteur de
+            // demarrage : ils ne doivent pas pour autant inscrire ou retirer la vraie
+            // entree de demarrage de la machine qui les execute.
+            if (!string.IsNullOrEmpty(DataFolderOverride)) return;
+
             try
             {
                 using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(

@@ -4,6 +4,54 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ---
 
+## [3.2.0] - 2026-09-22
+
+L'onglet Daltonisme trouve votre reglage au lieu de vous le faire deviner.
+
+### Ajoute
+
+- **Test de vision guide**, en deux temps, depuis l'onglet Daltonisme.
+
+  **Des planches** d'abord - un chiffre cache dans un semis de pastilles, comme chez
+  l'ophtalmologue. Elles ne sont pas dessinees a la main : pour chaque deficience, les
+  couleurs sont CHERCHEES parmi des centaines de candidates, puis retenues seulement si
+  le calcul montre que le chiffre disparait pour cette vision-la tout en restant franc
+  pour les deux autres. Deux planches de controle, lisibles par tout le monde, disent si
+  l'on a repondu au hasard.
+
+  **Une mesure** ensuite - deux couleurs cote a cote, dont l'ecart se resserre a chaque
+  bonne reponse et s'elargit a chaque erreur. C'est la methode des seuils en
+  psychophysique : elle converge vers la limite reelle de la personne au lieu de la
+  ranger dans une case. De ce seuil, la gravite se deduit par le calcul.
+
+  Les planches ne depistent que les deficiences COMPLETES, et c'est une limite physique,
+  verifiee a l'image : un chiffre assez efface pour tromper une anomalie partielle ne se
+  lit plus du tout une fois disperse en pastilles. Les cas partiels - l'immense majorite -
+  sont donc MESURES sur les trois axes, et c'est le profil des trois mesures qui designe
+  la vision. Une deficience n'est annoncee que si elle explique nettement mieux les
+  mesures qu'une vision normale ; sinon le test dit qu'il n'a rien trouve, plutot que
+  d'inventer un diagnostic.
+
+  Pendant toute la duree du test, la correction en cours est retiree - c'est l'oeil que
+  l'on mesure, pas l'ecran deja corrige - puis retablie a la sortie, y compris si l'on
+  ferme la fenetre en plein milieu.
+
+- **Reglages de vision enregistres** : « Mes reglages » dans l'onglet Daltonisme. On
+  enregistre le reglage courant ou le resultat du test sous un nom libre, on l'applique
+  d'un clic, on le renomme, on le supprime. Ils ne retiennent QUE la correction des
+  couleurs : rappeler « lecture » ne change ni la luminosite ni la temperature.
+
+- **Le demarrage, dit sur place** : l'interrupteur « Lancer OpusScreen au demarrage de
+  Windows » et l'etat en clair figurent desormais dans l'onglet Daltonisme. Le reglage
+  etait deja conserve d'une session a l'autre, mais rien ne le disait a l'endroit ou on
+  se pose la question.
+
+- **Tests** : planches verifiees par le calcul (le chiffre s'efface pour la deficience
+  visee, reste franc pour les autres), escalier confronte a un observateur simule dont
+  on connait la gravite, test guide joue de bout en bout pour trois visions et trois
+  gravites, reglages enregistres relus a l'identique. Et `run-tests.cmd planches`
+  dessine les planches dans une image, pour les juger a l'oeil.
+
 ## [3.1.0] — 2026-09-22
 
 La souris redevient fiable, et le daltonisme a son onglet.

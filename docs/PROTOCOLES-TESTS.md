@@ -203,6 +203,31 @@ change les réglages, le saut de défilement, et un interrupteur détruit entre 
 clics d'un double-clic. Il a aussi trouvé seul un défaut que personne n'avait vu :
 éteindre un écran juste après avoir réglé son curseur faisait sauter la page.
 
+### 9. Le test guide de vision
+
+Le test guidé se vérifie **par le calcul**, sans cliquer : la fenêtre ne décide rien,
+tout ce qui mesure vit dans `VisionExam`. On peut donc lui faire passer le test à un
+observateur simulé dont on connaît la vision.
+
+| Vérification | Pourquoi |
+|---|---|
+| Chaque planche s'efface pour la déficience visée et reste franche pour les deux autres | Une planche lisible par tout le monde ne diagnostique rien |
+| Les planches de contrôle restent lisibles par les trois visions | Elles valident la passation : les rater, c'est avoir répondu au hasard |
+| Le seuil mesurable croît avec la gravité | Sans cette monotonie, remonter du seuil à la gravité n'a pas de sens |
+| L'escalier retrouve la gravité d'un observateur simulé (±15 %) | Seule façon de savoir si la mesure mesure, ou produit un nombre décoratif |
+| Le test complet, joué pour 3 visions × 3 gravités, nomme la bonne famille et la bonne gravité | Contrat de bout en bout, fenêtre comprise |
+| Une vision normale ne fait rien diagnostiquer | Un faux diagnostic ferait poser une correction qui gêne pour rien |
+| L'écran est rendu à la sortie, même si l'on interrompt le test | Le test retire la correction : il doit toujours la remettre |
+| Un réglage enregistré se relit à l'identique | Sinon il ne sert à rien |
+
+Les planches se regardent aussi à l'œil — c'est ainsi qu'on a découvert que les planches
+subtiles étaient illisibles pour *tout le monde*, et non seulement pour la déficience
+visée :
+
+```
+tests\run-tests.cmd planches [fichier.png] [graine]
+```
+
 ---
 
 ## Vérifications manuelles

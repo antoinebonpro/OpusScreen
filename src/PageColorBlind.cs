@@ -26,9 +26,12 @@ namespace OpusScreen
         private SliderRow _severity, _strength;
         private Label _clinical, _confusions, _status;
         private ConfusionBoard _board;
-        private ToggleRow _reader;
-        private DarkButton _copyColor;
+        private ToggleRow _reader, _startup;
+        private DarkButton _copyColor, _applyPreset, _renamePreset, _deletePreset;
+        private ComboRow _presets;
+        private Label _examNote, _presetNote, _startupNote;
         private readonly List<DarkButton> _tiles = new List<DarkButton>();
+        private readonly List<DarkButton> _presetButtons = new List<DarkButton>();
 
         /// <summary>Derniere correction choisie : l'interrupteur la retrouve quand on le rallume.</summary>
         private ColorFilter _lastFilter = ColorFilter.Deuteranopia;
@@ -50,10 +53,214 @@ namespace OpusScreen
 
         public PageColorBlind(Settings s, DisplayController d, Action push) : base(s, d, push)
         {
+            BuildExam();
             BuildQuickStart();
             BuildTuning();
             BuildComparator();
+            BuildPresets();
+            BuildStartup();
             BuildColorIdentifier();
+        }
+
+        // ------------------------------------------------------------------ test guide
+
+        private void BuildExam()
+        {
+            Section("Test de vision");
+
+            DarkButton run = new DarkButton();
+            run.Text = "Lancer le test guide (2 minutes)";
+            run.Font = Theme.BodyBold;
+            run.Height = Theme.MinTarget + 8;
+            run.Click += delegate { RunExam(); };
+            Add(run, Theme.SpaceSm);
+
+            _examNote = UiKit.Caption("");
+            _examNote.Height = 34;
+            Add(_examNote, Theme.SpaceXs);
+
+            Note("Des planches ou se cache un chiffre trouvent le TYPE, puis des comparaisons de "
+               + "couleurs mesurent la GRAVITE en resserrant l'ecart jusqu'a votre limite. Le reglage "
+               + "obtenu vaut mieux qu'un reglage devine : une correction calibree sur une deficience "
+               + "complete rend l'ecran criard a qui n'en a qu'une partie. Pendant le test, la "
+               + "correction en cours est retiree, puis retablie a la sortie.");
+        }
+
+        private void RunExam()
+        {
+            bool applied;
+            using (VisionExamDialog dlg = new VisionExamDialog(S, Display))
+            {
+                dlg.ShowDialog(FindForm());
+                applied = dlg.Applied;
+            }
+            Sync();
+            if (applied) Commit();
+        }
+
+        // ------------------------------------------------------------------ reglages enregistres
+
+        private void BuildPresets()
+        {
+            Section("Mes reglages");
+
+            _presets = new ComboRow("Reglage enregistre", new string[] { "(aucun)" });
+            _presets.Changed += delegate { if (!Loading) UpdatePresetNote(); };
+            Add(_presets, Theme.SpaceSm);
+
+            _presetNote = UiKit.Caption("");
+            _presetNote.Height = 20;
+            Add(_presetNote, Theme.SpaceXs);
+
+            Panel row = new Panel();
+            row.BackColor = Color.Transparent;
+            row.Height = Theme.MinTarget + 4;
+
+            _applyPreset = PresetButton(row, "Appliquer", delegate { ApplySelectedPreset(); });
+            PresetButton(row, "Enregistrer le reglage actuel...", delegate { SaveCurrent(); });
+            _renamePreset = PresetButton(row, "Renommer...", delegate { RenameSelected(); });
+            _deletePreset = PresetButton(row, "Supprimer", delegate { DeleteSelected(); });
+            row.Resize += delegate { LayoutPresetButtons(row); };
+            Add(row, Theme.SpaceSm);
+
+            Note("Un reglage enregistre ne retient que la correction des couleurs - type, gravite, "
+               + "intensite, usage. Le rappeler ne touche donc ni la luminosite, ni la temperature : "
+               + "ce serait une mauvaise surprise pour un reglage nomme « lecture ». Tout est ecrit "
+               + "dans le fichier de configuration et vous attend au prochain demarrage.");
+        }
+
+        private DarkButton PresetButton(Panel host, string text, EventHandler click)
+        {
+            DarkButton b = new DarkButton();
+            b.Text = text;
+            b.Height = Theme.MinTarget;
+            b.Click += click;
+            host.Controls.Add(b);
+            _presetButtons.Add(b);
+            return b;
+        }
+
+        private void LayoutPresetButtons(Panel host)
+        {
+            int n = _presetButtons.Count;
+            if (n == 0) return;
+            int gap = Theme.SpaceXs;
+            int w = Math.Max(70, (host.ClientSize.Width - gap * (n - 1)) / n);
+            for (int i = 0; i < n; i++) _presetButtons[i].SetBounds(i * (w + gap), 2, w, Theme.MinTarget);
+        }
+
+        private VisionPreset Selected()
+        {
+            int i = _presets.SelectedIndex;
+            return (i >= 0 && i < S.VisionPresets.Count) ? S.VisionPresets[i] : null;
+        }
+
+        private void ApplySelectedPreset()
+        {
+            VisionPreset p = Selected();
+            if (p == null) return;
+            p.ApplyTo(S.Current);
+            if (ColorMatrixEffect.IsVisionFilter(p.Filter)) _lastFilter = p.Filter;
+            Sync();
+            Commit();
+        }
+
+        private void SaveCurrent()
+        {
+            string name = PromptDialog.Ask(FindForm(), "Enregistrer ce reglage", "Nom du reglage :",
+                ColorMatrixEffect.IsVisionFilter(S.Current.Filter)
+                    ? Vision.PlainName(S.Current.Filter) : "Mon reglage");
+            if (string.IsNullOrEmpty(name)) return;
+            SavePreset(name);
+        }
+
+        /// <summary>Enregistre les reglages courants sous ce nom. Public : les tests s'en servent.</summary>
+        public void SavePreset(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return;
+            VisionPreset preset = VisionPreset.FromProfile(name.Trim(), S.Current);
+            for (int i = 0; i < S.VisionPresets.Count; i++)
+                if (S.VisionPresets[i].Name == preset.Name) { S.VisionPresets.RemoveAt(i); break; }
+            S.VisionPresets.Add(preset);
+            Sync();
+            SelectPreset(preset.Name);
+            S.Save();
+        }
+
+        private void RenameSelected()
+        {
+            VisionPreset p = Selected();
+            if (p == null) return;
+            string name = PromptDialog.Ask(FindForm(), "Renommer", "Nouveau nom :", p.Name);
+            if (string.IsNullOrEmpty(name)) return;
+            p.Name = name.Trim();
+            Sync();
+            SelectPreset(p.Name);
+            S.Save();
+        }
+
+        private void DeleteSelected()
+        {
+            VisionPreset p = Selected();
+            if (p == null) return;
+            if (MessageBox.Show(FindForm(), "Supprimer le reglage « " + p.Name + " » ?",
+                    "OpusScreen", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+            S.VisionPresets.Remove(p);
+            Sync();
+            S.Save();
+        }
+
+        private void SelectPreset(string name)
+        {
+            for (int i = 0; i < S.VisionPresets.Count; i++)
+                if (S.VisionPresets[i].Name == name) { _presets.SelectedIndex = i; break; }
+            UpdatePresetNote();
+        }
+
+        private void UpdatePresetNote()
+        {
+            VisionPreset p = Selected();
+            _presetNote.Text = p != null ? p.Describe() : "Aucun reglage enregistre pour l'instant.";
+            bool any = p != null;
+            _applyPreset.Enabled = any;
+            _renamePreset.Enabled = any;
+            _deletePreset.Enabled = any;
+        }
+
+        // ------------------------------------------------------------------ demarrage
+
+        private void BuildStartup()
+        {
+            Section("Au demarrage");
+
+            _startup = new ToggleRow("Lancer OpusScreen au demarrage de Windows",
+                "Votre correction est alors posee des l'ouverture de session, sans y penser.");
+            _startup.Changed += delegate
+            {
+                if (Loading) return;
+                S.StartWithWindows = _startup.Checked;
+                S.ApplyStartupRegistration();
+                UpdateStartupNote();
+                Commit();
+            };
+            Add(_startup, Theme.SpaceSm);
+
+            _startupNote = UiKit.Caption("");
+            _startupNote.Height = 34;
+            Add(_startupNote, Theme.SpaceXs);
+        }
+
+        private void UpdateStartupNote()
+        {
+            if (!S.StartWithWindows)
+            {
+                _startupNote.Text = "OpusScreen ne demarre pas avec Windows : la correction ne revient "
+                                  + "qu'une fois l'application lancee a la main.";
+                return;
+            }
+            _startupNote.Text = ColorMatrixEffect.IsVisionFilter(S.Current.Filter)
+                ? "Ce reglage est repose a chaque ouverture de session, automatiquement."
+                : "OpusScreen demarre avec Windows. Aucune correction n'est active pour l'instant.";
         }
 
         // ------------------------------------------------------------------ en un clic
@@ -266,6 +473,30 @@ namespace OpusScreen
             CommitNoSave();
         }
 
+        /// <summary>
+        /// Recharge la liste des reglages enregistres, et seulement si elle a change :
+        /// la vider a chaque rafraichissement refermerait la liste ouverte sous les
+        /// yeux de l'utilisateur, et perdrait sa selection.
+        /// </summary>
+        private void RefreshPresetList()
+        {
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            foreach (VisionPreset v in S.VisionPresets) sb.Append(v.Name).Append('|');
+            string signature = sb.ToString();
+            if (signature != _presetsFor)
+            {
+                _presetsFor = signature;
+                int keep = _presets.SelectedIndex;
+                _presets.Box.Items.Clear();
+                foreach (VisionPreset v in S.VisionPresets) _presets.Box.Items.Add(v.Name);
+                if (S.VisionPresets.Count == 0) _presets.Box.Items.Add("(aucun reglage enregistre)");
+                _presets.SelectedIndex = Math.Min(Math.Max(0, keep), _presets.Box.Items.Count - 1);
+            }
+            UpdatePresetNote();
+        }
+
+        private string _presetsFor;
+
         private void UpdateTexts()
         {
             ColorFilter f = ColorMatrixEffect.IsVisionFilter(S.Current.Filter) ? S.Current.Filter : ColorFilter.None;
@@ -333,9 +564,16 @@ namespace OpusScreen
                 if (_mode.SelectedIndex != mode) _mode.SelectedIndex = mode;
 
                 _reader.SetCheckedSilent(S.ColorReaderEnabled);
+                _startup.SetCheckedSilent(S.StartWithWindows);
 
+                RefreshPresetList();
                 UpdateTexts();
                 UpdateStates();
+                UpdateStartupNote();
+
+                _examNote.Text = S.LastExamSummary.Length > 0
+                    ? "Dernier test : " + S.LastExamSummary + "."
+                    : "Jamais passe. Deux minutes suffisent, et le resultat s'applique en un clic.";
             }
             finally { Loading = false; }
         }

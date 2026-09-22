@@ -13,6 +13,9 @@ REM                                      et le clavier (n gestes, 400 par defaut
 REM                                      Bouger la souris ou Echap l'arrete.
 REM           run-tests.cmd singe-messages [n] [graine]
 REM                                      singe sans la souris, graine au choix
+REM           run-tests.cmd planches [fichier.png] [graine]
+REM                                      dessine les planches du test de vision dans
+REM                                      une image, pour les regarder a l oeil
 REM
 REM  Note d'implementation : la sequence est ecrite a plat, sans "call :label".
 REM  Une premiere version factorisee sautait silencieusement un test tout en
@@ -45,6 +48,7 @@ set RAN=0
 
 if /I "%~1"=="monitor" goto monitor
 if /I "%~1"=="singe" goto singe
+if /I "%~1"=="planches" goto planches
 if /I "%~1"=="singe-messages" goto singemessages
 
 REM =========================================================== 1/8
@@ -195,4 +199,12 @@ if errorlevel 1 exit /b 1
 set N=%~2
 if "%N%"=="" set N=5000
 bin\MonkeyTest.exe messages %N% %~3
+exit /b %errorlevel%
+
+:planches
+"%FW%\csc.exe" /nologo /target:exe /out:bin\PlateShot.exe %REFS% PlateShot.cs !SOURCES!
+if errorlevel 1 exit /b 1
+set OUT=%~2
+if "%OUT%"=="" set OUT=bin\planches.png
+bin\PlateShot.exe "%OUT%" %~3
 exit /b %errorlevel%
