@@ -1,0 +1,47 @@
+name: Le test ou la correction du daltonisme
+description: Le test se trompe, la correction gêne, ou les planches sont illisibles.
+title: "Daltonisme : "
+labels: ["daltonisme"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ce retour vaut de l'or : le test est vérifié par le calcul sur des yeux simulés,
+        mais un œil réel reste le seul juge. Aucune information médicale n'est demandée,
+        et rien de ce que vous écrivez ici n'est privé — n'indiquez que ce que vous
+        acceptez de rendre public.
+  - type: dropdown
+    id: quoi
+    attributes:
+      label: De quoi s'agit-il
+      options:
+        - Le test annonce un type qui ne correspond pas
+        - La gravité mesurée semble fausse
+        - Les planches sont illisibles, même sans daltonisme
+        - La correction gêne plus qu'elle n'aide
+        - Autre
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Ce que vous avez observé
+      description: Le résultat annoncé, ce que vous en pensez, et ce qui vous paraît faux.
+    validations:
+      required: true
+  - type: input
+    id: ecran
+    attributes:
+      label: Votre écran
+      placeholder: "Portable IPS, moniteur OLED, projecteur..."
+  - type: dropdown
+    id: origine
+    attributes:
+      label: Comment avez-vous connu OpusScreen ?
+      options:
+        - Moteur de recherche
+        - GitHub
+        - Reddit
+        - Une association ou un forum sur le daltonisme
+        - Bouche-à-oreille
+        - Je ne me souviens plus

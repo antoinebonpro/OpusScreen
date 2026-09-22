@@ -1,0 +1,51 @@
+name: Un problème dans l'application
+description: Quelque chose ne fonctionne pas comme annoncé.
+title: "Problème : "
+labels: ["probleme"]
+body:
+  - type: textarea
+    id: attendu
+    attributes:
+      label: Ce que vous attendiez
+    validations:
+      required: true
+  - type: textarea
+    id: obtenu
+    attributes:
+      label: Ce qui s'est passé
+    validations:
+      required: true
+  - type: textarea
+    id: reproduire
+    attributes:
+      label: Comment le reproduire
+      placeholder: |
+        1. Ouvrir l'onglet...
+        2. Régler...
+        3. Observer...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version d'OpusScreen
+      description: Elle est affichée sous le nom, en haut à gauche de la fenêtre.
+      placeholder: "3.2"
+    validations:
+      required: true
+  - type: input
+    id: ecrans
+    attributes:
+      label: Combien d'écrans, et lesquels
+      placeholder: "Portable + un écran HDMI 1920x1080"
+  - type: dropdown
+    id: origine
+    attributes:
+      label: Comment avez-vous connu OpusScreen ?
+      options:
+        - Moteur de recherche
+        - GitHub
+        - Reddit
+        - Un forum ou un site
+        - Bouche-à-oreille
+        - Je ne me souviens plus

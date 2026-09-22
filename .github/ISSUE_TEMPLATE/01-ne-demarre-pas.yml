@@ -1,0 +1,55 @@
+name: Ça n'a pas démarré
+description: L'application ne se lance pas, ou Windows la bloque.
+title: "Ne démarre pas : "
+labels: ["demarrage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Avant tout : si Windows affiche « Windows a protégé votre ordinateur », c'est
+        SmartScreen, et c'est attendu — le binaire n'est pas signé par un certificat
+        commercial. Cliquez **Informations complémentaires**, puis **Exécuter quand même**.
+        Si ce n'est pas votre cas, cette fiche est la bonne.
+  - type: dropdown
+    id: moment
+    attributes:
+      label: À quel moment ça bloque
+      options:
+        - Windows refuse d'ouvrir le fichier
+        - L'antivirus le supprime ou le met en quarantaine
+        - L'application se lance puis disparaît
+        - L'application se lance mais l'écran ne change pas
+        - Autre
+    validations:
+      required: true
+  - type: textarea
+    id: message
+    attributes:
+      label: Le message exact affiché
+      description: Recopiez-le, ou joignez une capture.
+    validations:
+      required: false
+  - type: input
+    id: windows
+    attributes:
+      label: Version de Windows
+      placeholder: "Windows 11 24H2, Windows 10 22H2..."
+    validations:
+      required: true
+  - type: input
+    id: antivirus
+    attributes:
+      label: Antivirus installé
+      placeholder: "Defender seul, Avast, Bitdefender..."
+  - type: dropdown
+    id: origine
+    attributes:
+      label: Comment avez-vous connu OpusScreen ?
+      description: L'application ne collecte rien ; c'est la seule façon de le savoir.
+      options:
+        - Moteur de recherche
+        - GitHub
+        - Reddit
+        - Un forum ou un site (précisez ci-dessous)
+        - Bouche-à-oreille
+        - Je ne me souviens plus

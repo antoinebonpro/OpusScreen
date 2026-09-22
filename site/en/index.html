@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpusScreen — set your screen's light, measure your colour vision</title>
+<meta name="description" content="Screen brightness from 5 % to 150 %, colour temperature, and colour-blindness correction calibrated by a guided test. Free, open source, no account, no network. For Windows.">
+<link rel="icon" href="../img/logo-64.png">
+<meta property="og:title" content="OpusScreen — set your screen's light">
+<meta property="og:description" content="Brightness from 5 % to 150 %, colour temperature, colour-blindness correction measured rather than guessed. Free and open source, for Windows.">
+<meta property="og:image" content="https://antoinebonpro.github.io/OpusScreen/img/social.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://antoinebonpro.github.io/OpusScreen/en/">
+<meta property="og:site_name" content="OpusScreen">
+<meta property="og:locale" content="en_GB">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="OpusScreen: brightness, colour temperature and colour-blindness correction for Windows.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="OpusScreen — set your screen's light">
+<meta name="twitter:description" content="Brightness from 5 % to 150 %, colour temperature, colour-blindness correction calibrated by a guided test. Free and open source, for Windows.">
+<meta name="twitter:image" content="https://antoinebonpro.github.io/OpusScreen/img/social.png">
+<link rel="canonical" href="https://antoinebonpro.github.io/OpusScreen/en/">
+<link rel="alternate" hreflang="fr" href="https://antoinebonpro.github.io/OpusScreen/">
+<link rel="alternate" hreflang="en" href="https://antoinebonpro.github.io/OpusScreen/en/">
+<link rel="alternate" hreflang="x-default" href="https://antoinebonpro.github.io/OpusScreen/">
+<link rel="apple-touch-icon" href="../img/icon-192.png">
+<link rel="preload" as="font" type="font/woff2" href="../fonts/atkinson-02.woff2" crossorigin>
+<link rel="stylesheet" href="../fonts/fonts.css">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<div class="veil" id="veil" aria-hidden="true"></div>
+<div class="veil gain" id="gain" aria-hidden="true"></div>
+
+<a class="skip" href="#content">Skip to content</a>
+
+<header class="top">
+  <a class="brand" href="./"><img src="../img/logo-64.png" alt="" width="30" height="30"><span>OpusScreen</span></a>
+  <nav aria-label="Sections">
+    <a href="#light">The light</a>
+    <a href="#colours">The colours</a>
+    <a href="#test">The test</a>
+    <a href="#app">The software</a>
+    <a href="#questions">Questions</a>
+    <a href="../" hreflang="fr" lang="fr">Français</a>
+  </nav>
+  <a class="get" href="https://github.com/antoinebonpro/OpusScreen/releases/latest/download/OpusScreen.exe">Download</a>
+</header>
+
+<main id="content">
+
+<!-- ============================================================ the instrument -->
+<section class="hero">
+  <div class="hero-text">
+    <h1>Set the light<br>of your screen.</h1>
+    <p class="lead">
+      Go lower than Windows allows. Warm the colours when night falls — a blue-light
+      filter adjustable to the kelvin. And if you confuse certain colours, have the
+      correction measured instead of guessed.
+    </p>
+    <div class="actions">
+      <a class="get big" href="https://github.com/antoinebonpro/OpusScreen/releases/latest/download/OpusScreen.exe">
+        Download for Windows</a>
+      <a class="plain" href="https://github.com/antoinebonpro/OpusScreen">Read the code</a>
+    </div>
+    <p class="fine" id="release-meta">Version 3.2, one file, nothing to install.</p>
+
+    <p class="fine averto">
+      On first launch, Windows will show “Windows protected your PC”. Choose
+      <strong>More info</strong>, then <strong>Run anyway</strong>: the file is not signed
+      by a commercial certificate, which costs a few hundred euros a year. The code is
+      public, and builds with a single command.
+    </p>
+
+    <p class="fine sur-mobile">
+      OpusScreen is Windows software. From a phone, note the address and open it on your
+      computer.
+    </p>
+
+    <p class="fine">
+      The interface is in French. An English interface is on the roadmap — open an issue
+      if you need it, that is how it gets prioritised.
+    </p>
+  </div>
+
+  <figure class="bench" id="bench">
+    <figcaption>This page is your screen. Adjust it.</figcaption>
+
+    <div class="dial">
+      <label for="kelvin">Temperature</label>
+      <output id="kelvin-out" aria-live="polite">5200 K</output>
+      <input type="range" id="kelvin" min="1200" max="6500" step="100" value="5200"
+             aria-describedby="kelvin-note">
+      <p class="scale" aria-hidden="true"><span>1200 K candle</span><span>6500 K daylight</span></p>
+      <p class="fine" id="kelvin-note">The same formula as the software, applied over this page.</p>
+    </div>
+
+    <div class="dial">
+      <label for="lum">Brightness</label>
+      <output id="lum-out" aria-live="polite">100 %</output>
+      <input type="range" id="lum" min="35" max="150" step="5" value="100"
+             aria-describedby="lum-note">
+      <p class="scale" aria-hidden="true"><span>35 %</span><span>100 %</span><span>150 %</span></p>
+      <p class="fine" id="lum-note">On your screen the software goes down to 5 %. Here the page stops at 35 %, to stay readable.</p>
+    </div>
+
+    <button type="button" class="plain small" id="reset">Reset the page to 6500 K</button>
+  </figure>
+</section>
+
+<!-- ============================================================ four stages -->
+<section id="light">
+  <h2>Four stages, from backlight to veil</h2>
+  <p class="lead narrow">
+    Windows offers one slider, and only on screens that accept it. An image actually
+    passes through four stages before reaching the eye, and each one is adjustable —
+    that is what makes 5 % to 150 % possible.
+  </p>
+
+  <ol class="chain">
+    <li>
+      <h3>Backlight</h3>
+      <p>The real light of the panel, through WMI on a laptop or DDC/CI on an external monitor. When it answers, it is the best stage: less light emitted, not merely less light shown.</p>
+      <p class="range-note">All or nothing, depending on the screen</p>
+    </li>
+    <li>
+      <h3>Gamma ramp</h3>
+      <p>The graphics card's colour table, rewritten channel by channel. This is where temperature, contrast, curve and balance live — and the only stage that can multiply, hence go past 100 %.</p>
+      <p class="range-note">From 35 % to 150 %</p>
+    </li>
+    <li>
+      <h3>Colour matrix</h3>
+      <p>Saturation and filters, including colour-blindness correction. Windows exposes it for the whole desktop only: the software therefore names the reference screen explicitly, rather than picking one at random.</p>
+      <p class="range-note">Whole desktop</p>
+    </li>
+    <li>
+      <h3>Veil</h3>
+      <p>A semi-transparent black window that receives no clicks. Below 35 % it takes over, where the gamma ramp would start crushing the blacks. It is also what this page is doing right now.</p>
+      <p class="range-note">From 5 % to 35 %</p>
+    </li>
+  </ol>
+</section>
+
+<!-- ============================================================ colours -->
+<section id="colours" class="dark">
+  <h2>Two colours you cannot tell apart, pushed apart until you can</h2>
+  <p class="lead narrow">
+    On the left, two colours as a colour-blind person sees them today. On the right, the
+    same two after correction, seen by that same vision. The colours are not chosen for
+    effect: they are built along the confusion axis, with the software's own matrices,
+    and the distance is measured in Delta E exactly as the software measures it.
+  </p>
+
+  <div class="bench-controls">
+    <div class="choice" role="group" aria-label="Deficiency">
+      <button type="button" data-vision="deuteranopia" class="on" aria-pressed="true">Green confused<span class="clinique">deuteranopia</span></button>
+      <button type="button" data-vision="protanopia" aria-pressed="false">Red confused<span class="clinique">protanopia</span></button>
+      <button type="button" data-vision="tritanopia" aria-pressed="false">Blue confused<span class="clinique">tritanopia</span></button>
+    </div>
+    <div class="dial inline">
+      <label for="sev">Severity</label>
+      <output id="sev-out">70 %</output>
+      <input type="range" id="sev" min="20" max="100" step="5" value="70">
+    </div>
+  </div>
+
+  <div class="pairs" id="pairs"></div>
+
+  <p class="fine wide">
+    Below 2.3 Delta E the eye no longer separates two colours; above it, it does. The
+    correction invents no colour: it moves the difference onto the channels still
+    perceived. The simulation remains a published approximation — a starting point that
+    the test then refines.
+  </p>
+</section>
+
+<!-- ============================================================ test -->
+<section id="test">
+  <h2>The colour vision test, in two minutes</h2>
+  <p class="lead narrow">
+    Picking “deuteranopia, severity 100 %” from a list means filing yourself under a
+    label. A correction calibrated for a complete deficiency makes the screen garish for
+    someone who only has part of one — and that is most people concerned.
+  </p>
+
+  <ol class="plates">
+    <li>
+      <img src="../img/test-planche.png" alt="A test plate: a digit hidden in a field of coloured dots." width="700" height="620" loading="lazy">
+      <div>
+        <h3>Plates find the type</h3>
+        <p>
+          A digit hidden in a field of dots. The colours are searched by calculation among
+          hundreds of candidates, and kept only if the digit vanishes for the targeted
+          deficiency while staying obvious for the other two. Two control plates, readable
+          by everyone, catch random answers.
+        </p>
+      </div>
+    </li>
+    <li>
+      <img src="../img/test-comparaison.png" alt="Two adjacent colours, to be called identical or different." width="700" height="620" loading="lazy">
+      <div>
+        <h3>Measurement finds the severity</h3>
+        <p>
+          The gap narrows after every correct answer and widens after every mistake, until
+          it converges on your own limit. This is the staircase method used for threshold
+          measurement in psychophysics. When the plates hesitate between two neighbouring
+          axes, all three are measured and the profile of the measurements decides.
+        </p>
+      </div>
+    </li>
+    <li>
+      <img src="../img/test-resultat.png" alt="The result screen: type found, severity measured, screening confidence." width="700" height="620" loading="lazy">
+      <div>
+        <h3>The result applies, and is saved</h3>
+        <p>
+          Under whatever name you choose, and it touches colours only: recalling “charts”
+          will never change your brightness. If nothing stands out clearly, the test says
+          so rather than inventing an answer.
+        </p>
+      </div>
+    </li>
+  </ol>
+
+  <p class="caveat">
+    This is a calibration tool, not a medical test. It tunes software from what you see on
+    this particular screen, whose brightness and colour profile affect the result. Telling
+    a mild protanomaly from a mild deuteranomaly requires an anomaloscope, and the software
+    says so whenever that doubt exists. For a diagnosis, see an eye specialist.
+  </p>
+</section>
+
+<!-- ============================================================ the software -->
+<section id="app" class="dark">
+  <h2>The software, page by page</h2>
+  <p class="lead narrow">
+    Ten pages, one of which is used daily. These screenshots come out of the real window:
+    a tool retakes them at every version, so the site cannot fall behind the software.
+    The interface is in French.
+  </p>
+
+  <div class="specimens">
+    <figure>
+      <img src="../img/ecran.png" alt="Screen tab: modes, brightness, temperature, contrast, saturation." width="984" height="721" loading="lazy">
+      <figcaption>
+        <h3>Screen</h3>
+        <p>The four daily sliders, twenty modes supplied, and your own. The brightness plan is written under the sliders: gain, curve, veil, clipping.</p>
+      </figcaption>
+    </figure>
+    <figure>
+      <img src="../img/daltonisme.png" alt="Colour-blindness tab: guided test, correction, fine tuning, saved settings." width="984" height="721" loading="lazy">
+      <figcaption>
+        <h3>Colour blindness</h3>
+        <p>The test, one-click correction, fine tuning, verification on confused pairs, and your named settings. Start-up with Windows is set here too, with its state in plain words.</p>
+      </figcaption>
+    </figure>
+    <figure>
+      <img src="../img/ecrans.png" alt="Screens tab: one settings card per detected monitor." width="984" height="721" loading="lazy">
+      <figcaption>
+        <h3>External monitors</h3>
+        <p>One block per monitor. Linked, offset by a few points, or each with its own profile. Copying one screen onto the others is one button; blacking out a screen disconnects nothing.</p>
+      </figcaption>
+    </figure>
+    <figure>
+      <img src="../img/confort.png" alt="Comfort tab: eye breaks, blink reminder, screen time." width="984" height="721" loading="lazy">
+      <figcaption>
+        <h3>Comfort</h3>
+        <p>The 20-20-20 rule, a blink reminder that never takes focus, time spent since this morning, and the system volume when a video stays too quiet.</p>
+      </figcaption>
+    </figure>
+  </div>
+
+  <p class="fine wide">
+    Also: sunset computed offline, adaptation to what is displayed, per-application rules,
+    full-screen magnifier, ring around the pointer, fifteen reconfigurable shortcuts, and a
+    command line — <code>OpusScreen.exe --brightness 60 --temp 3400</code>.
+  </p>
+</section>
+
+<!-- ============================================================ guarantees -->
+<section id="guarantees">
+  <h2>What is guaranteed, and by which test</h2>
+  <p class="lead narrow">
+    Software that touches screen light can make a screen unusable. These safeguards are
+    not intentions: each one fails loudly if it is broken.
+  </p>
+
+  <table class="certificate">
+    <caption>Eight suites, run before every release by <code>tests\run-tests.cmd</code>.</caption>
+    <tbody>
+      <tr><th scope="row">No combination of settings drops below 5 % luminance</th><td>SafetyTest</td></tr>
+      <tr><th scope="row">The screen returns to normal after a crash</th><td>SafetyTest</td></tr>
+      <tr><th scope="row">The colour-blindness correction really separates confused pairs</th><td>MatrixTest, VisionTest</td></tr>
+      <tr><th scope="row">The guided test recovers a simulated eye's severity, within 15 %</th><td>VisionTest, UiTest</td></tr>
+      <tr><th scope="row">The wheel scrolls the page without changing hovered settings</th><td>UiTest</td></tr>
+      <tr><th scope="row">Every hand-drawn control announces itself to screen readers</th><td>VisionTest</td></tr>
+      <tr><th scope="row">Three thousand random gestures break none of nine invariants</th><td>MonkeyTest</td></tr>
+    </tbody>
+  </table>
+
+  <div class="promises">
+    <p><strong>Nothing leaves your machine.</strong> No server contacted, no account, no usage statistics. A firewall has nothing to block.</p>
+    <p><strong>One file, and that is all.</strong> Settings live in a text file you can read in Notepad. Deleting the executable uninstalls it.</p>
+    <p><strong>Verifiable.</strong> Public code under AGPL v3, commented in French, buildable with one command and nothing to install.</p>
+  </div>
+</section>
+
+<!-- ============================================================ questions -->
+<section id="questions" class="dark">
+  <h2>Questions</h2>
+
+  <div class="faq">
+    <details>
+      <summary>Is it really free?</summary>
+      <p>Yes, and free as in freedom: AGPL v3. No paid tier, no reserved feature, no trial period.</p>
+    </details>
+    <details>
+      <summary>Windows shows a warning on first launch.</summary>
+      <p>The file is not signed by a commercial certificate, which costs a few hundred euros a year. SmartScreen says “Windows protected your PC”: choose <em>More info</em>, then <em>Run anyway</em>. The repository also builds with a single command, if you would rather not trust a binary.</p>
+    </details>
+    <details>
+      <summary>How is this different from f.lux or Night light?</summary>
+      <p>Colour temperature is the common ground. Beyond that: brightness runs from 5 % to 150 %, each screen is adjusted separately, and the colour-blindness side — adjustable correction plus a measurement test — is not offered free elsewhere.</p>
+    </details>
+    <details>
+      <summary>Does it work on an external monitor?</summary>
+      <p>Yes. Brightness, temperature and veil are set per screen. Saturation and colour filters apply to the whole desktop: that is a limit of the Windows interface, and the software names the reference screen rather than hiding it.</p>
+    </details>
+    <details>
+      <summary>Does the test replace an eye examination?</summary>
+      <p>No, and it says so. It calibrates software from what you see on this screen; a diagnosis requires a clinical examination. If the test finds something unexpected, talk to a professional rather than to software.</p>
+    </details>
+    <details>
+      <summary>Where are the settings stored?</summary>
+      <p>In <code>%LOCALAPPDATA%\OpusScreen\settings.ini</code>. A text file, backed up by copying, exportable from the Advanced tab.</p>
+    </details>
+    <details>
+      <summary>Which Windows versions?</summary>
+      <p>Windows 7 to 11. The software relies on .NET Framework 4, present on all of them: nothing to install.</p>
+    </details>
+    <details>
+      <summary>Is the interface available in English?</summary>
+      <p>Not yet — the interface is French. The concepts are visual (sliders, plates, colour pairs), but the labels are not. If you need an English interface, open an issue: that is how it gets prioritised.</p>
+    </details>
+  </div>
+</section>
+
+<!-- ============================================================ last -->
+<section class="last">
+  <h2>One file. Two minutes. A screen that leaves you alone.</h2>
+  <a class="get big" href="https://github.com/antoinebonpro/OpusScreen/releases/latest/download/OpusScreen.exe">
+    Download OpusScreen</a>
+  <p class="fine" id="release-meta-2">Version 3.2, for Windows. Put the file wherever you like and double-click.</p>
+</section>
+
+</main>
+
+<footer>
+  <div class="foot-inner">
+    <p class="foot-brand"><img src="../img/logo-64.png" alt="" width="26" height="26"> OpusScreen</p>
+    <nav aria-label="The software">
+      <a href="https://github.com/antoinebonpro/OpusScreen/releases/latest/download/OpusScreen.exe">Download</a>
+      <a href="https://github.com/antoinebonpro/OpusScreen/releases">All versions</a>
+      <a href="https://github.com/antoinebonpro/OpusScreen/blob/main/CHANGELOG.md">Changelog</a>
+    </nav>
+    <nav aria-label="The code">
+      <a href="https://github.com/antoinebonpro/OpusScreen">Repository</a>
+      <a href="https://github.com/antoinebonpro/OpusScreen/blob/main/docs/ARCHITECTURE.md">Architecture</a>
+      <a href="https://github.com/antoinebonpro/OpusScreen/issues">Report a problem</a>
+    </nav>
+    <nav aria-label="Legal">
+      <a href="https://github.com/antoinebonpro/OpusScreen/blob/main/LICENSE">AGPL v3 licence</a>
+      <a href="../" hreflang="fr" lang="fr">Version française</a>
+    </nav>
+  </div>
+  <p class="foot-note">
+    No tracker, no remote font, no library. One optional outside request: the latest
+    version number, read from GitHub; if it fails, the page stays correct. Headings in
+    Fraunces, text in Atkinson Hyperlegible, drawn by the Braille Institute for low vision.
+  </p>
+</footer>
+
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "SoftwareApplication",
+ "name": "OpusScreen",
+ "applicationCategory": "UtilitiesApplication",
+ "applicationSubCategory": "Accessibility and visual comfort",
+ "operatingSystem": "Windows 7, Windows 8, Windows 10, Windows 11",
+ "url": "https://antoinebonpro.github.io/OpusScreen/en/",
+ "downloadUrl": "https://github.com/antoinebonpro/OpusScreen/releases/latest/download/OpusScreen.exe",
+ "softwareHelp": "https://github.com/antoinebonpro/OpusScreen#readme",
+ "screenshot": "https://antoinebonpro.github.io/OpusScreen/img/ecran.png",
+ "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+ "isAccessibleForFree": true,
+ "inLanguage": "en",
+ "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"},
+ "featureList": [
+  "Brightness from 5 % to 150 %",
+  "Colour temperature from 1200 to 6500 K",
+  "Colour-blindness correction calibrated by a guided test",
+  "Independent settings per monitor",
+  "Eye breaks and blink reminders"
+ ],
+ "author": {"@type": "Person", "name": "Antoine Bon"}
+}
+</script>
+<script src="../app.js"></script>
+</body>
+</html>
