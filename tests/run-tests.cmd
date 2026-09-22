@@ -16,6 +16,9 @@ REM                                      singe sans la souris, graine au choix
 REM           run-tests.cmd planches [fichier.png] [graine]
 REM                                      dessine les planches du test de vision dans
 REM                                      une image, pour les regarder a l oeil
+REM           run-tests.cmd captures [dossier]
+REM                                      photographie chaque onglet de la vraie
+REM                                      fenetre, pour le site (defaut : ..\site\img)
 REM
 REM  Note d'implementation : la sequence est ecrite a plat, sans "call :label".
 REM  Une premiere version factorisee sautait silencieusement un test tout en
@@ -49,6 +52,7 @@ set RAN=0
 if /I "%~1"=="monitor" goto monitor
 if /I "%~1"=="singe" goto singe
 if /I "%~1"=="planches" goto planches
+if /I "%~1"=="captures" goto captures
 if /I "%~1"=="singe-messages" goto singemessages
 
 REM =========================================================== 1/8
@@ -207,4 +211,12 @@ if errorlevel 1 exit /b 1
 set OUT=%~2
 if "%OUT%"=="" set OUT=bin\planches.png
 bin\PlateShot.exe "%OUT%" %~3
+exit /b %errorlevel%
+
+:captures
+"%FW%\csc.exe" /nologo /target:exe /out:bin\Shots.exe %REFS% Shots.cs UiHarness.cs !SOURCES!
+if errorlevel 1 exit /b 1
+set OUT=%~2
+if "%OUT%"=="" set OUT=..\site\img
+bin\Shots.exe "%OUT%"
 exit /b %errorlevel%

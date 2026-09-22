@@ -22,3 +22,5 @@ bin/
 # Systeme
 Thumbs.db
 desktop.ini
+# Fichiers de travail du site
+.playwright-mcp/
