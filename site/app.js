@@ -1,14 +1,15 @@
 /* ===========================================================================
    OpusScreen - le site
 
-   Deux demonstrations, et aucune n'illustre : toutes deux calculent, avec les
-   formules du logiciel.
+   Trois comportements, et aucun n'illustre : tous calculent, avec les formules
+   du logiciel.
 
-   - Le voile de la page reprend ColorTemp.Multipliers et le voile de
-     GammaEngine : regler la page, c'est faire exactement ce que fait
-     l'application sur un ecran.
+   - La maquette reprend ColorTemp.Multipliers et le voile de GammaEngine :
+     regler la maquette, c'est faire exactement ce que fait l'application sur
+     un ecran - a ceci pres que l'effet s'arrete au cadre.
    - Les paires de couleurs sont construites le long de l'axe de confusion,
      comme dans Vision.ConfusionPairs, et mesurees en Delta E CIE76.
+   - Les onglets du heros echangent la capture affichee, sans rien charger.
 
    Aucune bibliotheque, aucune ressource distante. La page affirme que rien ne
    sort de la machine ; elle s'y tient.
@@ -18,6 +19,34 @@
   'use strict';
 
   var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ------------------------------------------------------------------ onglets
+
+  var onglets = [].slice.call(document.querySelectorAll('.onglets [role="tab"]'));
+
+  function montrer(tab) {
+    onglets.forEach(function (t) {
+      var actif = t === tab;
+      t.setAttribute('aria-selected', actif ? 'true' : 'false');
+      var vue = document.getElementById(t.getAttribute('aria-controls'));
+      if (vue) vue.hidden = !actif;
+    });
+  }
+
+  onglets.forEach(function (tab, i) {
+    tab.addEventListener('click', function () { montrer(tab); });
+
+    // Les fleches deplacent la selection : c'est ce qu'attend un lecteur
+    // d'ecran d'une bande d'onglets, et ce que fait le clavier partout ailleurs.
+    tab.addEventListener('keydown', function (e) {
+      var pas = e.key === 'ArrowRight' ? 1 : (e.key === 'ArrowLeft' ? -1 : 0);
+      if (!pas) return;
+      e.preventDefault();
+      var suivant = onglets[(i + pas + onglets.length) % onglets.length];
+      montrer(suivant);
+      suivant.focus();
+    });
+  });
 
   // ------------------------------------------------------------------ temperature
 
@@ -40,65 +69,74 @@
     return [norm(r, 255), norm(g, 254.1097), norm(b, 250.0522)];
   }
 
-  var veil = document.getElementById('veil');
-  var gain = document.getElementById('gain');
+  var voile = document.getElementById('voile');
+  var maquette = voile && voile.parentNode ? voile.parentNode.querySelector('img') : null;
   var kelvinIn = document.getElementById('kelvin');
   var lumIn = document.getElementById('lum');
   var kelvinOut = document.getElementById('kelvin-out');
   var lumOut = document.getElementById('lum-out');
 
-  function paint(kelvin, lum) {
-    if (!veil) return;
+  function peindre(kelvin, lum) {
+    if (!voile) return;
     var m = multipliers(kelvin);
 
-    // Sous 100 %, on retire de la lumiere : c'est le voile, en multiplication.
-    // Au-dessus, on ne peut qu'ECLAIRCIR une page deja affichee - la carte
-    // graphique, elle, multiplie vraiment le signal. La page le simule donc
-    // faiblement, et le dit.
-    var dim = Math.min(1, lum / 100);
-    veil.style.backgroundColor = 'rgb(' + Math.round(m[0] * 255 * dim) + ','
-                                        + Math.round(m[1] * 255 * dim) + ','
-                                        + Math.round(m[2] * 255 * dim) + ')';
+    // Sous 100 %, on retire de la lumiere : c'est le voile, en multiplication,
+    // exactement comme la fenetre noire de l'application.
+    var sombre = Math.min(1, lum / 100);
+    voile.style.backgroundColor = 'rgb(' + Math.round(m[0] * 255 * sombre) + ','
+                                         + Math.round(m[1] * 255 * sombre) + ','
+                                         + Math.round(m[2] * 255 * sombre) + ')';
 
-    var over = Math.max(0, (lum - 100) / 100);
-    gain.style.backgroundColor = 'rgba(255,255,255,' + (over * 0.35).toFixed(3) + ')';
+    // Au-dessus de 100 %, la carte graphique MULTIPLIE le signal : un voile ne
+    // sait pas faire cela, un filtre de luminosite si. C'est le meme geste.
+    if (maquette) {
+      var gain = Math.max(1, lum / 100);
+      maquette.style.filter = gain > 1 ? 'brightness(' + gain.toFixed(2) + ')' : '';
+    }
 
+    // La reglette suit ce qui est peint : pendant le rechauffement automatique,
+    // un curseur qui reste en arriere raconte autre chose que l'image.
+    if (kelvinIn && parseInt(kelvinIn.value, 10) !== kelvin) kelvinIn.value = kelvin;
     if (kelvinOut) kelvinOut.textContent = kelvin + ' K';
     if (lumOut) lumOut.textContent = lum + ' %';
   }
 
-  function current() {
+  function reglages() {
     return [parseInt(kelvinIn.value, 10), parseInt(lumIn.value, 10)];
   }
 
-  if (veil && kelvinIn && lumIn) {
-    kelvinIn.addEventListener('input', function () { var c = current(); paint(c[0], c[1]); });
-    lumIn.addEventListener('input', function () { var c = current(); paint(c[0], c[1]); });
+  if (voile && kelvinIn && lumIn) {
+    kelvinIn.addEventListener('input', function () { var c = reglages(); peindre(c[0], c[1]); });
+    lumIn.addEventListener('input', function () { var c = reglages(); peindre(c[0], c[1]); });
 
-    var reset = document.getElementById('reset');
-    if (reset) {
-      reset.addEventListener('click', function () {
-        kelvinIn.value = 6500; lumIn.value = 100;
-        paint(6500, 100);
+    // Le seul mouvement non demande de la page : a l'arrivee dans le champ de
+    // vision, la maquette se rechauffe une fois, de la lumiere du jour vers
+    // 4200 K. C'est la demonstration la plus courte du produit, et elle ne se
+    // repete jamais.
+    var depart = function () {
+      if (reduced) { peindre(4200, 100); return; }
+      var debut = null;
+      requestAnimationFrame(function pas(maintenant) {
+        if (debut === null) debut = maintenant;
+        var t = Math.min(1, (maintenant - debut) / 1400);
+        var adouci = 0.5 - 0.5 * Math.cos(Math.PI * t);
+        peindre(Math.round(6500 - adouci * 2300), 100);
+        if (t < 1) requestAnimationFrame(pas);
       });
-    }
+    };
 
-    // Le seul mouvement non demande de la page : au chargement, elle se rechauffe
-    // une fois, de la lumiere du jour vers 4600 K. C'est la demonstration la plus
-    // courte possible du produit - et elle ne se repete jamais.
-    if (reduced) {
-      paint(5200, 100);
+    peindre(6500, 100);
+    if (window.IntersectionObserver) {
+      var guetteur = new IntersectionObserver(function (entrees) {
+        entrees.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          guetteur.disconnect();
+          depart();
+        });
+      }, { threshold: 0.4 });
+      guetteur.observe(voile.parentNode);
     } else {
-      paint(6500, 100);
-      var start = null;
-      requestAnimationFrame(function step(now) {
-        if (start === null) start = now;
-        var t = Math.min(1, (now - start) / 1400);
-        var eased = 0.5 - 0.5 * Math.cos(Math.PI * t);
-        paint(Math.round(6500 - eased * 1300), 100);
-        if (t < 1) requestAnimationFrame(step);
-        else kelvinIn.value = 5200;
-      });
+      depart();
     }
   }
 
@@ -257,88 +295,82 @@
   function css(rgb) { return 'rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ')'; }
   function fr(v) { return v.toFixed(1).replace('.', ','); }
 
-  var state = { vision: 'deuteranopia', severity: 0.7 };
-  var host = document.getElementById('pairs');
+  var etat = { vision: 'deuteranopia', severity: 0.7 };
+  var avant = document.getElementById('avant');
+  var apres = document.getElementById('apres');
 
-  function row(a, b, value, when) {
-    var line = document.createElement('div');
-    line.className = 'pair-row ' + (value < 2.3 ? 'merged' : 'separated');
+  // Les deux verdicts, dans la langue de la page : le site anglais charge le
+  // meme fichier, et une colonne qui dit « une seule couleur » a un lecteur
+  // anglophone n'explique rien.
+  var EN = document.documentElement.lang === 'en';
+  var UNE = EN ? ' — one colour' : ' — une seule couleur';
+  var DEUX = EN ? ' — two colours' : ' — deux couleurs';
 
+  /** Une paire de pastilles jointives, suivie de la mesure qui la juge. */
+  function paire(colonne, a, b, ecart) {
+    var bande = document.createElement('div');
+    bande.className = 'paire';
     [a, b].forEach(function (c) {
-      var half = document.createElement('div');
-      half.className = 'half';
-      half.style.background = css(c);
-      line.appendChild(half);
+      var moitie = document.createElement('div');
+      moitie.style.background = css(c);
+      bande.appendChild(moitie);
     });
+    colonne.appendChild(bande);
 
-    var read = document.createElement('div');
-    read.className = 'read';
-
-    var moment = document.createElement('span');
-    moment.className = 'moment';
-    moment.textContent = when;
-
-    var v = document.createElement('span');
-    v.className = 'value';
-    v.textContent = fr(value) + ' Delta E';
-
-    var verdict = document.createElement('span');
-    verdict.className = 'verdict';
-    verdict.textContent = value < 2.3 ? 'une seule couleur' : 'deux couleurs';
-
-    read.appendChild(moment);
-    read.appendChild(v);
-    read.appendChild(verdict);
-    line.appendChild(read);
-    return line;
+    var mesure = document.createElement('p');
+    mesure.className = 'mesure';
+    var chiffre = document.createElement('strong');
+    chiffre.textContent = (EN ? ecart.toFixed(1) : fr(ecart)) + ' Delta E';
+    mesure.appendChild(chiffre);
+    mesure.appendChild(document.createTextNode(ecart < 2.3 ? UNE : DEUX));
+    colonne.appendChild(mesure);
   }
 
-  function render() {
-    if (!host) return;
-    var sim = simulation(state.vision, state.severity);
-    var corrected = multiply(daltonize(state.vision, state.severity, 1.0), sim);
-    var d = confusionDirection(state.vision);
+  function dessiner() {
+    if (!avant || !apres) return;
+    var sim = simulation(etat.vision, etat.severity);
+    var corrige = multiply(daltonize(etat.vision, etat.severity, 1.0), sim);
+    var d = confusionDirection(etat.vision);
 
-    while (host.firstChild) host.removeChild(host.firstChild);
+    while (avant.firstChild) avant.removeChild(avant.firstChild);
+    while (apres.firstChild) apres.removeChild(apres.firstChild);
 
     ANCHORS.forEach(function (anchor) {
       var t = confusedSpread(anchor, d, sim);
       var a = rgbAt(anchor, d, -t / 2), b = rgbAt(anchor, d, t / 2);
       if (a[0] === b[0] && a[1] === b[1] && a[2] === b[2]) return;
 
-      var block = document.createElement('div');
-      block.className = 'pair-block';
-      block.appendChild(row(applyM(sim, a), applyM(sim, b),
-                            deltaE(applyM(sim, a), applyM(sim, b)), 'Aujourd’hui'));
-      block.appendChild(row(applyM(corrected, a), applyM(corrected, b),
-                            deltaE(applyM(corrected, a), applyM(corrected, b)), 'Avec la correction'));
-      host.appendChild(block);
+      var sa = applyM(sim, a), sb = applyM(sim, b);
+      var ca = applyM(corrige, a), cb = applyM(corrige, b);
+      paire(avant, sa, sb, deltaE(sa, sb));
+      paire(apres, ca, cb, deltaE(ca, cb));
     });
   }
 
-  [].slice.call(document.querySelectorAll('[data-vision]')).forEach(function (btn) {
+  var choix = [].slice.call(document.querySelectorAll('[data-vision]'));
+  choix.forEach(function (btn) {
     btn.addEventListener('click', function () {
-      [].slice.call(document.querySelectorAll('[data-vision]')).forEach(function (b) {
-        b.classList.remove('on');
+      choix.forEach(function (b) {
+        b.classList.remove('actif');
         b.setAttribute('aria-pressed', 'false');   // l'etat doit s'entendre, pas seulement se voir
       });
-      btn.classList.add('on');
+      btn.classList.add('actif');
       btn.setAttribute('aria-pressed', 'true');
-      state.vision = btn.getAttribute('data-vision');
-      render();
+      etat.vision = btn.getAttribute('data-vision');
+      dessiner();
     });
   });
 
   var sev = document.getElementById('sev'), sevOut = document.getElementById('sev-out');
   if (sev) {
     sev.addEventListener('input', function () {
-      state.severity = parseInt(sev.value, 10) / 100;
+      etat.severity = parseInt(sev.value, 10) / 100;
       if (sevOut) sevOut.textContent = sev.value + ' %';
-      render();
+      dessiner();
     });
   }
 
-  render();
+  dessiner();
 
   // ------------------------------------------------------------------ version
 
@@ -349,14 +381,20 @@
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (data) {
         if (!data || !data.tag_name) return;
-        var size = 0;
-        (data.assets || []).forEach(function (a) { if (/\.exe$/i.test(a.name)) size = a.size; });
+        var taille = 0;
+        (data.assets || []).forEach(function (a) { if (/\.exe$/i.test(a.name)) taille = a.size; });
         var v = data.tag_name.replace(/^v/, '');
-        var one = document.getElementById('release-meta');
-        var two = document.getElementById('release-meta-2');
-        if (one) one.textContent = 'Version ' + v + (size ? ', ' + Math.round(size / 1024) + ' Ko' : '')
-                                 + ', un seul fichier, rien à installer.';
-        if (two) two.textContent = 'Version ' + v + ', pour Windows. Posez le fichier où vous voulez et double-cliquez.';
+        var ko = taille ? ' · ' + Math.round(taille / 1024) + ' Ko' : '';
+        var un = document.getElementById('release-meta');
+        var deux = document.getElementById('release-meta-2');
+        if (EN) {
+          if (un) un.textContent = 'Version ' + v + (taille ? ' · ' + Math.round(taille / 1024) + ' KB' : ' · one file')
+                                 + ' · Windows 7 to 11';
+          if (deux) deux.textContent = 'Version ' + v + ' · for Windows';
+        } else {
+          if (un) un.textContent = 'Version ' + v + (ko || ' · un seul fichier') + ' · Windows 7 à 11';
+          if (deux) deux.textContent = 'Version ' + v + ' · pour Windows';
+        }
       })
       .catch(function () { /* hors ligne : le texte ecrit suffit */ });
   }
