@@ -6,8 +6,11 @@
 
 **Luminosité 5 % → 150 %, température de couleur, daltonisme et basse vision, pour Windows.**
 
-Né du reverse engineering de deux applications — **PangoBright** et **f.lux** — puis étendu
-avec les fonctions que les concurrents facturent, et avec celles que personne ne propose.
+Né de l’analyse des **API Windows** employées par **PangoBright** et **f.lux** — en-têtes,
+table d’import, chaînes de caractères ; aucun désassemblage, aucune copie de code — puis
+étendu avec les fonctions que les concurrents facturent, et avec d’autres qu’ils n’ont pas.
+
+**Site : [antoinebonpro.github.io/OpusScreen](https://antoinebonpro.github.io/OpusScreen/)**
 
 </div>
 
@@ -72,7 +75,8 @@ Présentation, démonstration interactive du daltonisme et captures d’écran :
 **[antoinebonpro.github.io/OpusScreen](https://antoinebonpro.github.io/OpusScreen/)**
 
 Les sources du site vivent dans [](site/) et les captures se régénèrent d’une
-commande : `testsun-tests.cmd captures`.
+commande : `tests
+un-tests.cmd captures`.
 
 ## ⬇️ Télécharger
 
@@ -197,10 +201,10 @@ puis en calibrant l'écart pour qu'il reste juste sous le seuil de perception.
 français**, avec une grille de pixels agrandie, la valeur hexadécimale et les composantes.
 `Ctrl + Alt + Maj + C` la copie dans le presse-papiers.
 
-C'est l'outil que réclament en premier les personnes daltoniennes, et qu'aucun concurrent
-ne propose : un filtre écarte les couleurs les unes des autres, il ne répond pas à la
-question posée cent fois par jour — *ce fil, ce graphique, ce bouton, il est de quelle
-couleur ?*
+Un filtre écarte les couleurs les unes des autres ; il ne répond pas à la question posée
+cent fois par jour — *ce fil, ce graphique, ce bouton, il est de quelle couleur ?*
+Aucun des quatre outils comparés plus haut ne nomme la couleur sous le pointeur, d’après
+leurs pages de fonctionnalités consultées en septembre 2026.
 
 La lecture se fait **avant** la table de couleurs et avant les filtres : les réglages en
 cours ne faussent donc jamais la réponse.
