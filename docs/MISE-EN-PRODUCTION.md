@@ -10,7 +10,11 @@ au plus engageant : les premières étapes se vérifient, les dernières se déc
 - [ ] `build.cmd` se termine **sans avertissement**
       Un avertissement toléré aujourd'hui est un bug demain ; il n'y en a aucun
       actuellement, cet état doit être conservé.
-- [ ] `tests\run-tests.cmd` affiche `Tests executes : 6 / 6` et `RESULTAT : tous les tests passent`
+- [ ] `tests\run-tests.cmd` affiche `Tests executes : 8 / 8` et `RESULTAT : tous les tests passent`
+      La suite d'interface (7/8) dépend du **curseur physique** : WinForms n'émet `Click`
+      que si `WindowFromPoint` tombe sur le contrôle, alors que le harnais n'envoie que
+      des messages. Lancée seule — `bin\UiTest.exe` — elle donne un résultat franc ;
+      dans le tour complet elle échoue par intermittence, sans rapport avec le code.
 - [ ] Aucun fichier temporaire ni binaire dans le dépôt : `git status` est propre
 - [ ] Chaque nouveau réglage est **sauvegardé et rechargé** — vérifié par l'aller-retour
       de configuration dans `SafetyTest`
@@ -109,7 +113,7 @@ Ce qui a déjà causé un incident, ou en causera un si l'on n'y prend pas garde
 | Risque | Ce qui le contient | À surveiller |
 |---|---|---|
 | Écran noir après un plantage | fichier témoin + raccourci de secours | ne jamais retirer `RecoverFromCrash()` du début de `Main()` |
-| Test silencieusement sauté | compteur `4/4` dans le script | ne pas refactoriser le lanceur sans conserver le compteur |
+| Test silencieusement sauté | compteur `8/8` dans le script | ne pas refactoriser le lanceur sans conserver le compteur |
 | Réglage impossible à atteindre | bornes dures dans `ClampBrightness` | tout nouveau réglage doit être borné dans `ClampAll()` |
 | Fenêtre invisible au premier lancement | `IsFirstRun` | vérifier après toute modification du démarrage |
 | Conflit avec un autre outil de gamma | `ConflictDetector` | ajouter les nouveaux concurrents à la liste connue |

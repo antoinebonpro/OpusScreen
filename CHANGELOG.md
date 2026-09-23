@@ -4,7 +4,7 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ---
 
-## [3.2.1] - 2026-09-22
+## [3.2.1] - 2026-09-23
 
 Un mode choisi s'applique a tous les ecrans, y compris celui qui est regle a part.
 

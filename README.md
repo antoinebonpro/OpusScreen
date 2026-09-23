@@ -74,9 +74,8 @@ reconfigurables.
 Présentation, démonstration interactive du daltonisme et captures d’écran :
 **[antoinebonpro.github.io/OpusScreen](https://antoinebonpro.github.io/OpusScreen/)**
 
-Les sources du site vivent dans [](site/) et les captures se régénèrent d’une
-commande : `tests
-un-tests.cmd captures`.
+Les sources du site vivent dans [site/](site/) et les captures se régénèrent d’une
+commande : `tests\run-tests.cmd captures`.
 
 ## ⬇️ Télécharger
 
@@ -92,8 +91,8 @@ double-cliquez.
 > complémentaires* → *Exécuter quand même*. Si vous préférez ne pas faire confiance à un
 > binaire, la section suivante compile le vôtre en une commande.
 
-Version 3.2.0 précisément : [OpusScreen.exe 3.2.0](https://github.com/antoinebonpro/OpusScreen/releases/download/v3.2.0/OpusScreen.exe)
-· [notes de version](https://github.com/antoinebonpro/OpusScreen/releases/tag/v3.2.0).
+Version 3.2.1 précisément : [OpusScreen.exe 3.2.1](https://github.com/antoinebonpro/OpusScreen/releases/download/v3.2.1/OpusScreen.exe)
+· [notes de version](https://github.com/antoinebonpro/OpusScreen/releases/tag/v3.2.1).
 Toutes les versions : [page des publications](https://github.com/antoinebonpro/OpusScreen/releases).
 
 ## 🔨 Compiler soi-même
@@ -260,6 +259,13 @@ conduit d'un clic plutôt que de le reproduire à l'échelle d'une seule fenêtr
 
 Luminosité, température et voile se règlent **écran par écran** : profil indépendant,
 simple décalage, exclusion, ou extinction complète (le *BlackOut* de Lunar).
+
+Un **mode** reste une commande pour tout le poste : il atteint chaque écran, profil
+propre compris, et seuls les champs qu'il modifie sont répercutés — baisser la
+luminosité générale ne remet pas la température réglée à part sur un écran. L'exception
+se coche explicitement, écran par écran : **« ne pas suivre les réglages généraux »**,
+pour la dalle calibrée que ni les modes, ni l'horaire, ni les raccourcis ne doivent
+toucher.
 
 Deux points méritent d'être dits franchement :
 
