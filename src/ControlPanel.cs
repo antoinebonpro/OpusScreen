@@ -29,6 +29,7 @@ namespace OpusScreen
 
         private readonly List<SettingsPage> _pages = new List<SettingsPage>();
 
+        public PageWelcome WelcomePage;
         public PageDisplay Display1;
         public PageColor ColorPage;
         public PageColorBlind ColorBlindPage;
@@ -40,11 +41,18 @@ namespace OpusScreen
         public PageHotkeys HotkeysPage;
         public PageAdvanced AdvancedPage;
 
-        /// <summary>Rang de l'onglet Daltonisme, ouvert depuis le menu de la zone de notification.</summary>
-        public const int ColorBlindPageIndex = 2;
+        /// <summary>
+        /// Rang de l'onglet Daltonisme, ouvert depuis le menu de la zone de
+        /// notification.
+        ///
+        /// Calcule depuis la liste, et non ecrit a la main : la premiere version
+        /// etait une constante, et le jour ou un onglet s'est glisse avant celui-la,
+        /// le menu a ouvert la page voisine sans que rien ne le signale.
+        /// </summary>
+        public int ColorBlindPageIndex { get { return _pages.IndexOf(ColorBlindPage); } }
 
         /// <summary>Rang de la page Vision (basse vision, pointeur, lecture).</summary>
-        public const int VisionPageIndex = 3;
+        public int VisionPageIndex { get { return _pages.IndexOf(VisionPage); } }
 
         /// <summary>Largeur de la colonne de navigation, referencee par la mise en page de l'en-tete.</summary>
         private const int NavWidth = 196;
@@ -194,6 +202,7 @@ namespace OpusScreen
             _content.BringToFront();
 
             // ---------------- pages ----------------
+            WelcomePage = new PageWelcome(_s, _display, _push);
             Display1 = new PageDisplay(_s, _display, _push);
             ColorPage = new PageColor(_s, _display, _push);
             ColorBlindPage = new PageColorBlind(_s, _display, _push);
@@ -205,6 +214,7 @@ namespace OpusScreen
             HotkeysPage = new PageHotkeys(_s, _display, _push);
             AdvancedPage = new PageAdvanced(_s, _display, _push);
 
+            AddPage(WelcomePage, "Decouvrir", "compass");
             AddPage(Display1, "Ecran", "sun");
             AddPage(ColorPage, "Couleur", "palette");
             AddPage(ColorBlindPage, "Daltonisme", "colorblind");
@@ -218,7 +228,13 @@ namespace OpusScreen
 
             _nav.SelectionChanged += ShowPage;
             LayoutHeader();
-            ShowPage(0);
+
+            // Le tout premier lancement s'ouvre sur la page qui explique ou
+            // l'application se range - sans quoi elle se referme dans la zone de
+            // notification et parait avoir disparu. Les lancements suivants ouvrent
+            // l'ecran de tous les jours : une explication deja lue qui revient
+            // chaque fois devient une porte a pousser.
+            ShowPage(_s.IsFirstRun ? 0 : 1);
         }
 
         private void AddPage(SettingsPage page, string label, string glyph)

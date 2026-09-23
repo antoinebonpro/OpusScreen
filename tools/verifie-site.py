@@ -202,8 +202,8 @@ def verifie_affirmations(html):
     panneau = fichier("src/ControlPanel.cs")
     # Les APPELS seulement : la declaration de la methode s'ecrit « void AddPage( ».
     pages = len(re.findall(r"(?<!void )AddPage\(", panneau))
-    verifie(pages == 10, u"l'application a bien dix pages", u"%d trouvees" % pages)
-    verifie(any(m in html for m in (u"Dix pages", u"dix pages", u"Ten pages", u"ten pages")),
+    verifie(pages == 11, u"l'application a bien onze pages", u"%d trouvees" % pages)
+    verifie(any(m in html for m in (u"Onze pages", u"onze pages", u"Eleven pages", u"eleven pages")),
             u"la page annonce le bon nombre de pages")
 
     cites = set(re.findall(r"\b([A-Z][a-zA-Z]+Test)\b", html))

@@ -374,7 +374,7 @@ namespace OpusScreen
             parent.DropDownItems.Add(new ToolStripSeparator());
 
             ToolStripMenuItem more = new ToolStripMenuItem("Reglages du daltonisme...");
-            more.Click += delegate { ShowPanel(); if (_panel != null) _panel.SelectPage(ControlPanel.ColorBlindPageIndex); };
+            more.Click += delegate { ShowPanel(); if (_panel != null) _panel.SelectPage(_panel.ColorBlindPageIndex); };
             parent.DropDownItems.Add(more);
         }
 
@@ -833,54 +833,25 @@ namespace OpusScreen
         /// Icone redessinee a chaque changement : sa couleur suit la temperature, son
         /// remplissage la luminosite. L'etat se lit sans ouvrir quoi que ce soit.
         /// </summary>
+        /// <summary>
+        /// Repeint l'icone de la zone de notification a l'image de l'etat courant.
+        ///
+        /// Le dessin lui-meme vit dans TrayGlyph : il etait ecrit ici, au milieu de
+        /// mille lignes qui n'ont rien a voir, et aucun test ne pouvait l'atteindre
+        /// sans poser une icone dans la barre de la machine qui l'execute.
+        ///
+        /// La taille demandee est celle que Windows utilise REELLEMENT pour cette
+        /// zone. Fournir un 32x32 laissait le systeme le reduire lui-meme, et un
+        /// trait fin ne survit pas a cette reduction.
+        /// </summary>
         private void UpdateIcon()
         {
             try
             {
-                double[] mult = ColorTemp.Multipliers(_s.Current.Kelvin);
-                double b = _s.Current.Brightness / 150.0;
+                int taille = Math.Max(16, SystemInformation.SmallIconSize.Width);
 
-                using (Bitmap bmp = new Bitmap(32, 32))
+                using (Bitmap bmp = TrayGlyph.Draw(taille, _s.Current, _display.Suspended, _s.AdaptiveEnabled))
                 {
-                    using (Graphics g = Graphics.FromImage(bmp))
-                    {
-                        g.SmoothingMode = SmoothingMode.AntiAlias;
-                        g.Clear(Color.Transparent);
-
-                        if (_display.Suspended)
-                        {
-                            using (Pen p = new Pen(Color.FromArgb(150, 156, 172), 2.5f))
-                            {
-                                g.DrawEllipse(p, 5, 5, 22, 22);
-                                g.DrawLine(p, 11, 10, 11, 22);
-                                g.DrawLine(p, 20, 10, 20, 22);
-                            }
-                        }
-                        else
-                        {
-                            int level = (int)Math.Round(58 + 195 * Math.Min(1.0, b * 1.15));
-                            Color disc = Color.FromArgb(255,
-                                Clamp255(level * mult[0]), Clamp255(level * mult[1]), Clamp255(level * mult[2]));
-
-                            if (_s.Current.Brightness > 100)
-                            {
-                                using (SolidBrush halo = new SolidBrush(Color.FromArgb(70, disc)))
-                                    g.FillEllipse(halo, 1, 1, 30, 30);
-                            }
-
-                            using (SolidBrush br = new SolidBrush(disc))
-                                g.FillEllipse(br, 6, 6, 20, 20);
-                            using (Pen p = new Pen(Color.FromArgb(210, 18, 20, 26), 2))
-                                g.DrawEllipse(p, 6, 6, 20, 20);
-
-                            if (_s.AdaptiveEnabled)
-                            {
-                                using (SolidBrush dot = new SolidBrush(Color.FromArgb(86, 200, 130)))
-                                    g.FillEllipse(dot, 22, 22, 9, 9);
-                            }
-                        }
-                    }
-
                     IntPtr h = bmp.GetHicon();
                     Icon old = _currentIcon;
                     _currentIcon = Icon.FromHandle(h);
@@ -895,8 +866,6 @@ namespace OpusScreen
         }
 
         [DllImport("user32.dll")] private static extern bool DestroyIcon(IntPtr handle);
-
-        private static int Clamp255(double v) { return v < 0 ? 0 : (v > 255 ? 255 : (int)Math.Round(v)); }
 
         // ------------------------------------------------------------------ evenements systeme
 

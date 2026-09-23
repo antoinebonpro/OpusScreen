@@ -576,9 +576,12 @@ class UiTest
         Check(page != null, "onglet « Daltonisme » absent de la colonne");
         if (page == null) return;
 
-        System.Reflection.FieldInfo idx = typeof(ControlPanel).GetField("ColorBlindPageIndex");
-        Check(idx != null && Ui.Pages().IndexOf(page) == (int)idx.GetValue(null),
+        // Le rang est desormais calcule par la fenetre elle-meme, et non ecrit a la
+        // main : inserer un onglet avant celui-ci faisait ouvrir la page voisine.
+        Check(Ui.Pages().IndexOf(page) == Ui.P.ColorBlindPageIndex,
             "le menu de la zone de notification n'ouvre pas l'onglet Daltonisme");
+        Check(Ui.Pages().IndexOf(Ui.PageTitled("Vision")) == Ui.P.VisionPageIndex,
+            "le raccourci de la page Vision n'ouvre pas la bonne page");
 
         Ui.Show(page);
         Ui.ScrollTo(page, 0);

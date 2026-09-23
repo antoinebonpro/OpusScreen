@@ -5,6 +5,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Windows.Forms;
 
 namespace OpusScreen
 {
@@ -196,6 +197,51 @@ namespace OpusScreen
         private static object Get(object target, string property)
         {
             return target.GetType().InvokeMember(property, BindingFlags.GetProperty, null, target, null);
+        }
+
+        /// <summary>
+        /// Epingle si Windows le permet encore, et sinon accompagne l'utilisateur
+        /// jusqu'au geste qu'il est seul a pouvoir faire.
+        ///
+        /// Ce parcours vivait dans l'onglet Avance, ou personne ne le cherchait. Il
+        /// sert desormais a deux endroits - la page d'accueil et l'onglet Avance - et
+        /// une seule ecriture evite que les deux se mettent a raconter des choses
+        /// differentes.
+        ///
+        /// Retourne vrai si l'epinglage a reellement eu lieu.
+        /// </summary>
+        public static bool PinWithGuidance(IWin32Window owner)
+        {
+            if (!EnsureShortcut())
+            {
+                MessageBox.Show(owner,
+                    "Le raccourci n'a pas pu etre cree dans le menu Demarrer.\n\n"
+                  + "Vous pouvez tout de meme epingler OpusScreen : clic droit sur "
+                  + "OpusScreen.exe dans l'explorateur, puis « Epingler a la barre des taches ».",
+                    "OpusScreen", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            if (TryPin())
+            {
+                MessageBox.Show(owner,
+                    "OpusScreen est maintenant epingle a la barre des taches.",
+                    "OpusScreen", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return true;
+            }
+
+            DialogResult r = MessageBox.Show(owner,
+                "Le raccourci OpusScreen est en place dans le menu Demarrer.\n\n"
+              + "Depuis Windows 10, seul un geste de l'utilisateur peut epingler un "
+              + "programme - aucune application ne peut le faire a votre place :\n\n"
+              + "   1.  l'explorateur s'ouvre sur le raccourci\n"
+              + "   2.  clic droit dessus, puis « Epingler a la barre des taches »\n"
+              + "        (sous Windows 11, via « Afficher plus d'options »)\n\n"
+              + "Ouvrir l'explorateur maintenant ?",
+                "Epingler OpusScreen", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+
+            if (r == DialogResult.Yes) RevealShortcut();
+            return false;
         }
 
         // ------------------------------------------------------------------ liste de raccourcis

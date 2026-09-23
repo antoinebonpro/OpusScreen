@@ -86,7 +86,14 @@ static class Ui
         P = new ControlPanel(S, D, push);
         P.StartPosition = FormStartPosition.Manual;
         P.Location = new Point(40, 40);
+
+        // Au premier plan pendant toute la duree des tests : un clic n'aboutit que
+        // si la fenetre visee est bien celle qui se trouve sous le curseur. Une
+        // fenetre de l'operateur posee par-dessus suffisait sinon a faire echouer
+        // des tests qui n'avaient rien a voir.
+        P.TopMost = true;
         P.Show();
+        P.Activate();
         Pump();
     }
 
@@ -201,7 +208,49 @@ static class Ui
         SendMessage(c.Handle, WM_LBUTTONUP, IntPtr.Zero, LP(p.X, p.Y));
     }
 
-    public static void Click(Control c, Point p) { Down(c, p); Up(c, p); Pump(); }
+    [DllImport("user32.dll")] private static extern bool SetCursorPos(int x, int y);
+    [DllImport("user32.dll")] private static extern bool GetCursorPos(out Point p);
+
+    /// <summary>
+    /// Clic complet sur un controle.
+    ///
+    /// Le curseur PHYSIQUE est amene sur la cible le temps du clic, puis remis ou il
+    /// etait. Ce n'est pas un raffinement : Windows Forms n'emet Click, depuis
+    /// WM_LBUTTONUP, que si WindowFromPoint(position reelle du curseur) tombe sur le
+    /// controle. Envoyer les messages ne suffisait donc pas - le clic n'aboutissait
+    /// que lorsque la souris se trouvait par hasard au bon endroit.
+    ///
+    /// Ce defaut ne se voyait pas : il ne faisait pas planter les tests, il les
+    /// faisait REUSSIR ou ECHOUER au hasard, selon l'endroit ou la souris avait ete
+    /// laissee. Le tour complet echouait par intermittence sur des interrupteurs
+    /// differents a chaque fois, tandis que la meme suite lancee seule passait. Un
+    /// test qui depend de la position de la souris ne teste rien.
+    ///
+    /// Le curseur est rendu immediatement : le mode « messages » continue de ne pas
+    /// confisquer la souris, il l'emprunte le temps d'un clic.
+    /// </summary>
+    public static void Click(Control c, Point p)
+    {
+        Point avant;
+        try
+        {
+            if (GetCursorPos(out avant) && c.IsHandleCreated && c.Visible)
+            {
+                Point ecran = c.PointToScreen(p);
+                bool deplace = SetCursorPos(ecran.X, ecran.Y);
+                Down(c, p);
+                Up(c, p);
+                if (deplace) SetCursorPos(avant.X, avant.Y);
+                Pump();
+                return;
+            }
+        }
+        catch { /* pas de curseur utilisable : on envoie les messages tels quels */ }
+
+        Down(c, p);
+        Up(c, p);
+        Pump();
+    }
 
     public static void Click(Control c) { Click(c, new Point(c.Width / 2, c.Height / 2)); }
 

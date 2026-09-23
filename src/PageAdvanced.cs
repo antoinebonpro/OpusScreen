@@ -408,35 +408,7 @@ namespace OpusScreen
         /// </summary>
         private void OnPin(object sender, EventArgs e)
         {
-            if (!Taskbar.EnsureShortcut())
-            {
-                MessageBox.Show(FindForm(),
-                    "Le raccourci n'a pas pu etre cree dans le menu Demarrer.\n\n"
-                  + "Vous pouvez tout de meme epingler OpusScreen : clic droit sur "
-                  + "OpusScreen.exe dans l'explorateur, puis « Epingler a la barre des taches ».",
-                    "OpusScreen", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            if (Taskbar.TryPin())
-            {
-                MessageBox.Show(FindForm(),
-                    "OpusScreen est maintenant epingle a la barre des taches.",
-                    "OpusScreen", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
-
-            DialogResult r = MessageBox.Show(FindForm(),
-                "Le raccourci OpusScreen est en place dans le menu Demarrer.\n\n"
-              + "Depuis Windows 10, seul un geste de l'utilisateur peut epingler un "
-              + "programme - aucune application ne peut le faire a votre place :\n\n"
-              + "   1.  l'explorateur s'ouvre sur le raccourci\n"
-              + "   2.  clic droit dessus, puis « Epingler a la barre des taches »\n"
-              + "        (sous Windows 11, via « Afficher plus d'options »)\n\n"
-              + "Ouvrir l'explorateur maintenant ?",
-                "Epingler OpusScreen", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
-
-            if (r == DialogResult.Yes) Taskbar.RevealShortcut();
+            Taskbar.PinWithGuidance(FindForm());
         }
 
         private void OnExport(object sender, EventArgs e)

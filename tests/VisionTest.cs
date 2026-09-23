@@ -65,6 +65,7 @@ class VisionTest
         TestEveryCustomControlIsAnnounced();
         TestMonitorIdsAreUnique();
         TestGeneralSettingsReachEveryScreen();
+        TestTrayGlyph();
         TestPlatesHideTheirDigit();
         TestControlPlatesAreVisibleToEveryone();
         TestPlateChoicesAreUsable();
@@ -805,6 +806,168 @@ class VisionTest
               "le seul chargement des reglages ne doit rien repercuter sur les profils propres");
 
         Console.WriteLine("  OK");
+    }
+
+    // ------------------------------------------------------------------ icone de la zone de notification
+
+    /// <summary>
+    /// L'icone de la zone de notification etait un disque plein, colore par l'etat
+    /// de l'ecran. A 100 % et 6500 K - le reglage par defaut - cette couleur est
+    /// blanche : l'utilisateur voyait un point blanc anonyme au milieu des autres
+    /// icones, sans rien qui dise OpusScreen. Une icone qui ne se reconnait pas est
+    /// une application qu'on ne retrouve pas.
+    ///
+    /// Deux exigences qui doivent tenir ENSEMBLE, et c'est la toute la difficulte :
+    /// la forme doit etre reconnaissable quel que soit le reglage, et l'etat doit
+    /// rester lisible a l'interieur de cette forme.
+    /// </summary>
+    static void TestTrayGlyph()
+    {
+        Console.WriteLine();
+        Console.WriteLine("=== Icone de la zone de notification ===");
+
+        Profile neutre = new Profile();
+
+        // 1. Reconnaissable : le trait de l'oeil est pose meme au reglage neutre,
+        //    la ou l'ancien dessin se reduisait a un disque blanc.
+        using (Bitmap b = TrayGlyph.Draw(32, neutre, false, false))
+        {
+            Check(b.Width == 32 && b.Height == 32, "l'icone doit faire la taille demandee");
+            Check(Opaques(b) > 80, "l'icone doit porter un dessin, pas un fond vide");
+
+            // Le contour vit sur les bords gauche et droit, la ou l'oeil se pince -
+            // exactement ce qu'un disque centre ne peut pas avoir.
+            Check(TrouveOpaque(b, 0, 12, 6, 20), "le trait de l'oeil doit atteindre le bord gauche");
+            Check(TrouveOpaque(b, 26, 12, 32, 20), "le trait de l'oeil doit atteindre le bord droit");
+            Check(!Opaque(b, 2, 2) && !Opaque(b, 29, 29),
+                  "les coins doivent rester vides : un disque ou un carre plein n'est pas un oeil");
+        }
+
+        // 2. L'etat reste lisible : la pupille porte la couleur du reglage.
+        Profile bougie = new Profile(); bougie.Kelvin = 1500;
+        Profile jour = new Profile(); jour.Kelvin = 6500;
+        Color cBougie = Pupille(bougie), cJour = Pupille(jour);
+        Console.WriteLine(string.Format("  pupille a 1500 K : {0},{1},{2}   a 6500 K : {3},{4},{5}",
+            cBougie.R, cBougie.G, cBougie.B, cJour.R, cJour.G, cJour.B));
+
+        Check(cBougie.R - cBougie.B > 60,
+              "a 1500 K la pupille doit virer franchement au chaud (ecart rouge-bleu "
+            + (cBougie.R - cBougie.B) + ")");
+        Check(Math.Abs(cJour.R - cJour.B) < 25,
+              "a 6500 K la pupille doit rester neutre (ecart " + Math.Abs(cJour.R - cJour.B) + ")");
+
+        // 3. Les trois etats se distinguent l'un de l'autre.
+        byte[] actif = Empreinte(neutre, false, false);
+        byte[] suspendu = Empreinte(neutre, true, false);
+        byte[] adaptatif = Empreinte(neutre, false, true);
+        Check(!Identiques(actif, suspendu), "l'etat suspendu doit se voir sur l'icone");
+        Check(!Identiques(actif, adaptatif), "la luminosite adaptative doit se voir sur l'icone");
+
+        // 4. Suspendu : plus aucune couleur d'ecran, l'icone devient neutre. Laisser
+        //    l'ambre du soir sur une icone en pause annoncerait un effet qui n'est
+        //    plus applique.
+        //
+        //    La chaleur se mesure sur TOUTE l'icone, et non sur le pixel central :
+        //    au centre d'une icone en pause il n'y a rien - juste le vide entre les
+        //    deux barres, et le lisere adouci de leur bord. Une premiere version de
+        //    ce test lisait ce lisere et prenait le gris neutre lui-meme pour une
+        //    teinte.
+        Profile soir = new Profile(); soir.Kelvin = 2400;
+        int chaudEnPause = ChaleurMax(TrayGlyph.Draw(32, soir, true, false));
+        int chaudActif = ChaleurMax(TrayGlyph.Draw(32, soir, false, false));
+        Console.WriteLine(string.Format("  chaleur a 2400 K : {0} en marche, {1} en pause",
+            chaudActif, chaudEnPause));
+
+        Check(chaudActif > 80, "en marche a 2400 K, l'icone doit bien porter la teinte chaude "
+                             + "(mesure " + chaudActif + ") - sans quoi le controle suivant ne prouve rien");
+        Check(chaudEnPause < 40, "en pause, l'icone ne doit plus porter la teinte de l'ecran "
+                               + "(mesure " + chaudEnPause + ")");
+
+        // 5. La petite taille est la taille reelle : 16 px doit tenir sans exception
+        //    ni dessin vide.
+        foreach (int taille in new int[] { 16, 20, 24, 32, 48 })
+        {
+            using (Bitmap b = TrayGlyph.Draw(taille, neutre, false, false))
+                Check(b.Width == taille && Opaques(b) > taille,
+                      "l'icone doit rester dessinee a " + taille + " px");
+        }
+
+        Console.WriteLine("  OK");
+    }
+
+    /// <summary>Couleur au centre de l'icone : la pupille.</summary>
+    static Color Pupille(Profile p)
+    {
+        using (Bitmap b = TrayGlyph.Draw(32, p, false, false)) return Milieu(b);
+    }
+
+    static Color Milieu(Bitmap b)
+    {
+        Color c = b.GetPixel(b.Width / 2, b.Height / 2);
+        b.Dispose();
+        return c;
+    }
+
+    /// <summary>
+    /// Ecart rouge-bleu le plus marque parmi les pixels vraiment opaques : combien
+    /// l'icone tire au chaud. Les pixels a demi transparents sont ecartes, parce
+    /// qu'un bord adouci melange une couleur a du vide et ne represente aucune
+    /// intention de dessin.
+    /// </summary>
+    static int ChaleurMax(Bitmap b)
+    {
+        int max = 0;
+        for (int x = 0; x < b.Width; x++)
+            for (int y = 0; y < b.Height; y++)
+            {
+                Color c = b.GetPixel(x, y);
+                if (c.A < 200) continue;
+                max = Math.Max(max, c.R - c.B);
+            }
+        b.Dispose();
+        return max;
+    }
+
+    static int Opaques(Bitmap b)
+    {
+        int n = 0;
+        for (int x = 0; x < b.Width; x++)
+            for (int y = 0; y < b.Height; y++)
+                if (b.GetPixel(x, y).A > 40) n++;
+        return n;
+    }
+
+    static bool Opaque(Bitmap b, int x, int y) { return b.GetPixel(x, y).A > 40; }
+
+    static bool TrouveOpaque(Bitmap b, int x0, int y0, int x1, int y1)
+    {
+        for (int x = x0; x < x1 && x < b.Width; x++)
+            for (int y = y0; y < y1 && y < b.Height; y++)
+                if (Opaque(b, x, y)) return true;
+        return false;
+    }
+
+    static byte[] Empreinte(Profile p, bool suspendu, bool adaptatif)
+    {
+        using (Bitmap b = TrayGlyph.Draw(32, p, suspendu, adaptatif))
+        {
+            byte[] octets = new byte[b.Width * b.Height * 4];
+            int i = 0;
+            for (int x = 0; x < b.Width; x++)
+                for (int y = 0; y < b.Height; y++)
+                {
+                    Color c = b.GetPixel(x, y);
+                    octets[i++] = c.A; octets[i++] = c.R; octets[i++] = c.G; octets[i++] = c.B;
+                }
+            return octets;
+        }
+    }
+
+    static bool Identiques(byte[] a, byte[] b)
+    {
+        if (a.Length != b.Length) return false;
+        for (int i = 0; i < a.Length; i++) if (a[i] != b[i]) return false;
+        return true;
     }
 
     static MonitorInfo Fake(int index, string device, string id)

@@ -40,6 +40,7 @@ class Shots
         ShowRealVersion();
         Ui.Pump();
 
+        Shoot(Ui.P.WelcomePage, "decouvrir.png");
         Shoot(Ui.P.Display1, "ecran.png");
         Shoot(Ui.P.ColorPage, "couleur.png");
 

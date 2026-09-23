@@ -4,6 +4,50 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ---
 
+## [3.3.0] - 2026-09-23
+
+On reconnait l'application dans la barre, et elle explique ou elle se range.
+
+### Corrige
+
+- **L'icone de la zone de notification ne se reconnaissait pas.** C'etait un disque
+  plein dont la COULEUR disait l'etat de l'ecran - une bonne idee, avec un defaut
+  qu'aucun reglage ne corrigeait : au reglage par defaut, 100 % et 6500 K, cette
+  couleur est blanche. L'utilisateur voyait donc un point blanc anonyme au milieu de
+  vingt autres icones, et ne retrouvait pas son application.
+
+  L'icone reprend desormais la forme du logo - un oeil - et la couleur d'etat se
+  deplace du disque vers la PUPILLE : pale le jour, ambre le soir, grise en pause.
+  Rien n'est perdu, tout devient reconnaissable. Le dessin est trace a chaque taille
+  plutot que reduit depuis le logo, seule facon d'obtenir un 16 x 16 net.
+
+### Ajoute
+
+- **Onglet « Decouvrir »**, ouvert de lui-meme au tout premier lancement. Une
+  application sans fenetre permanente pose un probleme que les autres n'ont pas :
+  une fois lancee, elle disparait. La page dit ou elle se range, pourquoi Windows 11
+  la replie derriere le chevron de la barre des taches, comment l'en sortir, comment
+  l'epingler, et les trois gestes qui servent tous les jours.
+
+- **Epinglage accessible depuis cette page**, et non plus seulement depuis l'onglet
+  Avance ou personne ne le cherchait. Le parcours est ecrit une seule fois : les deux
+  boutons appellent le meme code.
+
+### Interne
+
+- **Les tests d'interface etaient faux sans le dire.** Windows Forms n'emet un clic,
+  depuis WM_LBUTTONUP, que si le curseur PHYSIQUE survole le controle ; le banc
+  d'essai se contentait d'envoyer les messages. Les clics n'aboutissaient donc que
+  lorsque la souris se trouvait par hasard au bon endroit : le tour complet echouait
+  par intermittence sur des interrupteurs differents a chaque fois, et la meme suite
+  lancee seule passait. Un test qui depend de la position de la souris ne teste rien.
+  Le banc amene maintenant le curseur sur sa cible et le remet ou il etait.
+
+- Le rang des onglets ouverts depuis le menu de la zone de notification est calcule,
+  et non plus ecrit a la main : inserer un onglet avant eux ouvrait la page voisine.
+
+---
+
 ## [3.2.1] - 2026-09-23
 
 Un mode choisi s'applique a tous les ecrans, y compris celui qui est regle a part.

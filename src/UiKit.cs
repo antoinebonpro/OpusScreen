@@ -673,6 +673,22 @@ namespace OpusScreen
                         }
                         break;
 
+                    case "compass": // decouvrir : une boussole, pas un point d'interrogation -
+                                    // on ne demande pas de l'aide, on prend ses reperes
+                        {
+                            g.DrawEllipse(p, r.X + 1, r.Y + 1, 14, 14);
+                            GraphicsPath aiguille = new GraphicsPath();
+                            aiguille.AddPolygon(new PointF[] {
+                                new PointF(r.X + 11.5f, r.Y + 4.5f),   // pointe nord-est
+                                new PointF(r.X + 9.2f,  r.Y + 9.2f),
+                                new PointF(r.X + 4.5f,  r.Y + 11.5f),  // queue sud-ouest
+                                new PointF(r.X + 6.8f,  r.Y + 6.8f)
+                            });
+                            g.FillPath(b, aiguille);
+                            aiguille.Dispose();
+                        }
+                        break;
+
                     case "palette": // couleur
                         g.DrawEllipse(p, r.X + 2, r.Y + 2, 12, 12);
                         g.FillEllipse(b, r.X + 5, r.Y + 4, 2.5f, 2.5f);
