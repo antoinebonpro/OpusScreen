@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
@@ -55,7 +55,7 @@ namespace OpusScreen
         public int VisionPageIndex { get { return _pages.IndexOf(VisionPage); } }
 
         /// <summary>Largeur de la colonne de navigation, referencee par la mise en page de l'en-tete.</summary>
-        private const int NavWidth = 196;
+        private static int NavWidth { get { return Theme.Px(196); } }
 
         /// <summary>Declenche la suspension ou la reprise depuis le bouton du pied de page.</summary>
         public Action TogglePause;
@@ -85,14 +85,14 @@ namespace OpusScreen
             // l'application : c'est la que Windows regroupe ce qui est epingle.
             ShowInTaskbar = true;
             AppIcon.ApplyTo(this);
-            ClientSize = new Size(806, 660);
-            MinimumSize = new Size(760, 560);
+            ClientSize = new Size(Theme.Px(806), Theme.Px(660));
+            MinimumSize = new Size(Theme.Px(760), Theme.Px(560));
             KeyPreview = true;
 
             // ---------------- en-tete ----------------
             _header = new Panel();
             _header.Dock = DockStyle.Top;
-            _header.Height = 66;
+            _header.Height = Theme.Px(66);
             _header.BackColor = Theme.Bg;
             Controls.Add(_header);
 
@@ -118,19 +118,19 @@ namespace OpusScreen
             // ---------------- pied ----------------
             _footer = new Panel();
             _footer.Dock = DockStyle.Bottom;
-            _footer.Height = 52;
+            _footer.Height = Theme.Px(52);
             _footer.BackColor = Theme.Bg;
             Controls.Add(_footer);
 
             _pauseButton = new DarkButton();
             _pauseButton.Text = "Suspendre";
-            _pauseButton.SetBounds(20, 10, 116, Theme.MinTarget);
+            _pauseButton.SetBounds(Theme.Px(20), Theme.Px(10), Theme.Px(116), Theme.MinTarget);
             _pauseButton.Click += delegate { if (TogglePause != null) TogglePause(); };
             _footer.Controls.Add(_pauseButton);
 
             DarkButton reset = new DarkButton();
             reset.Text = "Tout reinitialiser";
-            reset.SetBounds(144, 10, 132, Theme.MinTarget);
+            reset.SetBounds(Theme.Px(144), Theme.Px(10), Theme.Px(132), Theme.MinTarget);
             reset.Click += OnReset;
             _footer.Controls.Add(reset);
 
@@ -141,7 +141,7 @@ namespace OpusScreen
             panic.AutoSize = false;
             panic.TextAlign = ContentAlignment.MiddleRight;
             panic.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            panic.SetBounds(286, 10, ClientSize.Width - 306, Theme.MinTarget);
+            panic.SetBounds(Theme.Px(286), Theme.Px(10), ClientSize.Width - Theme.Px(306), Theme.MinTarget);
             _footer.Controls.Add(panic);
 
             // ---------------- navigation ----------------
@@ -153,23 +153,22 @@ namespace OpusScreen
             // 196 plutot que 180 : le logo prend la place a gauche du nom, et
             // « OpusScreen » ressortait tronque en « OpusScree ».
             _nav.Width = NavWidth;
-            _nav.TopOffset = 62;
             Controls.Add(_nav);
 
             // Le logo tient a gauche du nom plutot qu'au-dessus : la colonne est
             // etroite, et chaque ligne prise en hauteur est une ligne de moins pour
             // les onglets.
             Image logo = AppIcon.Logo;
-            int textLeft = 20;
+            int textLeft = Theme.Px(20);
             if (logo != null)
             {
                 PictureBox mark = new PictureBox();
                 mark.Image = logo;
                 mark.SizeMode = PictureBoxSizeMode.Zoom;
                 mark.BackColor = Color.Transparent;
-                mark.SetBounds(14, 15, 38, 32);
+                mark.SetBounds(Theme.Px(14), Theme.Px(15), Theme.Px(38), Theme.Px(32));
                 _nav.Controls.Add(mark);
-                textLeft = 58;
+                textLeft = Theme.Px(58);
             }
 
             Label brand = new Label();
@@ -178,7 +177,10 @@ namespace OpusScreen
             brand.ForeColor = Theme.Accent;
             brand.AutoSize = false;
             brand.BackColor = Color.Transparent;
-            brand.SetBounds(textLeft, 16, NavWidth - textLeft - 6, 24);
+            // Hauteur mesuree sur la police : ecrite en dur a 24 pixels, la marque
+            // sortait deja tronquee en « OpusScree » sur un ecran a 150 %.
+            int hMarque = TextRenderer.MeasureText("Ag", Theme.Title).Height + Theme.Px(2);
+            brand.SetBounds(textLeft, Theme.Px(14), NavWidth - textLeft - Theme.Px(6), hMarque);
             _nav.Controls.Add(brand);
 
             Label version = new Label();
@@ -190,7 +192,11 @@ namespace OpusScreen
             version.ForeColor = Theme.Faint;
             version.AutoSize = false;
             version.BackColor = Color.Transparent;
-            version.SetBounds(textLeft + 1, 40, NavWidth - textLeft - 6, 16);
+            int hVersion = TextRenderer.MeasureText("Ag", Theme.Small).Height + Theme.Px(2);
+            version.SetBounds(textLeft + 1, Theme.Px(14) + hMarque, NavWidth - textLeft - Theme.Px(6), hVersion);
+
+            // Les onglets commencent sous la marque, quelle que soit sa taille.
+            _nav.TopOffset = Theme.Px(14) + hMarque + hVersion + Theme.SpaceSm;
             _nav.Controls.Add(version);
 
             // ---------------- contenu ----------------
@@ -250,7 +256,7 @@ namespace OpusScreen
         {
             if (index < 0 || index >= _pages.Count) return;
             for (int i = 0; i < _pages.Count; i++) _pages[i].Visible = (i == index);
-            _pages[index].Sync();
+            _pages[index].SyncAndLayout();
             _title.Text = _pages[index].Title;
             _subtitle.Text = _pages[index].Subtitle;
             UpdateStatus();
@@ -263,7 +269,7 @@ namespace OpusScreen
         {
             foreach (SettingsPage p in _pages)
             {
-                try { p.Sync(); } catch { }
+                try { p.SyncAndLayout(); } catch { }
             }
             UpdateStatus();
         }
@@ -274,7 +280,7 @@ namespace OpusScreen
             foreach (SettingsPage p in _pages)
             {
                 if (!p.Visible) continue;
-                try { p.Sync(); } catch { }
+                try { p.SyncAndLayout(); } catch { }
             }
             UpdateStatus();
         }
@@ -351,14 +357,25 @@ namespace OpusScreen
         {
             if (_header == null || _status == null) return;
 
-            const int statusW = 290;
-            const int left = 24;
-            int statusX = Math.Max(left + 160, _header.Width - statusW - 20);
-            _status.SetBounds(statusX, 16, statusW, 36);
+            // Les hauteurs viennent des POLICES, et non de nombres ecrits ici :
+            // le titre etait fixe a 24 pixels, et le sous-titre commencait a 36.
+            // Sur un ecran a 200 %, le titre en demandait 40 : il etait tranche
+            // en son milieu et le sous-titre lui passait dessus.
+            int statusW = Theme.Px(290);
+            int left = Theme.Px(24);
+            int hTitre = TextRenderer.MeasureText("Ag", Theme.Title).Height + Theme.Px(2);
+            int hSous = TextRenderer.MeasureText("Ag", Theme.Small).Height + Theme.Px(2);
+            int hEtat = TextRenderer.MeasureText("Ag", Theme.Small).Height * 2 + Theme.Px(4);
 
-            int textW = Math.Max(140, statusX - left - Theme.SpaceLg);
-            _title.SetBounds(left, 12, textW, 24);
-            _subtitle.SetBounds(left, 36, textW, 18);
+            int haut = Theme.Px(12);
+            _header.Height = haut * 2 + hTitre + hSous;
+
+            int statusX = Math.Max(left + Theme.Px(160), _header.Width - statusW - Theme.Px(20));
+            _status.SetBounds(statusX, haut, statusW, hEtat);
+
+            int textW = Math.Max(Theme.Px(140), statusX - left - Theme.SpaceLg);
+            _title.SetBounds(left, haut, textW, hTitre);
+            _subtitle.SetBounds(left, haut + hTitre, textW, hSous);
         }
 
         /// <summary>Ouvre directement une page donnee (0 = Ecran).</summary>

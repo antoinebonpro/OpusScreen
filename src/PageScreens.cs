@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
@@ -79,7 +79,7 @@ namespace OpusScreen
 
             _host = new Panel();
             _host.BackColor = Color.Transparent;
-            _host.Height = 10;
+            _host.Height = Theme.Px(10);
             _host.Resize += delegate { foreach (MonitorCard c in _cards) c.Width = _host.ClientSize.Width; };
             Add(_host, Theme.SpaceSm);
 
@@ -187,7 +187,7 @@ namespace OpusScreen
                 MonitorInfo captured = m;
                 MonitorCard card = new MonitorCard(S, captured, S.For(m), !S.LinkMonitors, several);
                 card.Left = 0;
-                card.Width = Math.Max(160, _host.ClientSize.Width > 20 ? _host.ClientSize.Width : ContentWidth);
+                card.Width = Math.Max(Theme.Px(160), _host.ClientSize.Width > 20 ? _host.ClientSize.Width : ContentWidth);
                 card.Changed += delegate { LayoutCards(); Commit(); };
                 card.LiveChanged += delegate { CommitNoSave(); };
                 card.CopyRequested += delegate { CopyToOthers(captured); };
@@ -206,7 +206,7 @@ namespace OpusScreen
                 card.Top = y;
                 y += card.Height + Theme.SpaceSm;
             }
-            int h = Math.Max(10, y);
+            int h = Math.Max(Theme.Px(10), y);
             if (_host.Height != h)
             {
                 _host.Height = h;
@@ -258,7 +258,7 @@ namespace OpusScreen
         {
             _s = s; _m = m; _ms = ms;
             BackColor = Theme.Sunken;
-            Padding = new Padding(14, 12, 14, 12);
+            Padding = new Padding(Theme.Px(14), Theme.Px(12), Theme.Px(14), Theme.Px(12));
 
             _title = new Label();
             _title.Text = m.Label;
@@ -376,13 +376,13 @@ namespace OpusScreen
 
         private int ComputeHeight()
         {
-            int h = 12 + 20 + 18 + Theme.SpaceSm;
+            int h = Theme.Px(12) + Theme.Px(20) + Theme.Px(18) + Theme.SpaceSm;
             h += _enabled.Height + _blackout.Height + _locked.Height;
             if (_independent.Visible) h += _independent.Height;
             if (Indep) h += _ownBright.Height + _ownKelvin.Height + Theme.SpaceSm;
             else h += _offset.Height + Theme.SpaceSm;
             if (_copy.Visible) h += _copy.Height + Theme.SpaceSm;
-            return h + 12;
+            return h + Theme.Px(12);
         }
 
         private void UpdateStates()
@@ -432,21 +432,21 @@ namespace OpusScreen
 
         private void LayoutChildren()
         {
-            int w = Width - 28;
-            int y = 12;
-            _title.SetBounds(14, y, w, 20); y += 20;
-            _detail.SetBounds(14, y, w, 18); y += 18 + Theme.SpaceSm;
-            _enabled.SetBounds(14, y, w, _enabled.Height); y += _enabled.Height;
-            _blackout.SetBounds(14, y, w, _blackout.Height); y += _blackout.Height;
-            if (_independent.Visible) { _independent.SetBounds(14, y, w, _independent.Height); y += _independent.Height; }
-            _locked.SetBounds(14, y, w, _locked.Height); y += _locked.Height;
+            int w = Width - Theme.Px(28);
+            int y = Theme.Px(12);
+            _title.SetBounds(Theme.Px(14), y, w, Theme.Px(20)); y += Theme.Px(20);
+            _detail.SetBounds(Theme.Px(14), y, w, Theme.Px(18)); y += Theme.Px(18) + Theme.SpaceSm;
+            _enabled.SetBounds(Theme.Px(14), y, w, _enabled.Height); y += _enabled.Height;
+            _blackout.SetBounds(Theme.Px(14), y, w, _blackout.Height); y += _blackout.Height;
+            if (_independent.Visible) { _independent.SetBounds(Theme.Px(14), y, w, _independent.Height); y += _independent.Height; }
+            _locked.SetBounds(Theme.Px(14), y, w, _locked.Height); y += _locked.Height;
             y += Theme.SpaceSm;
-            _offset.SetBounds(14, y, w, _offset.Height);
-            _ownBright.SetBounds(14, y, w, _ownBright.Height);
-            _ownKelvin.SetBounds(14, y + _ownBright.Height, w, _ownKelvin.Height);
+            _offset.SetBounds(Theme.Px(14), y, w, _offset.Height);
+            _ownBright.SetBounds(Theme.Px(14), y, w, _ownBright.Height);
+            _ownKelvin.SetBounds(Theme.Px(14), y + _ownBright.Height, w, _ownKelvin.Height);
             y += Indep ? _ownBright.Height + _ownKelvin.Height : _offset.Height;
             y += Theme.SpaceSm;
-            _copy.SetBounds(14, y, Math.Min(w, 240), _copy.Height);
+            _copy.SetBounds(Theme.Px(14), y, Math.Min(w, Theme.Px(260)), _copy.Height);
         }
 
         protected override void OnPaint(PaintEventArgs e)

@@ -56,6 +56,8 @@ static class Ui
         return list;
     }
 
+    private static bool _modePose;
+
     public static void Setup(int monitors)
     {
         string dir = Path.Combine(Path.GetTempPath(), "OpusScreenUiTest-" + Guid.NewGuid().ToString("N"));
@@ -65,12 +67,20 @@ static class Ui
         SystemVolume.DryRun = true;
         DisplayController.MonitorSource = delegate { return FakeMonitors(monitors); };
 
-        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-        Application.ThreadException += delegate(object o, System.Threading.ThreadExceptionEventArgs e)
+        // Le mode d'exception ne se pose qu'une fois par thread, et seulement avant
+        // le premier controle. Un test qui monte la fenetre a plusieurs echelles
+        // rappelle donc Setup : le second appel doit passer sans bruit.
+        if (!_modePose)
         {
-            Errors.Add(e.Exception.GetType().Name + " : " + e.Exception.Message
-                     + "\n" + e.Exception.StackTrace);
-        };
+            _modePose = true;
+            try { Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException); }
+            catch { }
+            Application.ThreadException += delegate(object o, System.Threading.ThreadExceptionEventArgs e)
+            {
+                Errors.Add(e.Exception.GetType().Name + " : " + e.Exception.Message
+                         + "\n" + e.Exception.StackTrace);
+            };
+        }
 
         S = new Settings();
         D = new DisplayController(S);

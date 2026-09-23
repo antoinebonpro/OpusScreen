@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -19,9 +19,9 @@ namespace OpusScreen
     /// </summary>
     public static class UiKit
     {
-        public const int RowHeight = 34;
-        public const int RowHeightTall = 56;
-        public const int LabelWidth = 210;
+        public static int RowHeight { get { return Theme.Px(34); } }
+        public static int RowHeightTall { get { return Theme.Px(56); } }
+        public static int LabelWidth { get { return Theme.Px(210); } }
 
         public static Label SectionTitle(string text)
         {
@@ -30,7 +30,7 @@ namespace OpusScreen
             l.Font = Theme.SectionLabel;
             l.ForeColor = Theme.Dim;
             l.AutoSize = false;
-            l.Height = 20;
+            l.Height = Theme.Px(20);
             l.TextAlign = ContentAlignment.BottomLeft;
             l.BackColor = Color.Transparent;
             return l;
@@ -51,7 +51,7 @@ namespace OpusScreen
         public static Control Divider()
         {
             Panel p = new Panel();
-            p.Height = 1;
+            p.Height = Math.Max(1, Theme.Px(1));
             p.BackColor = Theme.Border;
             return p;
         }
@@ -156,11 +156,11 @@ namespace OpusScreen
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
-            _label.SetBounds(0, 2, UiKit.LabelWidth, 20);
-            _value.SetBounds(Width - 90, 2, 90, 20);
-            _hint.SetBounds(UiKit.LabelWidth, 4, Width - UiKit.LabelWidth - 95, 18);
+            _label.SetBounds(0, Theme.Px(2), UiKit.LabelWidth, Theme.Px(20));
+            _value.SetBounds(Width - Theme.Px(90), Theme.Px(2), Theme.Px(90), Theme.Px(20));
+            _hint.SetBounds(UiKit.LabelWidth, Theme.Px(4), Width - UiKit.LabelWidth - Theme.Px(95), Theme.Px(18));
             _hint.TextAlign = ContentAlignment.MiddleRight;
-            Track.SetBounds(-8, 22, Width + 16, 30);
+            Track.SetBounds(-Theme.Px(8), Theme.Px(22), Width + Theme.Px(16), Theme.Px(30));
         }
     }
 
@@ -175,7 +175,7 @@ namespace OpusScreen
 
         public ToggleRow(string label, string description)
         {
-            Height = string.IsNullOrEmpty(description) ? UiKit.RowHeight + 4 : 46;
+            Height = string.IsNullOrEmpty(description) ? UiKit.RowHeight + Theme.Px(4) : Theme.Px(46);
             BackColor = Color.Transparent;
             Cursor = Cursors.Hand;
 
@@ -233,8 +233,8 @@ namespace OpusScreen
             int sw = 44, sh = 22;
             Switch.SetBounds(Width - sw - 2, (Height - sh) / 2, sw, sh);
             bool hasDesc = _desc.Text.Length > 0;
-            _label.SetBounds(0, hasDesc ? 4 : (Height - 20) / 2, Width - sw - 16, 20);
-            _desc.SetBounds(0, 24, Width - sw - 16, 18);
+            _label.SetBounds(0, hasDesc ? Theme.Px(4) : (Height - Theme.Px(20)) / 2, Width - sw - Theme.Px(16), Theme.Px(20));
+            _desc.SetBounds(0, Theme.Px(24), Width - sw - Theme.Px(16), Theme.Px(18));
             _desc.Visible = hasDesc;
         }
     }
@@ -258,7 +258,7 @@ namespace OpusScreen
             // Windows avalait le second, et un interrupteur clique vite ne changeait
             // qu'une fois sur deux.
             SetStyle(ControlStyles.StandardDoubleClick, false);
-            Size = new Size(44, 22);
+            Size = new Size(Theme.Px(44), Theme.Px(22));
             Cursor = Cursors.Hand;
             TabStop = true;
             AccessibleRole = AccessibleRole.CheckButton;
@@ -464,9 +464,9 @@ namespace OpusScreen
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
-            int boxW = Math.Min(260, Width - UiKit.LabelWidth);
-            _label.SetBounds(0, (Height - 20) / 2, UiKit.LabelWidth, 20);
-            Box.SetBounds(Width - boxW, (Height - 24) / 2, boxW, 24);
+            int boxW = Math.Min(Theme.Px(260), Width - UiKit.LabelWidth);
+            _label.SetBounds(0, (Height - Theme.Px(20)) / 2, UiKit.LabelWidth, Theme.Px(20));
+            Box.SetBounds(Width - boxW, (Height - Theme.Px(24)) / 2, boxW, Theme.Px(24));
         }
     }
 
@@ -479,7 +479,7 @@ namespace OpusScreen
         public event Action<int> SelectionChanged;
 
         /// <summary>Espace laisse libre au-dessus du premier onglet, pour le nom du produit.</summary>
-        public int TopOffset = 8;
+        public int TopOffset = Theme.Px(8);
 
         public SideNav()
         {
@@ -506,8 +506,8 @@ namespace OpusScreen
         private void LayoutItems()
         {
             if (_items.Count == 0) return;
-            int avail = ClientSize.Height - TopOffset - 4;
-            int h = Math.Max(Theme.MinTarget, Math.Min(40, avail / _items.Count));
+            int avail = ClientSize.Height - TopOffset - Theme.Px(4);
+            int h = Math.Max(Theme.MinTarget, Math.Min(Theme.Px(40), avail / _items.Count));
             for (int i = 0; i < _items.Count; i++)
                 _items[i].SetBounds(0, TopOffset + i * h, Width, h);
         }

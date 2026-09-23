@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -8,8 +9,8 @@ using System.Windows.Forms;
 
 [assembly: AssemblyTitle("OpusScreen")]
 [assembly: AssemblyDescription("Luminosite 5-150 %, temperature de couleur, daltonisme et basse vision")]
-[assembly: AssemblyVersion("3.3.0.0")]
-[assembly: AssemblyFileVersion("3.3.0.0")]
+[assembly: AssemblyVersion("3.3.1.0")]
+[assembly: AssemblyFileVersion("3.3.1.0")]
 
 namespace OpusScreen
 {
@@ -159,11 +160,46 @@ namespace OpusScreen
         {
             try
             {
-                if (SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)) return;
+                if (SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2))
+                {
+                    ReleverEchelle();
+                    return;
+                }
             }
             catch { /* API absente avant Windows 10 1703 */ }
 
             try { SetProcessDPIAware(); } catch { }
+            ReleverEchelle();
+        }
+
+        /// <summary>
+        /// Releve la densite reelle de l'ecran et la transmet au theme.
+        ///
+        /// Declarer a Windows qu'on gere la mise a l'echelle soi-meme - ce que fait
+        /// la methode ci-dessus, et qu'il FAUT faire pour que le voile couvre
+        /// exactement les ecrans - engage a la gerer vraiment. L'application ne le
+        /// faisait pas : ses polices, exprimees en points, grandissaient avec
+        /// l'ecran, tandis que ses boites, ecrites en pixels, restaient immobiles.
+        /// Sur un portable regle a 200 % - le reglage par defaut d'a peu pres tous
+        /// les ecrans 4K vendus aujourd'hui - les titres etaient coupes en deux, les
+        /// onglets abreges et les boutons tronques. L'application etait illisible, et
+        /// aucun test ne pouvait le dire puisque aucun ne regardait ailleurs qu'a
+        /// 96 ppp.
+        ///
+        /// La valeur est lue APRES la declaration de conscience du DPI : avant,
+        /// Windows ment et repond toujours 96.
+        /// </summary>
+        private static void ReleverEchelle()
+        {
+            try
+            {
+                using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
+                {
+                    float echelle = g.DpiX / 96f;
+                    if (echelle > 0.5f && echelle < 6f) Theme.Scale = echelle;
+                }
+            }
+            catch { /* echelle laissee a 1 : l'interface reste celle d'un ecran a 96 ppp */ }
         }
     }
 }

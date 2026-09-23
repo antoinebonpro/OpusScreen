@@ -4,6 +4,51 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ---
 
+## [3.3.1] - 2026-09-23
+
+Lisible sur les ecrans a forte densite - c'est-a-dire sur la plupart des portables.
+
+### Corrige
+
+- **L'application etait illisible sur un ecran regle a 125 % ou plus.** Titres coupes
+  en deux, intitules de curseurs tranches par leur propre reglette, onglets abreges en
+  « Daltonis... », boutons reduits a « Suspe... ». Signale par une utilisatrice sur un
+  portable a 200 %, le reglage par defaut de presque tous les ecrans 4K vendus
+  aujourd'hui.
+
+  La cause tenait en deux moities qui ne parlaient pas la meme langue. L'application
+  declare a Windows qu'elle gere elle-meme la mise a l'echelle - il le faut, sans quoi
+  le voile ne couvrirait pas exactement les ecrans - mais elle ne la gerait pas : ses
+  polices, exprimees en POINTS, grandissaient avec l'ecran, tandis que ses boites,
+  ecrites en PIXELS, restaient immobiles. Le texte debordait de sa boite.
+
+  Toutes les mesures de l'interface sont desormais pensees a 96 ppp et converties a la
+  densite reelle, relevee au demarrage. Les hauteurs de titres, elles, sont mesurees
+  sur la police plutot qu'ecrites a la main.
+
+- **Du texte etait deja coupe a 100 %**, sur les pages Confort et Avance : la mise en
+  page mesurait les paragraphes avec GDI+ alors que Windows les dessine avec GDI. Les
+  deux ne coupent pas les lignes au meme endroit, et l'ecart se payait en lignes
+  tranchees. La mesure se fait maintenant avec le moteur qui dessine.
+
+- **Une explication de la page Avance etait invisible** : son texte, pose apres la mise
+  en page, occupait une boite de deux pixels de haut calculee sur la chaine vide
+  qu'elle contenait au depart.
+
+- **La rangee de boutons des reglages de vision** partageait sa largeur en parts egales :
+  « Appliquer » nageait dans la sienne pendant que « Enregistrer le reglage actuel... »
+  y perdait la moitie de son libelle. Chaque bouton recoit maintenant ce que son texte
+  demande.
+
+### Ajoute
+
+- **Neuvieme suite de tests : la mise a l'echelle.** La vraie fenetre est montee a
+  100, 125, 150, 175 et 200 %, et chaque texte est mesure dans sa boite - onze pages,
+  en-tete et pied compris. Aucune suite ne regardait ailleurs qu'a 96 ppp : c'est
+  precisement pour cela que le defaut a pu etre publie.
+
+---
+
 ## [3.3.0] - 2026-09-23
 
 On reconnait l'application dans la barre, et elle explique ou elle se range.

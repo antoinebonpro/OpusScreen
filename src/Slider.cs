@@ -36,7 +36,7 @@ namespace OpusScreen
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint
                    | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw
                    | ControlStyles.SupportsTransparentBackColor, true);
-            Height = 34;
+            Height = Theme.Px(34);
             TabStop = true;
             AccessibleRole = AccessibleRole.Slider;
         }
@@ -159,8 +159,12 @@ namespace OpusScreen
         {
             get
             {
-                int y = Height / 2 - 3;
-                return new Rectangle(10, y, Math.Max(1, Width - 20), 6);
+                // Le rail suit l'echelle : un trait de 6 pixels sur un ecran a
+                // 200 % est deux fois plus fin que sur un ecran ordinaire, et la
+                // pastille de 18 pixels finissait par le recouvrir entierement.
+                int ep = Theme.Px(6);
+                int y = Height / 2 - ep / 2;
+                return new Rectangle(Theme.Px(10), y, Math.Max(1, Width - Theme.Px(20)), ep);
             }
         }
 
@@ -300,7 +304,7 @@ namespace OpusScreen
             }
 
             // poignee
-            int knobR = 9;
+            int knobR = Theme.Px(9);
             Rectangle knob = new Rectangle(knobX - knobR, Height / 2 - knobR, knobR * 2, knobR * 2);
             using (SolidBrush shadow = new SolidBrush(Color.FromArgb(70, 0, 0, 0)))
                 g.FillEllipse(shadow, knob.X + 1, knob.Y + 2, knob.Width, knob.Height);
@@ -312,7 +316,7 @@ namespace OpusScreen
             if (Focused)
             {
                 using (Pen p = new Pen(Color.FromArgb(120, 255, 255, 255), 1))
-                    g.DrawEllipse(p, knob.X - 3, knob.Y - 3, knob.Width + 6, knob.Height + 6);
+                    g.DrawEllipse(p, knob.X - Theme.Px(3), knob.Y - Theme.Px(3), knob.Width + Theme.Px(6), knob.Height + Theme.Px(6));
             }
         }
 

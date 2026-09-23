@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -87,18 +87,23 @@ namespace OpusScreen
         // pour une application de confort - le tassement se lit comme de l'urgence.
         // Les pages defilent de toute facon ; ce qui se gagne en densite se paie en
         // fatigue de lecture.
-        public const int SpaceXs = 6;
-        public const int SpaceSm = 10;
-        public const int SpaceMd = 16;
-        public const int SpaceLg = 22;
-        public const int SpaceXl = 32;
+        //
+        // Ces valeurs sont pensees a 96 points par pouce et converties a la lecture.
+        // Elles etaient des constantes : sur un ecran regle a 200 %, un espacement
+        // de 10 pixels en faisait toujours 10, alors que le texte autour avait
+        // double. Tout se tassait jusqu'a se recouvrir.
+        public static int SpaceXs { get { return Px(6); } }
+        public static int SpaceSm { get { return Px(10); } }
+        public static int SpaceMd { get { return Px(16); } }
+        public static int SpaceLg { get { return Px(22); } }
+        public static int SpaceXl { get { return Px(32); } }
 
         /// <summary>
         /// Cible de clic minimale. 36 px plutot que 32 : le minimum desktop est un
         /// plancher, pas un objectif, et viser une cible se degrade avec la fatigue -
         /// precisement l'etat dans lequel on ouvre cette application.
         /// </summary>
-        public const int MinTarget = 36;
+        public static int MinTarget { get { return Px(36); } }
 
         /// <summary>
         /// Duree des transitions d'interface. En dessous de 150 ms l'oeil percoit un
@@ -106,15 +111,53 @@ namespace OpusScreen
         /// </summary>
         public const int MotionMs = 220;
 
+        // --- mise a l'echelle ---
+
+        /// <summary>
+        /// Echelle de l'interface. 1 correspond a 96 points par pouce, la definition
+        /// pour laquelle toutes les valeurs ci-dessus ont ete choisies.
+        ///
+        /// Elle existe parce que les deux moities de la mise en page ne grandissaient
+        /// pas ensemble. Les polices sont exprimees en POINTS : Windows les rend donc
+        /// 1,5 fois plus hautes sur un ecran regle a 150 %, sans qu'on demande rien.
+        /// Les boites qui les contiennent, elles, etaient des constantes en PIXELS -
+        /// elles ne bougeaient pas. Le texte debordait donc de sa boite et se
+        /// retrouvait coupe, les onglets s'abregeaient en « Daltonis... », et
+        /// l'application devenait illisible sur les ecrans a forte densite,
+        /// c'est-a-dire sur la plupart des portables vendus aujourd'hui.
+        /// </summary>
+        public static float Scale = 1f;
+
+        /// <summary>
+        /// Multiplicateur applique aux polices. Vaut 1 en production, et doit y
+        /// rester : Windows agrandit deja les polices exprimees en points.
+        ///
+        /// Il n'existe que pour les tests, qui doivent simuler un ecran a 150 % sur
+        /// une machine a 96 ppp. Sans lui, la seule facon de verifier la mise a
+        /// l'echelle serait de changer le reglage de Windows et de regarder.
+        /// </summary>
+        public static float FontSimulation = 1f;
+
+        /// <summary>Convertit une mesure pensee a 96 ppp vers l'ecran courant.</summary>
+        public static int Px(int at96)
+        {
+            return (int)Math.Round(at96 * Scale);
+        }
+
         // --- typographie ---
         private const string Family = "Segoe UI";
 
-        public static Font Display { get { return new Font(Family, 25f, FontStyle.Bold); } }
-        public static Font Title { get { return new Font(Family, 15f, FontStyle.Bold); } }
-        public static Font Heading { get { return new Font(Family, 10.5f, FontStyle.Bold); } }
-        public static Font SectionLabel { get { return new Font(Family, 8f, FontStyle.Bold); } }
-        public static Font Body { get { return new Font(Family, 9f, FontStyle.Regular); } }
-        public static Font BodyBold { get { return new Font(Family, 9f, FontStyle.Bold); } }
+        private static Font Make(float points, FontStyle style)
+        {
+            return new Font(Family, points * FontSimulation, style);
+        }
+
+        public static Font Display { get { return Make(25f, FontStyle.Bold); } }
+        public static Font Title { get { return Make(15f, FontStyle.Bold); } }
+        public static Font Heading { get { return Make(10.5f, FontStyle.Bold); } }
+        public static Font SectionLabel { get { return Make(8f, FontStyle.Bold); } }
+        public static Font Body { get { return Make(9f, FontStyle.Regular); } }
+        public static Font BodyBold { get { return Make(9f, FontStyle.Bold); } }
 
         /// <summary>
         /// Textes explicatifs et legendes. Remonte de 7,5 a 8,5 pt : a 96 ppp, 8 pt
@@ -122,8 +165,8 @@ namespace OpusScreen
         /// courant. Ces legendes portent l'essentiel des explications de l'interface -
         /// les reduire revenait a compter sur le fait qu'on ne les lit pas.
         /// </summary>
-        public static Font Small { get { return new Font(Family, 8.5f, FontStyle.Regular); } }
-        public static Font Mono { get { return new Font("Consolas", 8.5f, FontStyle.Regular); } }
+        public static Font Small { get { return Make(8.5f, FontStyle.Regular); } }
+        public static Font Mono { get { return new Font("Consolas", 8.5f * FontSimulation, FontStyle.Regular); } }
 
         /// <summary>
         /// Rapport de contraste WCAG entre deux couleurs. Sert a verifier les couples

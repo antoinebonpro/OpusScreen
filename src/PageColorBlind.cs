@@ -140,13 +140,56 @@ namespace OpusScreen
             return b;
         }
 
+        /// <summary>
+        /// Repartit la rangee selon la LONGUEUR de chaque libelle, et non en parts
+        /// egales.
+        ///
+        /// Les quatre boutons recevaient un quart de la largeur chacun. « Appliquer »
+        /// nageait dans le sien pendant que « Enregistrer le reglage actuel... » y
+        /// perdait la moitie de son texte - a 100 % deja, et pis encore des que
+        /// l'ecran agrandit les polices. Un quart de la place pour un tiers du texte
+        /// ne tient a aucune echelle.
+        ///
+        /// Chaque bouton recoit donc d'abord ce que son texte demande ; ce qui reste
+        /// se partage a parts egales.
+        /// </summary>
         private void LayoutPresetButtons(Panel host)
         {
             int n = _presetButtons.Count;
             if (n == 0) return;
+
             int gap = Theme.SpaceXs;
-            int w = Math.Max(70, (host.ClientSize.Width - gap * (n - 1)) / n);
-            for (int i = 0; i < n; i++) _presetButtons[i].SetBounds(i * (w + gap), 2, w, Theme.MinTarget);
+            int dispo = host.ClientSize.Width - gap * (n - 1);
+            if (dispo < n) return;
+
+            int[] besoin = new int[n];
+            int total = 0;
+            for (int i = 0; i < n; i++)
+            {
+                DarkButton b = _presetButtons[i];
+                besoin[i] = TextRenderer.MeasureText(b.Text, b.Font).Width + Theme.Px(24);
+                total += besoin[i];
+            }
+
+            int[] large = new int[n];
+            if (total <= dispo)
+            {
+                int rab = (dispo - total) / n;
+                for (int i = 0; i < n; i++) large[i] = besoin[i] + rab;
+            }
+            else
+            {
+                // Trop etroit pour tout le monde : on partage au prorata plutot que
+                // d'affamer le plus long.
+                for (int i = 0; i < n; i++) large[i] = Math.Max(Theme.Px(70), dispo * besoin[i] / total);
+            }
+
+            int x = 0;
+            for (int i = 0; i < n; i++)
+            {
+                _presetButtons[i].SetBounds(x, Theme.Px(2), large[i], Theme.MinTarget);
+                x += large[i] + gap;
+            }
         }
 
         private VisionPreset Selected()

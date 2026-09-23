@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Runtime.InteropServices;
@@ -30,7 +30,7 @@ namespace OpusScreen
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint
                    | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw
                    | ControlStyles.SupportsTransparentBackColor, true);
-            Height = 22;
+            Height = Theme.Px(22);
             Cursor = Cursors.Hand;
             ForeColor = Theme.Fg;
             AccessibleRole = AccessibleRole.CheckButton;
@@ -181,7 +181,7 @@ namespace OpusScreen
             FlatStyle = FlatStyle.Flat;
             BackColor = Theme.Field;
             ForeColor = Theme.Fg;
-            ItemHeight = 20;
+            ItemHeight = Theme.Px(20);
         }
 
         private const int WM_MOUSEWHEEL = 0x020A;
