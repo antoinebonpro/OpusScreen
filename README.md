@@ -91,8 +91,14 @@ double-cliquez.
 > complémentaires* → *Exécuter quand même*. Si vous préférez ne pas faire confiance à un
 > binaire, la section suivante compile le vôtre en une commande.
 
-Version 3.2.1 précisément : [OpusScreen.exe 3.2.1](https://github.com/antoinebonpro/OpusScreen/releases/download/v3.2.1/OpusScreen.exe)
-· [notes de version](https://github.com/antoinebonpro/OpusScreen/releases/tag/v3.2.1).
+> 👁️ **Une fois lancée, l'application n'a pas de fenêtre permanente** : elle se range
+> dans la zone de notification, en bas à droite. Son icône est un œil dont la pupille
+> prend la couleur que votre écran rend à cet instant. Windows 11 replie les icônes
+> récentes derrière le chevron `^` — l'onglet **Découvrir**, ouvert au premier
+> lancement, explique comment l'en sortir et l'épingler.
+
+Version 3.3.0 précisément : [OpusScreen.exe 3.3.0](https://github.com/antoinebonpro/OpusScreen/releases/download/v3.3.0/OpusScreen.exe)
+· [notes de version](https://github.com/antoinebonpro/OpusScreen/releases/tag/v3.3.0).
 Toutes les versions : [page des publications](https://github.com/antoinebonpro/OpusScreen/releases).
 
 ## 🔨 Compiler soi-même
@@ -116,9 +122,9 @@ voir [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#compatibilité).
 
 ### 📌 Épingler à la barre des tâches
 
-*Avancé → Système → Épingler OpusScreen à la barre des tâches*. OpusScreen dépose un
-raccourci dans le menu Démarrer et vous conduit dessus — depuis Windows 10, seul un
-geste de l'utilisateur peut épingler un programme.
+*Découvrir → Épingler OpusScreen à la barre des tâches* — également dans *Avancé →
+Système*. OpusScreen dépose un raccourci dans le menu Démarrer et vous conduit dessus —
+depuis Windows 10, seul un geste de l'utilisateur peut épingler un programme.
 
 Une fois épinglé :
 
