@@ -79,7 +79,9 @@ code {
   display: flex; align-items: center; gap: 22px;
 }
 .marque { display: inline-flex; align-items: center; gap: 9px; font-weight: 700; color: var(--encre); text-decoration: none; }
-.marque img { border-radius: 8px; }
+/* Le logo est un oeil large, pas un carre : l'enfermer dans 30x30 le reduisait a
+   une vingtaine de pixels de haut, cernes de vide, et on ne le voyait plus. */
+.marque img { display: block; height: 32px; width: auto; }
 .barre nav { display: flex; gap: 20px; margin-left: auto; }
 .barre nav a { color: var(--plume); text-decoration: none; font-size: .95rem; font-weight: 600; }
 .barre nav a:hover { color: var(--encre); }
@@ -114,6 +116,14 @@ code {
   background: linear-gradient(180deg, transparent, var(--fond)); pointer-events: none;
 }
 .heros > * { position: relative; z-index: 1; }
+
+/* Le logo ouvre la page. Sa hauteur est bornee des deux cotes : assez grand pour
+   etre le premier regard, jamais au point de repousser le titre hors de l'ecran
+   sur un portable. */
+.logo-heros {
+  display: block; margin: 0 auto clamp(14px, 2.4vw, 26px);
+  width: clamp(168px, 24vw, 299px); height: auto;
+}
 
 .heros h1 { max-width: 19ch; margin: 0 auto .4em; text-wrap: balance; }
 .accroche { font-size: clamp(1.08rem, 2vw, 1.3rem); color: var(--plume); max-width: 46ch; margin: 0 auto 2.2em; }
@@ -234,6 +244,25 @@ section { padding: clamp(56px, 8vw, 104px) 0; }
 .questions p { color: var(--plume); margin: 0 0 18px; }
 
 /* ---------------------------------------------------------------- fin + pied */
+
+/* ---------------------------------------------------------------- signature */
+
+/* Qui tient l'outil. Posee juste avant l'appel final, la ou la page a fini de
+   convaincre : la question « qui est derriere » se pose a ce moment-la, pas au
+   premier ecran. Le bloc reste volontairement sobre - c'est une signature, pas
+   une reclame. */
+.signature { padding-top: 0; }
+.signature-carte { display: flex; gap: clamp(18px, 3vw, 30px); align-items: flex-start; }
+/* Les images d'une carte sont des captures d'ecran : cadre, coins arrondis et
+   marge haute. Un logo n'est pas une capture - il se pose sans encadrement. */
+.signature-carte img { flex: none; width: 64px; height: auto; margin: 0; border: 0; border-radius: 0; }
+.signature-carte h2 { font-size: clamp(1.15rem, 2.2vw, 1.45rem); margin: 0 0 .5em; }
+.signature-carte h2 a { color: var(--accent); text-decoration: none; }
+.signature-carte h2 a:hover { text-decoration: underline; }
+.signature-carte p { color: var(--plume); margin: 0; max-width: 62ch; }
+@media (max-width: 560px) {
+  .signature-carte { flex-direction: column; align-items: center; text-align: center; }
+}
 
 .final { text-align: center; }
 .final .carte { padding: clamp(40px, 6vw, 68px) 28px; }
