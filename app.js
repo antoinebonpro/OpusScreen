@@ -372,30 +372,88 @@
 
   dessiner();
 
+  // ------------------------------------------------------------------ plateforme
+
+  // La page propose les deux systemes. Celui du visiteur passe devant : un
+  // utilisateur de Mac a qui l'on presente d'abord un .exe croit, a juste titre,
+  // que le logiciel n'est pas pour lui.
+  //
+  // La detection ne sert qu'a ORDONNER. Les deux boutons restent la, et restent
+  // cliquables : une detection qui se trompe doit couter un regard, pas un
+  // telechargement impossible.
+  var SUR_MAC = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || '');
+
+  if (SUR_MAC) {
+    [['dl-win', 'dl-mac'], ['dl-win-2', 'dl-mac-2']].forEach(function (paire) {
+      var win = document.getElementById(paire[0]);
+      var mac = document.getElementById(paire[1]);
+      if (!win || !mac || !mac.parentNode) return;
+      mac.className = 'bouton grand';
+      win.className = 'bouton clair grand';
+      mac.parentNode.insertBefore(mac, win);
+    });
+    var barre = document.getElementById('dl-barre');
+    if (barre) barre.href = document.getElementById('dl-mac').href;
+  }
+
   // ------------------------------------------------------------------ version
 
   // Confort, pas necessite : si GitHub ne repond pas, le texte de la page reste
   // juste. Lecture publique, rien n'est envoye.
+  //
+  // On demande la LISTE des publications, et non « la derniere ». Les deux
+  // versions vivent dans le meme depot sans suivre la meme numerotation : la
+  // derniere publication est celle de Windows, et l'on y chercherait en vain le
+  // paquet macOS.
   if (window.fetch) {
-    fetch('https://api.github.com/repos/antoinebonpro/OpusScreen/releases/latest')
+    fetch('https://api.github.com/repos/antoinebonpro/OpusScreen/releases?per_page=30')
       .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (data) {
-        if (!data || !data.tag_name) return;
-        var taille = 0;
-        (data.assets || []).forEach(function (a) { if (/\.exe$/i.test(a.name)) taille = a.size; });
-        var v = data.tag_name.replace(/^v/, '');
-        var ko = taille ? ' · ' + Math.round(taille / 1024) + ' Ko' : '';
+      .then(function (liste) {
+        if (!liste || !liste.length) return;
+
+        var win = null, mac = null;
+        liste.forEach(function (pub) {
+          if (pub.draft) return;
+          (pub.assets || []).forEach(function (a) {
+            if (!win && /\.exe$/i.test(a.name)) win = { v: numero(pub.tag_name), taille: a.size };
+            if (!mac && /^OpusScreen-mac\.zip$/i.test(a.name)) {
+              mac = { v: numero(pub.tag_name), url: a.browser_download_url };
+            }
+          });
+        });
+
+        // Le lien macOS est fige dans la page pour qu'il fonctionne sans script ;
+        // s'il existe plus recent, on le remplace.
+        if (mac) {
+          ['dl-mac', 'dl-mac-2'].forEach(function (id) {
+            var a = document.getElementById(id);
+            if (a) a.href = mac.url;
+          });
+          if (SUR_MAC) {
+            var barre2 = document.getElementById('dl-barre');
+            if (barre2) barre2.href = mac.url;
+          }
+        }
+
+        var ko = (win && win.taille) ? ' · ' + Math.round(win.taille / 1024) + (EN ? ' KB' : ' Ko') : '';
         var un = document.getElementById('release-meta');
         var deux = document.getElementById('release-meta-2');
-        if (EN) {
-          if (un) un.textContent = 'Version ' + v + (taille ? ' · ' + Math.round(taille / 1024) + ' KB' : ' · one file')
-                                 + ' · Windows 7 to 11';
-          if (deux) deux.textContent = 'Version ' + v + ' · for Windows';
-        } else {
-          if (un) un.textContent = 'Version ' + v + (ko || ' · un seul fichier') + ' · Windows 7 à 11';
-          if (deux) deux.textContent = 'Version ' + v + ' · pour Windows';
+        var w = win ? 'Version ' + win.v + ko + (EN ? ' · Windows 7 to 11' : ' · Windows 7 à 11') : '';
+        var m = mac ? 'version ' + mac.v + (EN ? ' · macOS 13 and later' : ' · macOS 13 et plus') : '';
+        var lien = (w && m) ? ' — ' : '';
+        if (un && (w || m)) un.textContent = w + lien + m;
+        if (deux && (w || m)) {
+          deux.textContent = (win ? (EN ? 'Windows 7 to 11' : 'Windows 7 à 11') : '')
+                           + (win && mac ? ' · ' : '')
+                           + (mac ? (EN ? 'macOS 13 and later' : 'macOS 13 et plus') : '');
         }
       })
       .catch(function () { /* hors ligne : le texte ecrit suffit */ });
+  }
+
+  // « v3.4.0 », « mac-v1.0.0 » : le numero commence au premier chiffre.
+  function numero(etiquette) {
+    var m = String(etiquette || '').match(/\d+(\.\d+)*/);
+    return m ? m[0].replace(/\.0$/, '') : '';
   }
 })();
