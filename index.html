@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OpusScreen — régler la lumière de votre écran</title>
-<meta name="description" content="Luminosité de 5 à 150 %, température de couleur, correction du daltonisme mesurée par un test guidé. Gratuit, libre, sans compte, sans réseau. Pour Windows.">
+<meta name="description" content="Luminosité de 5 à 150 %, température de couleur, correction du daltonisme mesurée par un test guidé. Gratuit, libre, sans compte, rien envoyé. Pour Windows.">
 <link rel="icon" href="img/logo-64.png">
 <meta property="og:title" content="OpusScreen — régler la lumière de votre écran">
 <meta property="og:description" content="Luminosité de 5 à 150 %, température de couleur, daltonisme mesuré plutôt que deviné. Gratuit et libre, pour Windows.">
@@ -57,7 +57,7 @@
   <p class="accroche">
     La température de couleur au kelvin près, une luminosité qui dépasse largement ce que
     Windows autorise, et une correction du daltonisme <strong>mesurée</strong> plutôt que
-    devinée. Gratuit, libre, sans compte et sans la moindre connexion.
+    devinée. Gratuit, libre, sans compte, et rien ne sort de votre machine.
   </p>
 
   <div class="appels">
@@ -67,12 +67,12 @@
     </a>
     <a class="bouton clair grand" href="https://github.com/antoinebonpro/OpusScreen">Lire le code</a>
   </div>
-  <p class="sous-bouton" id="release-meta">Version 3.3 · un seul fichier · Windows 7 à 11</p>
+  <p class="sous-bouton" id="release-meta">Version 3.4 · un seul fichier · Windows 7 à 11</p>
 
   <ul class="rassurance">
-    <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5"/></svg> Rien à installer</li>
+    <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5"/></svg> Sans droits administrateur</li>
     <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5"/></svg> Aucun compte</li>
-    <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5"/></svg> Aucune connexion réseau</li>
+    <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5"/></svg> Toujours à jour</li>
     <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5"/></svg> Licence AGPL v3</li>
   </ul>
 
@@ -231,7 +231,7 @@
     <div class="cartes large-gauche">
       <div class="carte">
         <table class="garanties">
-          <caption class="etiquette">Neuf suites de tests, lancées avant chaque publication</caption>
+          <caption class="etiquette">Dix suites de tests, lancées avant chaque publication</caption>
           <tbody>
             <tr><th scope="row">Aucun réglage ne descend sous 5 % de luminance</th><td>SafetyTest</td></tr>
             <tr><th scope="row">L’écran redevient normal après un plantage</th><td>SafetyTest</td></tr>
@@ -240,6 +240,7 @@
             <tr><th scope="row">La molette fait défiler sans modifier les réglages survolés</th><td>UiTest</td></tr>
             <tr><th scope="row">Chaque contrôle dessiné à la main s’annonce aux lecteurs d’écran</th><td>VisionTest</td></tr>
             <tr><th scope="row">Trois mille gestes au hasard ne cassent aucun des neuf invariants</th><td>MonkeyTest</td></tr>
+            <tr><th scope="row">Une ancienne copie ne prend jamais la place d’une plus récente</th><td>UpdateTest</td></tr>
           </tbody>
         </table>
         <div class="encart">
@@ -250,8 +251,8 @@
 
       <div class="carte">
         <h3>Rien ne sort de votre machine</h3>
-        <p>Aucun serveur contacté, aucun compte, aucune statistique d’usage. Un pare-feu n’a rien à bloquer.</p>
-        <p><strong>Un fichier, et c’est tout.</strong> Les réglages tiennent dans un fichier texte lisible au bloc-notes. Supprimer l’exécutable suffit à désinstaller.</p>
+        <p>Aucun compte, aucune statistique d’usage, aucune donnée envoyée. Une seule requête, une fois par jour : demander à GitHub le numéro de la dernière version. Elle se coupe dans l’onglet Avancé.</p>
+        <p><strong>Un fichier, et c’est tout.</strong> Au premier lancement, OpusScreen se range tout seul dans votre dossier utilisateur, sans droits administrateur. Il se désinstalle depuis « Applications installées » de Windows, et ses réglages tiennent dans un fichier texte lisible au bloc-notes.</p>
         <p><strong>Vérifiable.</strong> Code public sous licence AGPL v3, commenté en français, compilable en une commande sans rien installer.</p>
         <div class="encart">
           <p class="etiquette">Au premier lancement</p>
@@ -335,14 +336,14 @@
   <div class="large">
     <div class="carte">
       <h2>Un fichier. Deux minutes. Un écran qui vous laisse tranquille.</h2>
-      <p>Posez l’exécutable où vous voulez et double-cliquez. Aucun installateur, aucun compte, aucune connexion.</p>
+      <p>Double-cliquez, c’est installé. Aucun compte, aucun droit administrateur, et les nouvelles versions vous sont proposées d’elles-mêmes.</p>
       <div class="appels">
         <a class="bouton grand" href="https://github.com/antoinebonpro/OpusScreen/releases/latest/download/OpusScreen.exe">
           <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M3 5.5 10.2 4.5v7H3v-6zM11.4 4.3 21 3v8.5h-9.6v-7.2zM3 12.5h7.2v7L3 18.5v-6zM11.4 12.5H21V21l-9.6-1.3v-7.2z"/></svg>
           Télécharger OpusScreen
         </a>
       </div>
-      <p class="sous-bouton" id="release-meta-2">Version 3.3 · pour Windows</p>
+      <p class="sous-bouton" id="release-meta-2">Version 3.4 · pour Windows</p>
     </div>
   </div>
 </section>

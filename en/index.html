@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OpusScreen — set your screen's light</title>
-<meta name="description" content="Screen brightness from 5 % to 150 %, colour temperature, and colour-blindness correction calibrated by a guided test. Free, open source, no account, no network. For Windows.">
+<meta name="description" content="Screen brightness from 5 % to 150 %, colour temperature, and colour-blindness correction calibrated by a guided test. Free, open source, no account, nothing sent. For Windows.">
 <link rel="icon" href="../img/logo-64.png">
 <meta property="og:title" content="OpusScreen — set your screen's light">
 <meta property="og:description" content="Brightness from 5 % to 150 %, colour temperature, colour-blindness correction measured rather than guessed. Free and open source, for Windows.">
@@ -57,7 +57,7 @@
   <p class="accroche">
     Colour temperature to the kelvin, brightness far beyond what Windows allows, and a
     colour-blindness correction that is <strong>measured</strong> rather than guessed.
-    Free, open source, no account, and not a single network call.
+    Free, open source, no account, and nothing leaves your machine.
   </p>
 
   <div class="appels">
@@ -67,12 +67,12 @@
     </a>
     <a class="bouton clair grand" href="https://github.com/antoinebonpro/OpusScreen">Read the code</a>
   </div>
-  <p class="sous-bouton" id="release-meta">Version 3.3 · one file · Windows 7 to 11</p>
+  <p class="sous-bouton" id="release-meta">Version 3.4 · one file · Windows 7 to 11</p>
 
   <ul class="rassurance">
-    <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5"/></svg> Nothing to install</li>
+    <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5"/></svg> No admin rights</li>
     <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5"/></svg> No account</li>
-    <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5"/></svg> No network connection</li>
+    <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5"/></svg> Always up to date</li>
     <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5"/></svg> AGPL v3 licence</li>
   </ul>
 
@@ -231,7 +231,7 @@
     <div class="cartes large-gauche">
       <div class="carte">
         <table class="garanties">
-          <caption class="etiquette">Nine suites of tests, run before every release</caption>
+          <caption class="etiquette">Ten suites of tests, run before every release</caption>
           <tbody>
             <tr><th scope="row">No combination of settings drops below 5 % luminance</th><td>SafetyTest</td></tr>
             <tr><th scope="row">The screen returns to normal after a crash</th><td>SafetyTest</td></tr>
@@ -240,6 +240,7 @@
             <tr><th scope="row">The wheel scrolls without changing the setting under the pointer</th><td>UiTest</td></tr>
             <tr><th scope="row">Every hand-drawn control announces itself to screen readers</th><td>VisionTest</td></tr>
             <tr><th scope="row">Three thousand random gestures break none of the nine invariants</th><td>MonkeyTest</td></tr>
+            <tr><th scope="row">An older copy never takes the place of a newer one</th><td>UpdateTest</td></tr>
           </tbody>
         </table>
         <div class="encart">
@@ -250,8 +251,8 @@
 
       <div class="carte">
         <h3>Nothing leaves your machine</h3>
-        <p>No server contacted, no account, no usage statistics. A firewall has nothing to block.</p>
-        <p><strong>One file, and that is all.</strong> The settings fit in a text file you can read in Notepad. Deleting the executable is the uninstall.</p>
+        <p>No account, no usage statistics, no data sent. A single request, once a day: asking GitHub for the number of the latest version. It can be switched off in the Advanced tab.</p>
+        <p><strong>One file, and that is all.</strong> On first launch, OpusScreen files itself away in your user folder, without admin rights. It uninstalls from Windows’ « Installed apps », and its settings fit in a text file you can read in Notepad.</p>
         <p><strong>Verifiable.</strong> Public code under the AGPL v3 licence, commented in French, compiled with a single command and no toolchain to install.</p>
         <div class="encart">
           <p class="etiquette">On first launch</p>
@@ -335,14 +336,14 @@
   <div class="large">
     <div class="carte">
       <h2>One file. Two minutes. A screen that leaves you alone.</h2>
-      <p>Put the executable wherever you like and double-click it. No installer, no account, no connection.</p>
+      <p>Double-click, and it is installed. No account, no admin rights, and new versions are offered to you as they come out.</p>
       <div class="appels">
         <a class="bouton grand" href="https://github.com/antoinebonpro/OpusScreen/releases/latest/download/OpusScreen.exe">
           <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M3 5.5 10.2 4.5v7H3v-6zM11.4 4.3 21 3v8.5h-9.6v-7.2zM3 12.5h7.2v7L3 18.5v-6zM11.4 12.5H21V21l-9.6-1.3v-7.2z"/></svg>
           Download OpusScreen
         </a>
       </div>
-      <p class="sous-bouton" id="release-meta-2">Version 3.3 · for Windows</p>
+      <p class="sous-bouton" id="release-meta-2">Version 3.4 · for Windows</p>
     </div>
   </div>
 </section>
