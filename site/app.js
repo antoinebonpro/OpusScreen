@@ -416,7 +416,9 @@
           if (pub.draft) return;
           (pub.assets || []).forEach(function (a) {
             if (!win && /\.exe$/i.test(a.name)) win = { v: numero(pub.tag_name), taille: a.size };
-            if (!mac && /^OpusScreen-mac\.zip$/i.test(a.name)) {
+            // L'image disque, et non l'archive : l'archive sert a la mise a
+            // jour automatique de l'application, pas au premier telechargement.
+            if (!mac && /\.dmg$/i.test(a.name)) {
               mac = { v: numero(pub.tag_name), url: a.browser_download_url };
             }
           });

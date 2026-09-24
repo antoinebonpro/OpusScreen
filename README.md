@@ -120,12 +120,12 @@ Toutes les versions : [page des publications](https://github.com/antoinebonpro/O
 
 ### 🍎 Pour macOS
 
-**[OpusScreen-mac.zip — version 1.0.0](https://github.com/antoinebonpro/OpusScreen/releases/download/mac-v1.0.0/OpusScreen-mac.zip)**
+**[OpusScreen-1.0.0.dmg — version 1.0.0](https://github.com/antoinebonpro/OpusScreen/releases/download/mac-v1.0.0/OpusScreen-1.0.0.dmg)**
 · [notes de version](https://github.com/antoinebonpro/OpusScreen/releases/tag/mac-v1.0.0)
 · [le code et sa documentation](mac/)
 
-macOS 13 (Ventura) ou plus récent, Apple Silicon comme Intel. Décompressez, glissez
-**OpusScreen** dans *Applications*, ouvrez-le. Le portage refait **toutes** les fonctions de
+macOS 13 (Ventura) ou plus récent, Apple Silicon comme Intel. Ouvrez l'image, glissez
+**OpusScreen** dans *Applications* — la fenêtre montre le geste —, puis ouvrez-le. Le portage refait **toutes** les fonctions de
 la version Windows sur les API de macOS — les quatre étages de luminosité, les onze pages de
 réglages, le test de daltonisme, la loupe, les quinze raccourcis, la ligne de commande — et
 le fichier de configuration reste **le même**, clef par clef : une configuration exportée
@@ -140,6 +140,11 @@ depuis un PC s'importe sur le Mac telle quelle.
 > la saturation, les filtres de daltonisme et la loupe — sans elle, la luminosité et la
 > température fonctionnent quand même, et l'application le dit. *Accessibilité* pour le fil
 > de secours, qui répond au raccourci `⌃⌥⇧R` même si l'interface est bloquée.
+
+> 📦 **Une archive `OpusScreen-mac.zip` est publiée à côté de l'image.** Elle contient
+> exactement la même application : c'est elle que le Mac va chercher quand il se met à jour
+> tout seul, parce qu'une image disque ne se déballe pas sans être montée. Pour installer à
+> la main, prenez le `.dmg`.
 
 Les deux versions avancent chacune à son rythme : les publications macOS portent l'étiquette
 `mac-v…`, celles de Windows `v…`.
@@ -162,8 +167,9 @@ ligne de commande d'Apple suffisent.
 
 ```
 cd mac
-./build.sh           compile OpusScreen.app
-./run-tests.sh all   vérifie : calcul, matériel réel, et le paquet livré
+./build.sh            compile OpusScreen.app
+./run-tests.sh all    vérifie : calcul, matériel réel, et le paquet livré
+tools/make-dmg.sh     fabrique l'image disque telle qu'elle est publiée
 ```
 
 ## 🖱️ Utilisation

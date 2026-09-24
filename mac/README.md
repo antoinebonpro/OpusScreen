@@ -33,7 +33,15 @@ se cumule avec le Zoom.
 OpusScreen réunit les quatre techniques, les rend réglables écran par écran, et y ajoute ce
 qui manque partout : une correction du daltonisme **qui se vérifie**.
 
-## ⬇️ Construire et lancer
+## ⬇️ Installer
+
+**[OpusScreen-1.0.0.dmg — version 1.0.0](https://github.com/antoinebonpro/OpusScreen/releases/download/mac-v1.0.0/OpusScreen-1.0.0.dmg)**
+· [notes de version](https://github.com/antoinebonpro/OpusScreen/releases/tag/mac-v1.0.0)
+
+Ouvrez l'image, glissez **OpusScreen** dans *Applications*, ouvrez-le. macOS 13 (Ventura) ou
+plus récent, Apple Silicon comme Intel.
+
+## 🔨 Construire et lancer
 
 Aucune dépendance à installer, **aucun Xcode** : les outils en ligne de commande d'Apple
 suffisent.
@@ -47,7 +55,16 @@ open OpusScreen.app     # lance (icône dans la barre des menus)
 ./run-tests.sh          # 135 tests de calcul, en mode à blanc
 ./run-tests.sh all      # + 30 vérifications sur le matériel réel
                         # + 20 de bout en bout sur l'application livrée
+
+tools/make-dmg.sh       # l'image disque telle qu'elle est publiée
 ```
+
+> 💿 **L'image disque se refabrique d'une commande**, fond de fenêtre compris : celui-ci est
+> **tracé** par `tools/dmg-fond.swift` plutôt que dessiné dans un éditeur, pour la même
+> raison que le reste de l'interface — ce qui se redessine se vérifie et se corrige. La mise
+> en page des icônes passe par le Finder, que macOS demande d'autoriser une fois
+> (*Réglages → Confidentialité → Automatisation*) ; sans cette autorisation le script le dit
+> et produit une image sans mise en page, qui s'installe tout aussi bien.
 
 **Prérequis** : macOS 13 ou plus récent, Apple Silicon ou Intel.
 Installer les outils si besoin : `xcode-select --install`.
@@ -64,9 +81,10 @@ Installer les outils si besoin : `xcode-select --install`.
 > fonctionnent sans cette autorisation** — l'application le dit et continue.
 
 > 🛡️ **macOS affichera un avertissement au premier lancement** si vous récupérez un paquet
-> tout fait : il n'est pas signé par un certificat de développeur, qui se loue une centaine
-> d'euros par an. Clic droit sur l'application → *Ouvrir*. Si vous préférez ne pas faire
-> confiance à un binaire, `./build.sh` compile le vôtre en une commande.
+> tout fait : il n'est pas signé par un certificat de développeur, qui se loue quatre-vingt-dix-neuf
+> euros par an. Clic droit sur l'application → *Ouvrir*, puis *Ouvrir* dans la boîte qui suit ;
+> une seule fois. Si vous préférez ne pas faire confiance à un binaire, `./build.sh` compile
+> le vôtre en une commande.
 
 ## ⚖️ Ce qu'il fait
 

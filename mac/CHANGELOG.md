@@ -30,6 +30,10 @@ Toutes les fonctions de la version Windows, reconstruites sur les API de macOS :
 - **Ligne de commande** complète, avec transmission à l'instance en cours.
 - **Les cinq protections anti-écran-noir**, toutes vérifiées par test.
 - **VoiceOver** : chaque contrôle dessiné à la main déclare son rôle, son nom et sa valeur.
+- **Une image disque pour s'installer** — on l'ouvre, on glisse l'application dans
+  *Applications*, la fenêtre montre le geste. L'archive `.zip` reste publiée à côté : c'est
+  elle que l'application va chercher quand elle se met à jour toute seule. Image et fond de
+  fenêtre se refabriquent d'une commande, sans outil tiers ni Xcode.
 
 ### Meilleur que sur Windows
 

@@ -1,4 +1,6 @@
 # Produits de construction : ils se refabriquent en une commande.
 .build/
 OpusScreen.app/
+OpusScreen-*.dmg
+OpusScreen-mac.zip
 .DS_Store
