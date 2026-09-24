@@ -1,0 +1,4 @@
+# Produits de construction : ils se refabriquent en une commande.
+.build/
+OpusScreen.app/
+.DS_Store

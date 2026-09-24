@@ -4,7 +4,9 @@
 
 # 👁️ OpusScreen
 
-**Luminosité 5 % → 150 %, température de couleur, daltonisme et basse vision, pour Windows.**
+**Luminosité 5 % → 150 %, température de couleur, daltonisme et basse vision.**
+
+**Pour Windows** — et désormais **[pour macOS](mac/)**, portage intégral, fonction par fonction.
 
 Né de l’analyse des **API Windows** employées par **PangoBright** et **f.lux** — en-têtes,
 table d’import, chaînes de caractères ; aucun désassemblage, aucune copie de code — puis
@@ -116,6 +118,32 @@ Version 3.4.0 précisément : [OpusScreen.exe 3.4.0](https://github.com/antoineb
 · [notes de version](https://github.com/antoinebonpro/OpusScreen/releases/tag/v3.4.0).
 Toutes les versions : [page des publications](https://github.com/antoinebonpro/OpusScreen/releases).
 
+### 🍎 Pour macOS
+
+**[OpusScreen-mac.zip — version 1.0.0](https://github.com/antoinebonpro/OpusScreen/releases/download/mac-v1.0.0/OpusScreen-mac.zip)**
+· [notes de version](https://github.com/antoinebonpro/OpusScreen/releases/tag/mac-v1.0.0)
+· [le code et sa documentation](mac/)
+
+macOS 13 (Ventura) ou plus récent, Apple Silicon comme Intel. Décompressez, glissez
+**OpusScreen** dans *Applications*, ouvrez-le. Le portage refait **toutes** les fonctions de
+la version Windows sur les API de macOS — les quatre étages de luminosité, les onze pages de
+réglages, le test de daltonisme, la loupe, les quinze raccourcis, la ligne de commande — et
+le fichier de configuration reste **le même**, clef par clef : une configuration exportée
+depuis un PC s'importe sur le Mac telle quelle.
+
+> 🛡️ **macOS dira « impossible de vérifier le développeur » au premier lancement**, pour la
+> même raison que SmartScreen côté Windows : le paquet n'est pas signé par un certificat
+> Apple, qui se loue quatre-vingt-dix-neuf euros par an. **Clic droit sur l'application →
+> Ouvrir**, puis *Ouvrir* dans la boîte qui suit. Une seule fois.
+
+> 🎥 **Deux autorisations, demandées quand elles servent.** *Enregistrement de l'écran* pour
+> la saturation, les filtres de daltonisme et la loupe — sans elle, la luminosité et la
+> température fonctionnent quand même, et l'application le dit. *Accessibilité* pour le fil
+> de secours, qui répond au raccourci `⌃⌥⇧R` même si l'interface est bloquée.
+
+Les deux versions avancent chacune à son rythme : les publications macOS portent l'étiquette
+`mac-v…`, celles de Windows `v…`.
+
 ## 🔨 Compiler soi-même
 
 Aucune dépendance à installer, aucun kit de développement : le compilateur C# utilisé
@@ -128,6 +156,15 @@ OpusScreen.exe       lance l'application (icône dans la zone de notification)
 
 **Prérequis** : Windows 7 ou plus récent. Certaines fonctions demandent davantage —
 voir [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#compatibilité).
+
+Sur macOS, c'est la même promesse avec d'autres outils — et **sans Xcode** : les outils en
+ligne de commande d'Apple suffisent.
+
+```
+cd mac
+./build.sh           compile OpusScreen.app
+./run-tests.sh all   vérifie : calcul, matériel réel, et le paquet livré
+```
 
 ## 🖱️ Utilisation
 
