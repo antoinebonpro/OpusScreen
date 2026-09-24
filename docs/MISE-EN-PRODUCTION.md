@@ -10,7 +10,7 @@ au plus engageant : les premières étapes se vérifient, les dernières se déc
 - [ ] `build.cmd` se termine **sans avertissement**
       Un avertissement toléré aujourd'hui est un bug demain ; il n'y en a aucun
       actuellement, cet état doit être conservé.
-- [ ] `tests\run-tests.cmd` affiche `Tests executes : 9 / 9` et `RESULTAT : tous les tests passent`
+- [ ] `tests\run-tests.cmd` affiche `Tests executes : 10 / 10` et `RESULTAT : tous les tests passent`
       Les suites d'interface (7/9 et 9/9) montent la vraie fenêtre. Elles amènent le
       **curseur physique** sur chaque cible avant de cliquer, puis le remettent en
       place : WinForms n'émet `Click` que si `WindowFromPoint` tombe sur le contrôle,
@@ -83,6 +83,9 @@ de tout soupçon :
 | Table de couleurs du GPU | session, jusqu'au redémarrage | oui, automatiquement |
 | `%LOCALAPPDATA%\OpusScreen\settings.ini` | utilisateur | supprimer le fichier |
 | `HKCU\…\Run` (si démarrage automatique) | utilisateur | case à décocher |
+| `%LOCALAPPDATA%\Programs\OpusScreen\OpusScreen.exe` | utilisateur | désinstallation |
+| Raccourci du menu Démarrer | utilisateur | désinstallation |
+| `HKCU\…\Uninstall\OpusScreen` (Applications installées) | utilisateur | désinstallation |
 | `HKLM\…\ICM\GdiIcmGammaRange` | **machine, admin** | uniquement sur action explicite |
 | `HKLM\…\Class\{4d36e968…}\FeatureTestControl` | **machine, admin** | bouton d'annulation prévu |
 
@@ -91,10 +94,14 @@ l'utilisateur, avec la clé et la valeur affichées avant l'écriture.
 
 ### Ce que l'application ne fait pas
 
-- Aucune connexion réseau — le calcul solaire est fait sur place
+- Une seule connexion : une fois par jour, une requête anonyme à l'API de GitHub pour
+  lire le numéro de la dernière version (désactivable dans l'onglet Avancé). Le calcul
+  solaire est fait sur place
 - Aucune télémétrie, aucune donnée transmise
 - Aucun service, aucune tâche planifiée, aucun pilote installé
-- Aucun fichier hors de `%LOCALAPPDATA%\OpusScreen\`
+- Aucune mise à jour installée sans l'accord de l'utilisateur
+- Aucun fichier hors de `%LOCALAPPDATA%\OpusScreen\` (réglages) et
+  `%LOCALAPPDATA%\Programs\OpusScreen\` (programme)
 
 ### SmartScreen
 

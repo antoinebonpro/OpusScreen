@@ -6,8 +6,8 @@
 tests\run-tests.cmd
 ```
 
-Huit suites : six sur le moteur et les règles, deux sur l'interface elle-même
-(dont 3000 gestes au hasard). Code de sortie **0** si tout passe, **1** sinon.
+Dix suites : le moteur et les règles, l'interface elle-même (dont 3000 gestes au
+hasard et la lisibilité à cinq densités d'écran), l'installation et les mises à jour. Code de sortie **0** si tout passe, **1** sinon.
 
 ```
 tests
@@ -228,6 +228,21 @@ visée :
 tests\run-tests.cmd planches [fichier.png] [graine]
 ```
 
+### 10. UpdateTest — une seule copie, et la plus récente
+
+Sans réseau et sans rien installer : la décision prise au lancement est une fonction
+pure, et la réponse de GitHub est reproduite dans le test telle qu'elle arrive.
+
+| Vérification | Pourquoi |
+|---|---|
+| Une copie plus ancienne s'efface devant la copie installée | C'est le défaut d'origine : une 3.0 oubliée au démarrage accueillait la 3.3 |
+| À version égale, l'instance en cours n'est pas fermée | Sinon chaque double-clic ferait clignoter l'écran |
+| 3.10 passe après 3.9 | Une comparaison de texte installerait une version plus ancienne |
+| Brouillons, préversions et publications sans exécutable sont ignorés | Rien ne doit s'installer qui n'ait été publié pour tous |
+| Un téléchargement hors de `https://github.com/` est refusé | La réponse de l'API ne doit pas pouvoir envoyer ailleurs |
+| Taille, empreinte ou version différente : fichier refusé | Un fichier tronqué ou substitué ne remplace jamais le bon |
+| La réponse illisible, tronquée ou d'erreur ne casse rien | Un proxy d'entreprise renvoie volontiers du HTML |
+
 ---
 
 ## Vérifications manuelles
@@ -288,6 +303,22 @@ Ce que l'automatisation ne peut pas juger. À faire avant toute diffusion.
 - [ ] `--mode "Nuit profonde"` **et** `--mode Nuit profonde` donnent le même résultat
 - [ ] Une commande envoyée à une instance déjà lancée prend effet en moins de 2 s
 - [ ] `--help` s'affiche sans lancer l'application
+
+### G. Installation et mise à jour
+
+- [ ] Une ancienne version tourne depuis Téléchargements ; lancer la nouvelle → l'ancienne
+      disparaît, la nouvelle tourne depuis `%LOCALAPPDATA%\Programs\OpusScreen\`, et le
+      démarrage automatique pointe vers ce fichier
+- [ ] Relancer l'ancienne depuis Téléchargements → c'est la fenêtre de la nouvelle qui
+      s'ouvre
+- [ ] *Applications installées* affiche OpusScreen avec le bon numéro de version
+- [ ] Onglet Avancé → « Vérifier maintenant » : réponse « à jour », ou proposition
+      d'installer la version publiée ; accepter → redémarrage sur la nouvelle version,
+      réglages conservés, bulle « OpusScreen est à jour »
+- [ ] Couper le réseau puis « Vérifier maintenant » → message clair, l'application
+      continue normalement
+- [ ] Désinstaller depuis *Applications installées* → écran normal, raccourci et dossier
+      retirés ; les réglages restent si on l'a demandé
 
 ---
 

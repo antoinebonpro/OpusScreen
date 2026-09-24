@@ -9,8 +9,8 @@ using System.Windows.Forms;
 
 [assembly: AssemblyTitle("OpusScreen")]
 [assembly: AssemblyDescription("Luminosite 5-150 %, temperature de couleur, daltonisme et basse vision")]
-[assembly: AssemblyVersion("3.3.1.0")]
-[assembly: AssemblyFileVersion("3.3.1.0")]
+[assembly: AssemblyVersion("3.4.0.0")]
+[assembly: AssemblyFileVersion("3.4.0.0")]
 
 namespace OpusScreen
 {
@@ -23,9 +23,14 @@ namespace OpusScreen
         private static void Main(string[] args)
         {
             if (CommandLine.WantsHelp(args)) { CommandLine.ShowHelp(); return; }
+            if (Installer.WantsUninstall(args)) { Installer.Uninstall(); return; }
+
+            // --- une seule copie, a un seul endroit, et la plus recente : un lancement
+            //     depuis Telechargements s'installe ou s'efface devant la copie installee ---
+            if (Installer.HandleLaunch(args)) return;
 
             bool isNew;
-            _instanceLock = new Mutex(true, "OpusScreen_SingleInstance_9f2a", out isNew);
+            _instanceLock = new Mutex(true, Installer.MutexName, out isNew);
             if (!isNew) { HandOver(args); return; }
 
             // --- conscience du DPI : sans cela, sur un ecran a mise a l'echelle, le

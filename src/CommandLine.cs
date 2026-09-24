@@ -317,6 +317,7 @@ namespace OpusScreen
             sb.AppendLine("  OpusScreen.exe --reset              remet l'ecran a l'etat normal");
             sb.AppendLine("  OpusScreen.exe --show               ouvre la fenetre de reglages");
             sb.AppendLine("  OpusScreen.exe --minimized          demarre sans ouvrir la fenetre");
+            sb.AppendLine("  OpusScreen.exe --uninstall          desinstalle OpusScreen");
             sb.AppendLine();
             sb.AppendLine("Si OpusScreen tourne deja, l'ordre lui est transmis et prend effet");
             sb.AppendLine("immediatement. Sinon il s'applique au demarrage.");

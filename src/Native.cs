@@ -184,6 +184,12 @@ namespace OpusScreen
         /// </summary>
         public static readonly uint WM_OPUSSCREEN_SHOW = RegisterWindowMessage("OpusScreen.ShowPanel.9f2a");
 
+        /// <summary>
+        /// Message par lequel une version plus recente demande a l'instance en cours
+        /// de remettre l'ecran a l'etat normal et de sortir, pour prendre sa place.
+        /// </summary>
+        public static readonly uint WM_OPUSSCREEN_QUIT = RegisterWindowMessage("OpusScreen.Quit.9f2a");
+
         // ---------------------------------------------------------------- DXVA2 : retroeclairage physique (DDC/CI)
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]

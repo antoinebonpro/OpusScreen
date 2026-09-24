@@ -90,6 +90,20 @@ namespace OpusScreen
             SyncEnginesFromSettings();
             ApplyAll();
 
+            // Le menu vient de creer le premier controle du fil : le contexte qui permet
+            // aux verifications de mise a jour de revenir sur ce fil existe maintenant.
+            _ui = System.Threading.SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
+            _tray.BalloonTipClicked += OnBalloonClicked;
+            Updater.CheckRequested += OnCheckRequested;
+            Updater.LastStatus = _s.CheckUpdates
+                ? (_s.LastUpdateCheck == DateTime.MinValue ? "Premiere verification dans une minute." : "")
+                : "Verification desactivee.";
+
+            if (Updater.WasJustUpdated(args))
+                _tray.ShowBalloonTip(8000, "OpusScreen est a jour",
+                    "Version " + Installer.CurrentVersion.ToString(3) + " installee. Vos reglages sont conserves.",
+                    ToolTipIcon.Info);
+
             // Le panneau s'ouvre au tout premier lancement - sinon rien ne semble se
             // passer - puis seulement si l'utilisateur n'a pas demande le contraire.
             // --show passe outre : c'est une demande explicite de la fenetre.
@@ -173,6 +187,16 @@ namespace OpusScreen
             header.Font = Theme.BodyBold;
             menu.Items.Add(header);
             menu.Items.Add(new ToolStripSeparator());
+
+            if (_available != null)
+            {
+                ToolStripMenuItem upd = new ToolStripMenuItem("Installer la version " + _available.ShortVersion + "...");
+                upd.Font = Theme.BodyBold;
+                upd.ForeColor = Theme.Accent;
+                upd.Click += delegate { PromptUpdate(); };
+                menu.Items.Add(upd);
+                menu.Items.Add(new ToolStripSeparator());
+            }
 
             // --- modes ---
             ToolStripMenuItem modes = new ToolStripMenuItem("Modes");
@@ -734,6 +758,182 @@ namespace OpusScreen
 
             if (_panel != null && _panel.IsHandleCreated && _panel.Visible)
                 _panel.RefreshReadouts();
+
+            MaybeCheckForUpdates();
+        }
+
+        // ------------------------------------------------------------------ mises a jour
+
+        private System.Threading.SynchronizationContext _ui;
+        private readonly DateTime _startedAt = DateTime.UtcNow;
+        private DateTime _lastUpdateAttempt = DateTime.MinValue;
+        private bool _updateBusy;
+        private UpdateInfo _available;
+
+        /// <summary>
+        /// Verification quotidienne. Attend une minute apres le demarrage : a
+        /// l'ouverture de session, le reseau n'est souvent pas encore la, et
+        /// l'application a mieux a faire que de se renseigner sur elle-meme.
+        /// Un echec est retente une heure plus tard, pas a chaque battement.
+        /// </summary>
+        private void MaybeCheckForUpdates()
+        {
+            if (!_s.CheckUpdates || _updateBusy) return;
+            DateTime now = DateTime.UtcNow;
+            if (now - _startedAt < TimeSpan.FromMinutes(1)) return;
+            if (now - _s.LastUpdateCheck < TimeSpan.FromHours(24)) return;
+            if (now - _lastUpdateAttempt < TimeSpan.FromHours(1)) return;
+            CheckForUpdates(false);
+        }
+
+        private void OnCheckRequested(object sender, EventArgs e)
+        {
+            Post(delegate { CheckForUpdates(true); });
+        }
+
+        private void Post(MethodInvoker action)
+        {
+            if (_ui != null) _ui.Post(delegate { try { action(); } catch { } }, null);
+            else action();
+        }
+
+        /// <summary>
+        /// Interroge GitHub hors du fil de l'interface. Manuelle, la verification
+        /// repond dans tous les cas ; automatique, elle ne se manifeste que s'il y a
+        /// une nouvelle version.
+        /// </summary>
+        private void CheckForUpdates(bool manual)
+        {
+            if (_updateBusy) return;
+            _updateBusy = true;
+            _lastUpdateAttempt = DateTime.UtcNow;
+            Updater.LastStatus = "Verification en cours...";
+
+            System.Threading.Thread t = new System.Threading.Thread(delegate ()
+            {
+                UpdateInfo info = null;
+                string error = null;
+                try { info = Updater.Fetch(); }
+                catch (Exception ex) { error = ex.Message; }
+
+                Post(delegate
+                {
+                    _updateBusy = false;
+                    if (error != null)
+                    {
+                        Updater.LastStatus = "Derniere verification impossible : pas de reponse de GitHub.";
+                        if (manual)
+                            MessageBox.Show("GitHub n'a pas pu etre joint.\n\n" + error
+                                          + "\n\nVous pouvez verifier a la main : " + Updater.ReleasesPage,
+                                            "OpusScreen", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        RefreshPanelSoon();
+                        return;
+                    }
+
+                    _s.LastUpdateCheck = DateTime.UtcNow;
+                    _s.Save();
+
+                    if (Updater.IsNewer(info.Version, Installer.CurrentVersion))
+                    {
+                        _available = info;
+                        Updater.LastStatus = "Version " + info.ShortVersion + " disponible.";
+                        if (manual) PromptUpdate();
+                        else
+                        {
+                            _tray.ShowBalloonTip(15000, "OpusScreen " + info.ShortVersion + " est disponible",
+                                "Cliquez ici pour l'installer. Vos reglages sont conserves.", ToolTipIcon.Info);
+                        }
+                    }
+                    else
+                    {
+                        _available = null;
+                        Updater.LastStatus = "A jour. Verifie le " + DateTime.Now.ToString("d MMMM a HH:mm",
+                            System.Globalization.CultureInfo.GetCultureInfo("fr-FR")) + ".";
+                        if (manual)
+                            MessageBox.Show("Vous avez la derniere version d'OpusScreen ("
+                                          + Installer.CurrentVersion.ToString(3) + ").",
+                                            "OpusScreen", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    RefreshPanelSoon();
+                });
+            });
+            t.IsBackground = true;
+            t.Start();
+        }
+
+        private void RefreshPanelSoon()
+        {
+            if (_panel != null && _panel.IsHandleCreated && _panel.Visible) _panel.SyncAll();
+        }
+
+        private void OnBalloonClicked(object sender, EventArgs e)
+        {
+            if (_available != null) PromptUpdate();
+        }
+
+        /// <summary>
+        /// Rien ne s'installe sans accord : l'utilisateur est peut-etre au milieu d'une
+        /// presentation, et l'ecran va clignoter le temps du redemarrage.
+        /// </summary>
+        private void PromptUpdate()
+        {
+            UpdateInfo info = _available;
+            if (info == null || _updateBusy) return;
+
+            DialogResult r = MessageBox.Show(
+                "OpusScreen " + info.ShortVersion + " est disponible. Vous avez la version "
+              + Installer.CurrentVersion.ToString(3) + ".\n\n"
+              + "L'installer maintenant ? OpusScreen redemarrera en quelques secondes, "
+              + "avec tous vos reglages.\n\n"
+              + "Nouveautes : " + (info.PageUrl.Length > 0 ? info.PageUrl : Updater.ReleasesPage),
+                "Mise a jour d'OpusScreen", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+            if (r != DialogResult.Yes) return;
+
+            _updateBusy = true;
+            _tray.ShowBalloonTip(5000, "Mise a jour d'OpusScreen",
+                "Telechargement de la version " + info.ShortVersion + "...", ToolTipIcon.Info);
+
+            System.Threading.Thread t = new System.Threading.Thread(delegate ()
+            {
+                string file = null;
+                string error = null;
+                try { file = Updater.Download(info); }
+                catch (Exception ex) { error = ex.Message; }
+
+                Post(delegate
+                {
+                    if (error == null)
+                    {
+                        try
+                        {
+                            Updater.Apply(file);
+                            ExitCleanly();
+                            return;
+                        }
+                        catch (Exception ex) { error = ex.Message; }
+                    }
+
+                    _updateBusy = false;
+                    MessageBox.Show("La mise a jour n'a pas pu se faire :\n\n" + error
+                                  + "\n\nOpusScreen continue avec la version actuelle. Vous pouvez "
+                                  + "telecharger la nouvelle a la main : " + Updater.ReleasesPage,
+                                    "OpusScreen", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                });
+            });
+            t.IsBackground = true;
+            t.Start();
+        }
+
+        /// <summary>
+        /// Sortie demandee par une version plus recente. Differee d'un tour de boucle
+        /// pour ne pas detruire la fenetre qui recoit le message pendant qu'elle le traite.
+        /// </summary>
+        public void ExitSoon()
+        {
+            System.Windows.Forms.Timer once = new System.Windows.Forms.Timer();
+            once.Interval = 50;
+            once.Tick += delegate { once.Stop(); once.Dispose(); ExitCleanly(); };
+            once.Start();
         }
 
         // ------------------------------------------------------------------ raccourcis
@@ -969,6 +1169,7 @@ namespace OpusScreen
 
         public void ExitCleanly()
         {
+            Updater.CheckRequested -= OnCheckRequested;
             _slowTick.Stop();
             _fastTick.Stop();
             UnhookSystemEvents();
@@ -1017,6 +1218,14 @@ namespace OpusScreen
                 if (m.Msg == (int)Native.WM_OPUSSCREEN_SHOW && Native.WM_OPUSSCREEN_SHOW != 0)
                 {
                     try { _owner.ShowPanel(); } catch { }
+                    return;
+                }
+                if (m.Msg == (int)Native.WM_OPUSSCREEN_QUIT && Native.WM_OPUSSCREEN_QUIT != 0)
+                {
+                    // Une version plus recente prend la place : on rend l'ecran propre et
+                    // on s'en va. BeginInvoke sort de la pile du message avant de tout
+                    // detruire, cette fenetre comprise.
+                    try { _owner.ExitSoon(); } catch { }
                     return;
                 }
                 base.WndProc(ref m);

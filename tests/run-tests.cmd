@@ -6,7 +6,7 @@ REM  Compile chaque test avec les sources de l'application, puis l'execute.
 REM  Un seul echec fait echouer l'ensemble : ce script est le filtre a passer
 REM  avant toute mise en production.
 REM
-REM  Usage :  run-tests.cmd              les neuf tests automatiques
+REM  Usage :  run-tests.cmd              les dix tests automatiques
 REM           run-tests.cmd monitor      observation continue (Ctrl+C pour sortir)
 REM           run-tests.cmd singe [n]    singe en mode REEL : il emprunte la souris
 REM                                      et le clavier (n gestes, 400 par defaut).
@@ -55,10 +55,10 @@ if /I "%~1"=="planches" goto planches
 if /I "%~1"=="captures" goto captures
 if /I "%~1"=="singe-messages" goto singemessages
 
-REM =========================================================== 1/9
+REM =========================================================== 1/10
 echo.
 echo ============================================================
-echo  1/9  EngineTest  --  plan de luminosite, rampes, temperature, soleil
+echo  1/10  EngineTest  --  plan de luminosite, rampes, temperature, soleil
 echo ============================================================
 "%FW%\csc.exe" /nologo /target:exe /out:bin\EngineTest.exe %REFS% EngineTest.cs !SOURCES!
 if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
@@ -67,10 +67,10 @@ if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
     if errorlevel 1 set /a FAILED+=1
 )
 
-REM =========================================================== 2/9
+REM =========================================================== 2/10
 echo.
 echo ============================================================
-echo  2/9  MatrixTest  --  saturation, filtres, daltonisme
+echo  2/10  MatrixTest  --  saturation, filtres, daltonisme
 echo ============================================================
 "%FW%\csc.exe" /nologo /target:exe /out:bin\MatrixTest.exe %REFS% MatrixTest.cs !SOURCES!
 if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
@@ -79,10 +79,10 @@ if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
     if errorlevel 1 set /a FAILED+=1
 )
 
-REM =========================================================== 3/9
+REM =========================================================== 3/10
 echo.
 echo ============================================================
-echo  3/9  SafetyTest  --  restauration, bornes, configuration, contrastes
+echo  3/10  SafetyTest  --  restauration, bornes, configuration, contrastes
 echo ============================================================
 "%FW%\csc.exe" /nologo /target:exe /out:bin\SafetyTest.exe %REFS% SafetyTest.cs !SOURCES!
 if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
@@ -91,10 +91,10 @@ if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
     if errorlevel 1 set /a FAILED+=1
 )
 
-REM =========================================================== 4/9
+REM =========================================================== 4/10
 echo.
 echo ============================================================
-echo  4/9  DpstTest  --  detection DPST et LACE du pilote Intel
+echo  4/10  DpstTest  --  detection DPST et LACE du pilote Intel
 echo ============================================================
 "%FW%\csc.exe" /nologo /target:exe /out:bin\DpstTest.exe %REFS% DpstTest.cs !SOURCES!
 if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
@@ -103,10 +103,10 @@ if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
     if errorlevel 1 set /a FAILED+=1
 )
 
-REM =========================================================== 5/9
+REM =========================================================== 5/10
 echo.
 echo ============================================================
-echo  5/9  TaskbarTest  --  icone, raccourci et liste de taches
+echo  5/10  TaskbarTest  --  icone, raccourci et liste de taches
 echo ============================================================
 "%FW%\csc.exe" /nologo /target:exe /out:bin\TaskbarTest.exe %REFS% TaskbarTest.cs !SOURCES!
 if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
@@ -115,10 +115,10 @@ if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
     if errorlevel 1 set /a FAILED+=1
 )
 
-REM =========================================================== 6/9
+REM =========================================================== 6/10
 echo.
 echo ============================================================
-echo  6/9  VisionTest  --  daltonisme, basse vision, identifiants d'ecran
+echo  6/10  VisionTest  --  daltonisme, basse vision, identifiants d'ecran
 echo ============================================================
 "%FW%\csc.exe" /nologo /target:exe /out:bin\VisionTest.exe %REFS% VisionTest.cs !SOURCES!
 if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
@@ -127,10 +127,10 @@ if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
     if errorlevel 1 set /a FAILED+=1
 )
 
-REM =========================================================== 7/9
+REM =========================================================== 7/10
 echo.
 echo ============================================================
-echo  7/9  UiTest  --  clics, molette, defilement, ecrans, daltonisme
+echo  7/10  UiTest  --  clics, molette, defilement, ecrans, daltonisme
 echo ============================================================
 "%FW%\csc.exe" /nologo /target:exe /out:bin\UiTest.exe %REFS% UiTest.cs UiHarness.cs !SOURCES!
 if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
@@ -139,13 +139,13 @@ if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
     if errorlevel 1 set /a FAILED+=1
 )
 
-REM =========================================================== 8/9
+REM =========================================================== 8/10
 REM  Le singe, en mode messages : des milliers de gestes au hasard, invariants
 REM  verifies apres chacun. Graine fixe ici pour qu'un echec se rejoue a l'identique ;
 REM  "run-tests.cmd singe-messages" explore avec une graine nouvelle a chaque fois.
 echo.
 echo ============================================================
-echo  8/9  MonkeyTest  --  3000 gestes au hasard, invariants apres chacun
+echo  8/10  MonkeyTest  --  3000 gestes au hasard, invariants apres chacun
 echo ============================================================
 "%FW%\csc.exe" /nologo /target:exe /out:bin\MonkeyTest.exe %REFS% MonkeyTest.cs UiHarness.cs !SOURCES!
 if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
@@ -154,13 +154,13 @@ if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
     if errorlevel 1 set /a FAILED+=1
 )
 
-REM =========================================================== 9/9
+REM =========================================================== 9/10
 REM  La mise a l echelle : la fenetre est montee a cinq densites d ecran et
 REM  chaque texte est mesure dans sa boite. Une utilisatrice sur un portable a
 REM  200 % ne lisait plus rien, et aucune suite ne regardait ailleurs qu a 96 ppp.
 echo.
 echo ============================================================
-echo  9/9  ScaleTest  --  lisibilite a 100, 125, 150, 175 et 200 %%
+echo  9/10  ScaleTest  --  lisibilite a 100, 125, 150, 175 et 200 %%
 echo ============================================================
 "%FW%\csc.exe" /nologo /target:exe /out:bin\ScaleTest.exe %REFS% ScaleTest.cs UiHarness.cs !SOURCES!
 if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
@@ -169,12 +169,26 @@ if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
     if errorlevel 1 set /a FAILED+=1
 )
 
-REM =========================================================== bilan
+REM =========================================================== 10/10
+REM  Installation et mises a jour : une seule copie, a un seul endroit, et la
+REM  plus recente. Une ancienne version lancee au demarrage de Windows faisait
+REM  croire a l utilisateur que la nouvelle n avait rien corrige.
 echo.
 echo ============================================================
-echo   Tests executes : !RAN! / 9
+echo  10/10  UpdateTest  --  installation, versions, reponse de GitHub
+echo ============================================================
+"%FW%\csc.exe" /nologo /target:exe /out:bin\UpdateTest.exe %REFS% UpdateTest.cs !SOURCES!
+if errorlevel 1 (echo   *** ECHEC DE COMPILATION *** & set /a FAILED+=1) else (
+    set /a RAN+=1
+    bin\UpdateTest.exe
+    if errorlevel 1 set /a FAILED+=1
+)
+
+REM =========================================================== bilanecho.
+echo ============================================================
+echo   Tests executes : !RAN! / 10
 echo   Echecs         : !FAILED!
-if !RAN! NEQ 9 (
+if !RAN! NEQ 10 (
     echo   RESULTAT : INCOMPLET - un test n'a pas ete execute
     echo ============================================================
     exit /b 1

@@ -58,7 +58,9 @@ changement qu'il faut revoir, pas le test.
   lisible, quoi qu'on règle.
 - **L'écran redevient normal après un plantage.** Une table de couleurs modifiée survit à
   la mort du processus : c'est pour cela qu'un témoin est écrit sur le disque.
-- **Rien ne sort de la machine.** Aucun appel réseau, aucune télémétrie, aucun compte.
+- **Rien ne sort de la machine.** Aucune télémétrie, aucun compte. Le seul appel réseau
+  est la lecture quotidienne du numéro de la dernière version chez GitHub
+  (`src/Updater.cs`), désactivable : n'en ajoutez pas d'autre.
 - **Chaque contrôle dessiné à la main s'annonce** avec son rôle, son nom et son état : une
   application d'accessibilité ne peut pas être elle-même inaccessible.
 - **Le vocabulaire du daltonisme reste celui d'un réglage**, jamais celui d'un diagnostic.

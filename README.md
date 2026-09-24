@@ -81,9 +81,24 @@ commande : `tests\run-tests.cmd captures`.
 
 **[OpusScreen.exe — dernière version](https://github.com/antoinebonpro/OpusScreen/releases/latest/download/OpusScreen.exe)**
 
-Un seul fichier, rien à installer : il s'appuie sur le .NET Framework 4, présent sur
-toute installation de Windows depuis Windows 7. Posez-le où vous voulez et
-double-cliquez.
+Un seul fichier, qui s'appuie sur le .NET Framework 4, présent sur toute installation
+de Windows depuis Windows 7. Double-cliquez-le, où que le navigateur l'ait posé.
+
+> 📦 **Il se range tout seul.** Au premier lancement, OpusScreen se copie dans
+> `%LOCALAPPDATA%\Programs\OpusScreen\`, sans droits administrateur, crée son raccourci
+> dans le menu Démarrer et s'inscrit dans *Applications installées*, d'où il se
+> désinstalle. Le fichier téléchargé peut ensuite être supprimé.
+>
+> Une seule copie tourne, et c'est la plus récente : une version plus récente lancée
+> depuis n'importe où ferme l'ancienne et prend sa place ; une version plus ancienne,
+> oubliée dans Téléchargements, s'efface devant celle qui est installée.
+
+> 🔄 **Mises à jour.** Une fois par jour, OpusScreen demande à GitHub le numéro de la
+> dernière version publiée — c'est sa seule connexion, et rien d'autre n'est envoyé.
+> Quand une version plus récente existe, il la propose ; rien ne s'installe sans votre
+> accord. Le fichier téléchargé est vérifié (taille, empreinte SHA-256 publiée par
+> GitHub, numéro de version) avant de remplacer l'ancien. La vérification se coupe
+> dans l'onglet **Avancé**.
 
 > 🛡️ **Windows affichera un avertissement au premier lancement.** Le binaire n'est pas
 > signé par un certificat commercial — ceux-ci se louent quelques centaines d'euros par
@@ -97,8 +112,8 @@ double-cliquez.
 > récentes derrière le chevron `^` — l'onglet **Découvrir**, ouvert au premier
 > lancement, explique comment l'en sortir et l'épingler.
 
-Version 3.3.1 précisément : [OpusScreen.exe 3.3.1](https://github.com/antoinebonpro/OpusScreen/releases/download/v3.3.1/OpusScreen.exe)
-· [notes de version](https://github.com/antoinebonpro/OpusScreen/releases/tag/v3.3.1).
+Version 3.4.0 précisément : [OpusScreen.exe 3.4.0](https://github.com/antoinebonpro/OpusScreen/releases/download/v3.4.0/OpusScreen.exe)
+· [notes de version](https://github.com/antoinebonpro/OpusScreen/releases/tag/v3.4.0).
 Toutes les versions : [page des publications](https://github.com/antoinebonpro/OpusScreen/releases).
 
 ## 🔨 Compiler soi-même
@@ -159,6 +174,7 @@ OpusScreen.exe --magnifier 2.5            # loupe, 1 à 8 (1 = éteinte)
 OpusScreen.exe --beacon on
 OpusScreen.exe --show                     # ouvre les réglages
 OpusScreen.exe --reset
+OpusScreen.exe --uninstall                # désinstalle (réglages gardés ou non, au choix)
 ```
 
 ---

@@ -331,6 +331,16 @@ namespace OpusScreen
         public bool WarnedAboutClamp;
         public bool ShowTrayPercentage = true;
 
+        // ---------------- mises a jour ----------------
+        /// <summary>
+        /// Demande une fois par jour a GitHub le numero de la derniere version. Active
+        /// par defaut : c'est ce qui garantit qu'on ne reste pas sur une version
+        /// corrigee depuis longtemps sans le savoir.
+        /// </summary>
+        public bool CheckUpdates = true;
+        /// <summary>Derniere verification reussie, en temps universel.</summary>
+        public DateTime LastUpdateCheck = DateTime.MinValue;
+
         /// <summary>
         /// Peuple des l'instanciation, et non au chargement : une remise a zero ou un
         /// import partiel laisserait sinon l'utilisateur sans aucun raccourci.
@@ -631,6 +641,15 @@ namespace OpusScreen
                 case "ignoreConflicts": IgnoreConflicts = val == "1"; break;
                 case "warnedAboutClamp": WarnedAboutClamp = val == "1"; break;
                 case "trayPercent": ShowTrayPercentage = val == "1"; break;
+                case "checkUpdates": CheckUpdates = val == "1"; break;
+                case "lastUpdateCheck":
+                    {
+                        long ticks;
+                        if (long.TryParse(val, NumberStyles.Integer, CultureInfo.InvariantCulture, out ticks)
+                            && ticks >= DateTime.MinValue.Ticks && ticks <= DateTime.MaxValue.Ticks)
+                            LastUpdateCheck = new DateTime(ticks, DateTimeKind.Utc);
+                    }
+                    break;
                 case "hotkey":
                     // Le premier raccourci lu remplace les valeurs par defaut plutot
                     // que de s'y ajouter, sinon chaque action serait liee deux fois.
@@ -744,6 +763,8 @@ namespace OpusScreen
             sb.AppendLine("ignoreConflicts=" + B(IgnoreConflicts));
             sb.AppendLine("warnedAboutClamp=" + B(WarnedAboutClamp));
             sb.AppendLine("trayPercent=" + B(ShowTrayPercentage));
+            sb.AppendLine("checkUpdates=" + B(CheckUpdates));
+            sb.AppendLine("lastUpdateCheck=" + LastUpdateCheck.Ticks.ToString(inv));
             foreach (HotkeyBinding h in Hotkeys) sb.AppendLine("hotkey=" + h.Serialize());
             return sb.ToString();
         }
