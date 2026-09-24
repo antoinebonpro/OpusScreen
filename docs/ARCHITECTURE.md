@@ -244,6 +244,8 @@ src/
 │
 ├── AppIcon.cs              icône de l'application, embarquée dans l'exécutable
 ├── Taskbar.cs              raccourci du menu Démarrer, liste de tâches épinglée
+├── Installer.cs            copie unique dans %LOCALAPPDATA%\Programs, désinstallation
+├── Updater.cs              vérification quotidienne chez GitHub, téléchargement contrôlé
 │
 ├── TrayApp.cs              cycle de vie, événements système, raccourcis
 ├── CommandLine.cs          pilotage en ligne de commande

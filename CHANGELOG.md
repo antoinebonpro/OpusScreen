@@ -4,6 +4,49 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ---
 
+## [3.4.0] - 2026-09-24
+
+Une seule copie, a un seul endroit, et c'est la plus recente.
+
+### Corrige
+
+- **Une nouvelle version pouvait sembler n'avoir rien corrige.** OpusScreen ne tourne
+  qu'en un exemplaire : un second lancement passait la main a celui qui tournait deja,
+  quelle que soit sa version. Une ancienne copie lancee au demarrage de Windows - depuis
+  Telechargements, sous le nom OpusScreen(1).exe - accueillait donc la nouvelle en
+  ouvrant sa propre fenetre, et l'utilisateur cherchait en vain l'onglet Daltonisme dans
+  une 3.0.
+
+### Ajoute
+
+- **Installation automatique, sans droits administrateur.** Au premier lancement,
+  l'executable se copie dans `%LOCALAPPDATA%\Programs\OpusScreen\`, y fait pointer le
+  demarrage automatique et le raccourci du menu Demarrer, et s'inscrit dans
+  *Applications installees*. Lance depuis ailleurs :
+  - plus recent que la copie installee, il ferme l'instance en cours et la remplace ;
+  - pas plus recent, il ouvre la copie installee et s'efface.
+
+  L'instance en cours est fermee proprement par un message dedie, et l'ecran remis a
+  l'etat normal. Les versions anterieures, qui ne connaissent pas ce message, sont
+  arretees apres quatre secondes ; leur ecran est restaure par la suivante.
+
+- **Mises a jour proposees.** Une fois par jour, OpusScreen demande a GitHub le numero
+  de la derniere version - sa seule connexion, anonyme, et desactivable dans l'onglet
+  Avance. Une version plus recente est annoncee par une bulle et dans le menu de
+  l'icone ; rien ne s'installe sans accord. Le fichier telecharge est controle avant de
+  remplacer l'ancien : taille, empreinte SHA-256 publiee par GitHub, description et
+  numero de version inscrits dans l'executable. En cas d'echec a n'importe quelle
+  etape, l'ancienne version reste en place.
+
+- **Desinstallation** depuis *Applications installees* ou par `OpusScreen.exe --uninstall` :
+  ecran remis a l'etat normal, demarrage automatique, raccourci et dossier retires ;
+  les reglages ne partent que si on le demande.
+
+- **UpdateTest**, dixieme suite de tests : decision au lancement, lecture de la reponse
+  de GitHub, comparaison des versions et controle du fichier telecharge.
+
+---
+
 ## [3.3.1] - 2026-09-23
 
 Lisible sur les ecrans a forte densite - c'est-a-dire sur la plupart des portables.

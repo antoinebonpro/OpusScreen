@@ -260,8 +260,8 @@ namespace OpusScreen
     {
         private ToggleRow _hardware, _overlay, _matrix, _smooth;
         private SliderRow _speed;
-        private ToggleRow _startup, _startMin, _trayPercent, _conflicts, _darkConfirm;
-        private Label _diag, _dpstNote;
+        private ToggleRow _startup, _startMin, _trayPercent, _conflicts, _darkConfirm, _updates;
+        private Label _diag, _dpstNote, _updateNote;
         private DarkButton _dpstButton;
 
         public override string Title { get { return "Avance"; } }
@@ -340,6 +340,30 @@ namespace OpusScreen
 
             Note("Un clic sur l'icone epinglee ouvre cette fenetre ; un clic droit donne "
                + "les reglages, la suspension et les modes principaux, sans rien ouvrir.");
+
+            Section("Mises a jour");
+
+            _updates = new ToggleRow("Verifier les mises a jour",
+                "Une fois par jour. Rien ne s'installe sans votre accord.");
+            _updates.Changed += delegate
+            {
+                S.CheckUpdates = _updates.Checked;
+                Updater.LastStatus = S.CheckUpdates ? "" : "Verification desactivee.";
+                Commit();
+                Sync();
+            };
+            Add(_updates, Theme.SpaceSm);
+
+            DarkButton checkNow = new DarkButton();
+            checkNow.Text = "Verifier maintenant";
+            checkNow.Height = Theme.MinTarget;
+            checkNow.Click += delegate { Updater.RequestCheck(); };
+            Add(checkNow, Theme.SpaceSm);
+
+            Note("C'est la seule connexion d'OpusScreen : elle demande a GitHub le numero de la "
+               + "derniere version publiee, et rien d'autre n'est envoye.");
+
+            _updateNote = Note("Version installee : " + Installer.CurrentVersion.ToString(3) + ".");
 
             Section("Configuration");
 
@@ -614,6 +638,10 @@ namespace OpusScreen
                 _trayPercent.SetCheckedSilent(S.ShowTrayPercentage);
                 _darkConfirm.SetCheckedSilent(!S.SkipDarkConfirm);
                 _conflicts.SetCheckedSilent(!S.IgnoreConflicts);
+                _updates.SetCheckedSilent(S.CheckUpdates);
+                _updateNote.Text = "Version installee : " + Installer.CurrentVersion.ToString(3)
+                                 + (Updater.LastStatus.Length > 0 ? ". " + Updater.LastStatus : ".")
+                                 + "\nEmplacement : " + Taskbar.ExecutablePath;
 
                 List<string> lines = new List<string>();
                 lines.Add("Ecrans detectes            : " + Display.Monitors.Count);
