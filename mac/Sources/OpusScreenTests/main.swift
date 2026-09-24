@@ -19,6 +19,7 @@ let live = Swift.CommandLine.arguments.contains("--live")
 
 if Swift.CommandLine.arguments.contains("--probe") { Probe.run(); Probe.measure(); exit(0) }
 if Swift.CommandLine.arguments.contains("--gamma") { Probe.gamma(); exit(0) }
+if Swift.CommandLine.arguments.contains("--update-check") { Probe.updateCheck(); exit(0) }
 
 // Pose une table sombre puis meurt sans rien rendre. Sert a un seul test, qui
 // constate ce que macOS fait d'une table dont le proprietaire disparait - la

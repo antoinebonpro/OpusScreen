@@ -240,7 +240,15 @@ En plus des suites, le binaire de test sait **montrer** :
 swift run OpusScreenTests --probe            # noms de couleurs, mesures de texte
 swift run OpusScreenTests --render           # dessine les 11 pages dans des PNG
 swift run OpusScreenTests --render --tall    # pages entières, sans défilement
+swift run OpusScreenTests --gamma            # le point blanc réellement affiché
+swift run OpusScreenTests --update-check     # ce que GitHub répond, aujourd'hui
 ```
+
+`--update-check` pose au vrai serveur la question que l'application pose chaque jour, et
+montre la réponse sans rien télécharger. Les tests vérifient la *lecture* d'une réponse
+écrite à la main ; ils ne peuvent pas dire si la publication existe, si le nom du paquet
+est le bon, ni si la ligne macOS a bien été séparée de celle de Windows. Cette sonde le
+dit.
 
 `--render` dessine l'interface **hors écran**, par `cacheDisplay(in:to:)`. Une interface
 entièrement peinte à la main ne se vérifie pas en lisant le code : il faut la regarder. La

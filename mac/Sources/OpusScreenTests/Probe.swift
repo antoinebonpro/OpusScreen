@@ -26,6 +26,34 @@ enum Probe {
         }
     }
 
+    /// Ce que GitHub repond vraiment, aujourd'hui, a la question posee par
+    /// l'application.
+    ///
+    /// Les tests verifient la LECTURE d'une reponse ecrite a la main. Ils ne
+    /// peuvent pas dire si la publication existe, si le nom du paquet est le bon,
+    /// ni si la ligne macOS a ete separee de celle de Windows comme prevu. Cette
+    /// sonde pose la question au vrai serveur, et montre la reponse. Elle ne
+    /// telecharge rien et n'installe rien.
+    static func updateCheck() {
+        print("-- interrogation de GitHub --")
+        print("   ", Updater.apiUrl)
+        do {
+            let info = try Updater.fetch()
+            print("    publication : \(info.tag)  (\(info.title))")
+            print("    version lue : \(info.shortVersion)")
+            print("    paquet      : \(info.downloadUrl)")
+            print("    taille      : \(info.size) o")
+            print("    empreinte   : \(info.sha256)")
+            let mienne = Installer.currentVersion.map(String.init).joined(separator: ".")
+            print("    installee   : \(mienne)")
+            print(Updater.isNewer(info.version, Installer.currentVersion)
+                  ? "    => une version plus recente est proposee"
+                  : "    => rien de plus recent : aucune proposition")
+        } catch {
+            print("    echec : \(error.localizedDescription)")
+        }
+    }
+
     /// Dessine chaque page dans un PNG. Rend le dossier utilise.
     static func render(into folder: String) {
         // AppKit exige une application, meme pour peindre hors ecran. Celle-ci
