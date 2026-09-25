@@ -73,6 +73,25 @@
   </div>
   <p class="sous-bouton" id="release-meta">Version 3.4 · Windows 7 to 11 — version 1.0 · macOS 13 and later</p>
 
+  <details class="note-secu" id="note-secu">
+    <summary><span class="note-secu-titre">Windows and macOS will both warn you the first time.</span><span class="note-secu-plus">what to do</span></summary>
+    <div class="note-secu-corps">
+      <p><strong>Why.</strong> The software is countersigned by no commercial certificate: a few hundred euros a year on Windows, ninety-nine euros a year on Apple’s side. So neither system is saying it found something — it is saying it <em>could not check</em>. The SHA-256 of every file is published next to it, so you can verify for yourself what you are opening.</p>
+      <div id="note-secu-win">
+        <h4>Windows — “Windows protected your PC”</h4>
+        <p><em>More info</em> → <em>Run anyway</em>.</p>
+      </div>
+      <div id="note-secu-mac">
+        <h4>macOS — “Apple could not verify this file is free of malware”</h4>
+        <p><strong>macOS 15 and later</strong>, including macOS 26: dismiss the dialog, then <em>System Settings</em> → <em>Privacy &amp; Security</em> → scroll to the <em>Security</em> section, where a line names the file → <em>Open Anyway</em>.</p>
+        <p><strong>macOS 13 and 14</strong>: right-click the file → <em>Open</em>. Apple removed that shortcut from macOS 15 onwards; an instruction still recommending it sends you looking for a button that no longer exists.</p>
+        <p>Or, in one command:</p>
+        <code>xattr -d com.apple.quarantine ~/Downloads/OpusScreen-1.0.0.dmg</code>
+        <p style="margin-top:12px"><strong>The message comes back with every fresh download</strong>, and that is expected: the quarantine mark is put on the file you received, not on the installed application. Once OpusScreen sits in <em>Applications</em>, it no longer appears.</p>
+      </div>
+    </div>
+  </details>
+
   <ul class="rassurance">
     <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5"/></svg> No admin rights</li>
     <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5"/></svg> No account</li>
