@@ -80,11 +80,22 @@ Installer les outils si besoin : `xcode-select --install`.
 > n'est enregistré, rien ne sort de la machine. **La luminosité et la température
 > fonctionnent sans cette autorisation** — l'application le dit et continue.
 
-> 🛡️ **macOS affichera un avertissement au premier lancement** si vous récupérez un paquet
-> tout fait : il n'est pas signé par un certificat de développeur, qui se loue quatre-vingt-dix-neuf
-> euros par an. Clic droit sur l'application → *Ouvrir*, puis *Ouvrir* dans la boîte qui suit ;
-> une seule fois. Si vous préférez ne pas faire confiance à un binaire, `./build.sh` compile
-> le vôtre en une commande.
+> 🛡️ **macOS refuse d'ouvrir le fichier téléchargé** — « Apple n'a pas pu confirmer que
+> « OpusScreen-1.0.0.dmg » ne contenait pas de logiciel malveillant ». Le paquet n'est pas
+> *notarié* : la notarisation passe par un compte de développeur Apple, quatre-vingt-dix-neuf
+> euros par an. Trois façons d'en sortir :
+>
+> - **macOS 15 et suivants** (dont macOS 26) : fermez la boîte, puis **Réglages Système →
+>   Confidentialité et sécurité**, descendez jusqu'à la section *Sécurité* — une ligne cite le
+>   fichier bloqué — et cliquez **« Ouvrir quand même »**. Depuis macOS 15, le clic droit →
+>   *Ouvrir* ne suffit plus pour ce cas.
+> - **macOS 13 et 14** : clic droit sur le fichier → *Ouvrir*, puis *Ouvrir* dans la boîte.
+> - **En une commande**, quelle que soit la version :
+>   `xattr -d com.apple.quarantine ~/Downloads/OpusScreen-1.0.0.dmg`
+>
+> Si l'application redemande la même chose au premier lancement, refaites le même geste pour
+> elle. Et si vous préférez ne pas faire confiance à un binaire, `./build.sh` compile le
+> vôtre : construit sur place, il n'est jamais mis en quarantaine.
 
 ## ⚖️ Ce qu'il fait
 

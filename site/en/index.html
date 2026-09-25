@@ -303,8 +303,8 @@
         <p>Yes, since version 1.0: a complete port, feature by feature, written against the macOS APIs. macOS 13 (Ventura) or later, Apple Silicon and Intel alike. Two differences, stated rather than hidden: saturation, colour-blindness filters and the magnifier need the Screen Recording permission — without it, brightness and temperature still work; and the pointer is not recoloured, because macOS draws it above every window. In exchange, the colour matrix is set per display there, which Windows does not allow. The settings file is the same on both sides: a configuration exported from a PC imports on the Mac as is.</p>
       </details>
       <details>
-        <summary>macOS refuses to open the application.</summary>
-        <p>Open the disk image you downloaded and drag OpusScreen into Applications — the window shows the gesture. Then, the very first time only: right-click the application, choose Open, and Open again in the dialog that follows. macOS says it cannot verify the developer for the same reason SmartScreen complains on Windows: the bundle is not signed with an Apple certificate, which costs ninety-nine euros a year.</p>
+        <summary>macOS refuses to open the downloaded file.</summary>
+        <p>“Apple could not verify this file is free of malware”: macOS puts it badly — it found nothing, it could not check. The bundle is not notarised, which requires a paid Apple developer account at ninety-nine euros a year, the same reason SmartScreen complains on Windows. On macOS 15 and later, including macOS 26: dismiss the dialog, open System Settings → Privacy & Security, scroll to the Security section where a line names the blocked file, and click “Open Anyway”. On macOS 13 and 14, right-clicking the file and choosing Open is enough — Apple removed that shortcut from macOS 15 onwards. Then: open the image, drag OpusScreen into Applications, the window shows the gesture; the same step may be needed once more for the application itself. The repository also compiles with a single command, if you would rather not trust a binary.</p>
       </details>
       <details>
         <summary>How is this different from f.lux or Night light?</summary>
@@ -451,10 +451,10 @@
 },
   {
  "@type": "Question",
- "name": "macOS refuses to open the application.",
+ "name": "macOS refuses to open the downloaded file.",
  "acceptedAnswer": {
   "@type": "Answer",
-  "text": "Open the disk image you downloaded and drag OpusScreen into Applications — the window shows the gesture. Then, the very first time only: right-click the application, choose Open, and Open again in the dialog that follows. macOS says it cannot verify the developer for the same reason SmartScreen complains on Windows: the bundle is not signed with an Apple certificate, which costs ninety-nine euros a year."
+  "text": "“Apple could not verify this file is free of malware”: macOS puts it badly — it found nothing, it could not check. The bundle is not notarised, which requires a paid Apple developer account at ninety-nine euros a year, the same reason SmartScreen complains on Windows. On macOS 15 and later, including macOS 26: dismiss the dialog, open System Settings → Privacy & Security, scroll to the Security section where a line names the blocked file, and click “Open Anyway”. On macOS 13 and 14, right-clicking the file and choosing Open is enough — Apple removed that shortcut from macOS 15 onwards. Then: open the image, drag OpusScreen into Applications, the window shows the gesture; the same step may be needed once more for the application itself. The repository also compiles with a single command, if you would rather not trust a binary."
  }
 },
   {

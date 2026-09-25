@@ -131,10 +131,22 @@ réglages, le test de daltonisme, la loupe, les quinze raccourcis, la ligne de c
 le fichier de configuration reste **le même**, clef par clef : une configuration exportée
 depuis un PC s'importe sur le Mac telle quelle.
 
-> 🛡️ **macOS dira « impossible de vérifier le développeur » au premier lancement**, pour la
-> même raison que SmartScreen côté Windows : le paquet n'est pas signé par un certificat
-> Apple, qui se loue quatre-vingt-dix-neuf euros par an. **Clic droit sur l'application →
-> Ouvrir**, puis *Ouvrir* dans la boîte qui suit. Une seule fois.
+> 🛡️ **macOS refuse d'ouvrir le fichier téléchargé** — « Apple n'a pas pu confirmer que
+> « OpusScreen-1.0.0.dmg » ne contenait pas de logiciel malveillant ». Le paquet n'est pas
+> *notarié* : la notarisation passe par un compte de développeur Apple, quatre-vingt-dix-neuf
+> euros par an. Trois façons d'en sortir :
+>
+> - **macOS 15 et suivants** (dont macOS 26) : fermez la boîte, puis **Réglages Système →
+>   Confidentialité et sécurité**, descendez jusqu'à la section *Sécurité* — une ligne cite le
+>   fichier bloqué — et cliquez **« Ouvrir quand même »**. Depuis macOS 15, le clic droit →
+>   *Ouvrir* ne suffit plus pour ce cas.
+> - **macOS 13 et 14** : clic droit sur le fichier → *Ouvrir*, puis *Ouvrir* dans la boîte.
+> - **En une commande**, quelle que soit la version :
+>   `xattr -d com.apple.quarantine ~/Downloads/OpusScreen-1.0.0.dmg`
+>
+> Si l'application redemande la même chose au premier lancement, refaites le même geste pour
+> elle. Et si vous préférez ne pas faire confiance à un binaire, `cd mac && ./build.sh` compile
+> le vôtre : construit sur place, il n'est jamais mis en quarantaine.
 
 > 🎥 **Deux autorisations, demandées quand elles servent.** *Enregistrement de l'écran* pour
 > la saturation, les filtres de daltonisme et la loupe — sans elle, la luminosité et la
