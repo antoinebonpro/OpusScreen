@@ -303,8 +303,8 @@
         <p>Oui, depuis la version 1.0 : un portage intégral, fonction par fonction, écrit sur les API de macOS. macOS 13 (Ventura) ou plus récent, Apple Silicon comme Intel. Deux différences, dites plutôt que masquées : la saturation, les filtres de daltonisme et la loupe demandent l’autorisation « Enregistrement de l’écran » — sans elle, la luminosité et la température fonctionnent quand même ; et le pointeur n’est pas recoloré, car macOS le dessine au-dessus de toutes les fenêtres. En échange, la matrice de couleur s’y règle écran par écran, ce que Windows ne permet pas. Le fichier de réglages est le même des deux côtés : une configuration exportée depuis un PC s’importe sur le Mac telle quelle.</p>
       </details>
       <details>
-        <summary>macOS refuse d’ouvrir l’application.</summary>
-        <p>Ouvrez l’image disque téléchargée, glissez OpusScreen dans Applications — la fenêtre montre le geste. Puis, la toute première fois seulement : clic droit sur l’application, Ouvrir, et Ouvrir à nouveau dans la boîte qui suit. macOS dit « impossible de vérifier le développeur » pour la même raison que SmartScreen râle côté Windows : le paquet n’est pas signé par un certificat Apple, qui se loue quatre-vingt-dix-neuf euros par an.</p>
+        <summary>macOS refuse d’ouvrir le fichier téléchargé.</summary>
+        <p>« Apple n’a pas pu confirmer que ce fichier ne contenait pas de logiciel malveillant » : macOS le dit mal, il n’a rien trouvé — il n’a rien pu vérifier. Le paquet n’est pas notarié, ce qui demande un compte de développeur Apple à quatre-vingt-dix-neuf euros par an, la même raison qui fait râler SmartScreen côté Windows. Sur macOS 15 et suivants, dont macOS 26 : fermez la boîte, puis Réglages Système → Confidentialité et sécurité, descendez jusqu’à la section Sécurité où une ligne cite le fichier bloqué, et cliquez « Ouvrir quand même ». Sur macOS 13 et 14, le clic droit sur le fichier puis Ouvrir suffit — Apple a retiré ce raccourci à partir de macOS 15. Ensuite : ouvrez l’image, glissez OpusScreen dans Applications, la fenêtre montre le geste ; le même geste peut être à refaire une fois pour l’application elle-même. Le dépôt se compile aussi en une commande, si vous préférez ne pas faire confiance à un binaire.</p>
       </details>
       <details>
         <summary>Quelle différence avec f.lux ou l’éclairage nocturne ?</summary>
@@ -452,10 +452,10 @@
 },
   {
  "@type": "Question",
- "name": "macOS refuse d’ouvrir l’application.",
+ "name": "macOS refuse d’ouvrir le fichier téléchargé.",
  "acceptedAnswer": {
   "@type": "Answer",
-  "text": "Ouvrez l’image disque téléchargée, glissez OpusScreen dans Applications — la fenêtre montre le geste. Puis, la toute première fois seulement : clic droit sur l’application, Ouvrir, et Ouvrir à nouveau dans la boîte qui suit. macOS dit « impossible de vérifier le développeur » pour la même raison que SmartScreen râle côté Windows : le paquet n’est pas signé par un certificat Apple, qui se loue quatre-vingt-dix-neuf euros par an."
+  "text": "« Apple n’a pas pu confirmer que ce fichier ne contenait pas de logiciel malveillant » : macOS le dit mal, il n’a rien trouvé — il n’a rien pu vérifier. Le paquet n’est pas notarié, ce qui demande un compte de développeur Apple à quatre-vingt-dix-neuf euros par an, la même raison qui fait râler SmartScreen côté Windows. Sur macOS 15 et suivants, dont macOS 26 : fermez la boîte, puis Réglages Système → Confidentialité et sécurité, descendez jusqu’à la section Sécurité où une ligne cite le fichier bloqué, et cliquez « Ouvrir quand même ». Sur macOS 13 et 14, le clic droit sur le fichier puis Ouvrir suffit — Apple a retiré ce raccourci à partir de macOS 15. Ensuite : ouvrez l’image, glissez OpusScreen dans Applications, la fenêtre montre le geste ; le même geste peut être à refaire une fois pour l’application elle-même. Le dépôt se compile aussi en une commande, si vous préférez ne pas faire confiance à un binaire."
  }
 },
   {
