@@ -394,6 +394,28 @@
     });
     var barre = document.getElementById('dl-barre');
     if (barre) barre.href = document.getElementById('dl-mac').href;
+
+    // L'avertissement de telechargement : sur un Mac il est OUVERT d'emblee.
+    //
+    // Ce n'est pas une insistance : c'est le seul evenement certain de la
+    // visite. Quiconque telecharge verra « Apple n'a pas pu confirmer que ce
+    // fichier ne contenait pas de logiciel malveillant », et le lira comme une
+    // accusation. Le laisser replie revient a faire decouvrir cette phrase
+    // seul, apres coup, devant la boite de dialogue.
+    var note = document.getElementById('note-secu');
+    if (note) {
+      var titre = note.querySelector('.note-secu-titre');
+      if (titre) {
+        titre.textContent = EN
+          ? 'macOS will refuse to open the file the first time. Here is the exact step.'
+          : 'macOS refusera d’ouvrir le fichier la première fois. Voici le geste exact.';
+      }
+      // Le bloc qui concerne le visiteur passe devant l'autre.
+      var mac = document.getElementById('note-secu-mac');
+      var win = document.getElementById('note-secu-win');
+      if (mac && win && win.parentNode) win.parentNode.insertBefore(mac, win);
+      note.open = true;
+    }
   }
 
   // ------------------------------------------------------------------ version

@@ -73,6 +73,25 @@
   </div>
   <p class="sous-bouton" id="release-meta">Version 3.4 · Windows 7 à 11 — version 1.0 · macOS 13 et plus</p>
 
+  <details class="note-secu" id="note-secu">
+    <summary><span class="note-secu-titre">Windows comme macOS afficheront un avertissement au premier lancement.</span><span class="note-secu-plus">quoi faire</span></summary>
+    <div class="note-secu-corps">
+      <p><strong>Pourquoi.</strong> Le logiciel n’est contresigné par aucun certificat commercial : quelques centaines d’euros par an côté Windows, quatre-vingt-dix-neuf euros par an côté Apple. Les deux systèmes ne disent donc pas qu’ils ont trouvé quelque chose — ils disent qu’ils <em>n’ont rien pu vérifier</em>. L’empreinte SHA-256 de chaque fichier est publiée à côté de lui, pour que vous puissiez contrôler vous-même ce que vous ouvrez.</p>
+      <div id="note-secu-win">
+        <h4>Windows — « Windows a protégé votre ordinateur »</h4>
+        <p><em>Informations complémentaires</em> → <em>Exécuter quand même</em>.</p>
+      </div>
+      <div id="note-secu-mac">
+        <h4>macOS — « Apple n’a pas pu confirmer que ce fichier ne contenait pas de logiciel malveillant »</h4>
+        <p><strong>macOS 15 et suivants</strong>, dont macOS 26 : fermez la boîte, puis <em>Réglages Système</em> → <em>Confidentialité et sécurité</em> → descendez jusqu’à la section <em>Sécurité</em>, où une ligne cite le fichier → <em>Ouvrir quand même</em>.</p>
+        <p><strong>macOS 13 et 14</strong> : clic droit sur le fichier → <em>Ouvrir</em>. Apple a retiré ce raccourci à partir de macOS 15 ; une instruction qui le recommande encore envoie chercher un bouton qui n’existe plus.</p>
+        <p>Ou, en une commande :</p>
+        <code>xattr -d com.apple.quarantine ~/Downloads/OpusScreen-1.0.0.dmg</code>
+        <p style="margin-top:12px"><strong>Le message revient à chaque nouveau téléchargement</strong>, et c’est normal : la marque de quarantaine est posée sur le fichier reçu, pas sur l’application installée. Une fois OpusScreen dans <em>Applications</em>, il ne réapparaît plus.</p>
+      </div>
+    </div>
+  </details>
+
   <ul class="rassurance">
     <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5"/></svg> Sans droits administrateur</li>
     <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5"/></svg> Aucun compte</li>

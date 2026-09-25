@@ -228,6 +228,39 @@ section { padding: clamp(56px, 8vw, 104px) 0; }
 .garanties td { color: var(--accent); font-weight: 700; white-space: nowrap; font-size: .92rem; }
 .garanties tr:last-child th, .garanties tr:last-child td { border-bottom: 0; }
 
+/* ------------------------------------------- avertissement de telechargement */
+
+/*
+   Windows comme macOS refusent d'ouvrir un logiciel qu'aucun certificat
+   commercial ne contresigne, et le disent dans des termes qui font peur -
+   « logiciel malveillant », « porter atteinte a votre vie privee ». C'est la
+   seule chose CERTAINE qui arrive a quiconque telecharge depuis cette page.
+   Elle etait rangee dans la foire aux questions, tout en bas : chacun la
+   decouvrait donc seul, devant la boite de dialogue, apres avoir telecharge.
+   Elle est maintenant sous le bouton, avant le clic.
+*/
+.note-secu {
+  max-width: 680px; margin: 18px auto 0; text-align: left;
+  background: #fffaf0; border: 1px solid #f0e0c4; border-radius: 16px;
+  padding: 2px 22px; box-shadow: var(--ombre);
+}
+.note-secu summary {
+  cursor: pointer; list-style: none; padding: 15px 0;
+  display: flex; justify-content: space-between; gap: 14px; align-items: center;
+  font-weight: 700; font-size: .97rem; color: #6d4c14; line-height: 1.4;
+}
+.note-secu summary::-webkit-details-marker { display: none; }
+.note-secu-plus { font-weight: 600; color: var(--accent); white-space: nowrap; font-size: .88rem; }
+.note-secu[open] .note-secu-plus { display: none; }
+.note-secu-corps { padding-bottom: 16px; }
+.note-secu-corps p { color: var(--plume); margin: 0 0 12px; font-size: .95rem; line-height: 1.6; }
+.note-secu-corps h4 { margin: 18px 0 7px; font-size: .95rem; color: var(--encre); }
+.note-secu-corps > div:first-child h4 { margin-top: 4px; }
+.note-secu-corps code {
+  display: block; overflow-x: auto; background: var(--carte); border: 1px solid var(--trait);
+  border-radius: 10px; padding: 9px 12px; font-size: .84rem; color: var(--encre);
+}
+
 /* ---------------------------------------------------------------- questions */
 
 .questions { display: grid; gap: 12px; max-width: 860px; margin: 0 auto; }
