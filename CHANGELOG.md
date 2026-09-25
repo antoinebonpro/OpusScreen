@@ -2,6 +2,11 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+Ce journal est celui de la version **Windows**. Depuis le 24 septembre 2026, une version
+**macOS** existe et suit sa propre numérotation — elle commence à 1.0.0 et son journal est
+[mac/CHANGELOG.md](mac/CHANGELOG.md). Les deux vivent dans ce dépôt sans se confondre : les
+publications macOS portent l'étiquette `mac-v…`, celles de Windows `v…`.
+
 ---
 
 ## [3.4.0] - 2026-09-24
