@@ -402,6 +402,52 @@
     // fichier ne contenait pas de logiciel malveillant », et le lira comme une
     // accusation. Le laisser replie revient a faire decouvrir cette phrase
     // seul, apres coup, devant la boite de dialogue.
+    // La commande d'installation, montree d'emblee.
+    //
+    // Cliquer « Telecharger » fera TOUJOURS apparaitre l'avertissement de
+    // macOS : c'est le navigateur qui marque le fichier. La seule voie qui
+    // n'avertit pas doit donc se voir AVANT le clic.
+    var bloc = document.getElementById('commande-mac');
+    if (bloc) {
+      bloc.hidden = false;
+      var bouton = document.getElementById('copier-cmd');
+      var champ = document.getElementById('cmd-install');
+      if (bouton && champ) {
+        var libelle = bouton.textContent;
+        bouton.addEventListener('click', function () {
+          var texte = champ.textContent;
+          var fini = function () {
+            bouton.textContent = EN ? 'Copied' : 'Copié';
+            setTimeout(function () { bouton.textContent = libelle; }, 2000);
+          };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(texte).then(fini, selectionner);
+          } else {
+            selectionner();
+          }
+          // Repli : si le presse-papiers est refuse - page non securisee,
+          // reglage du navigateur -, on SELECTIONNE la commande. L'utilisateur
+          // fait alors Cmd+C lui-meme, ce qui vaut mieux qu'un bouton qui ne
+          // fait rien et ne le dit pas.
+          function selectionner() {
+            var plage = document.createRange();
+            plage.selectNodeContents(champ);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(plage);
+            bouton.textContent = EN ? 'press ⌘C' : 'faites ⌘C';
+            setTimeout(function () { bouton.textContent = libelle; }, 3000);
+          }
+        });
+      }
+    }
+
+    // La commande est desormais montree en clair au-dessus : la repeter dans
+    // la note la ferait lire deux fois de suite, ce qui donne l'impression
+    // d'une page mal relue plutot que d'une page qui insiste.
+    var doublon = document.getElementById('note-secu-commande');
+    if (doublon && bloc) doublon.hidden = true;
+
     var note = document.getElementById('note-secu');
     if (note) {
       var titre = note.querySelector('.note-secu-titre');
