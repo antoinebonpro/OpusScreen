@@ -4,6 +4,33 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ---
 
+## [1.0.2] — 2026-09-29
+
+### Corrigé — la fenêtre du disque donnait une instruction périmée
+
+Le fond disait « clic droit sur l'application → *Ouvrir* ». **Apple a retiré ce raccourci à
+partir de macOS 15** : l'instruction envoyait chercher un bouton qui n'existe plus, exactement
+au moment où l'on en a besoin — devant une boîte qui parle de logiciel malveillant, et loin du
+site où se trouve l'explication. Une aide fausse à cet endroit-là est pire qu'une aide absente.
+
+La fenêtre porte maintenant le bon geste, sous la flèche : *Réglages Système → Confidentialité
+et sécurité → « Ouvrir quand même »*, avec le cas de macOS 13 et 14 en dessous. La signature
+décorative qui occupait ce bas de fenêtre a été retirée pour lui faire place : entre dire son
+propre nom une fois de plus et dire à quelqu'un comment ouvrir ce qu'il vient de télécharger,
+le choix est vite fait.
+
+### Le site montre les étapes au moment du clic
+
+L'explication était sur la page ; l'obstacle, lui, arrive deux minutes plus tard dans le
+Finder, quand la page a été quittée depuis longtemps. Une explication qu'il faut avoir lue par
+avance n'aide personne.
+
+Cliquer *Télécharger pour macOS* fait maintenant apparaître les trois étapes à l'écran, et les
+y laisse. La commande d'installation sans avertissement est, elle, montrée en clair sous les
+boutons plutôt que repliée dans une note.
+
+---
+
 ## [1.0.1] — 2026-09-25
 
 ### Corrigé — la 1.0.0 ne démarrait pas sur les Mac Intel

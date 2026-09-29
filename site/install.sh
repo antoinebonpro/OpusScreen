@@ -30,11 +30,11 @@
 #
 set -euo pipefail
 
-VERSION="1.0.1"
+VERSION="1.0.2"
 # Mises a jour a chaque publication, et verifiees contre GitHub par
 # tools/verifier-publication.sh.
 ARCHIVE="OpusScreen-mac.zip"
-SHA256="c041ff8701e6ced3b942fee9829a27e1f4d00507c3e966efba71a9be647792ae"
+SHA256="abd3104d57f4cfbfb6d9b872f710c3d9c5b8fa66da9e42c4460104149e059787"
 URL="https://github.com/antoinebonpro/OpusScreen/releases/download/mac-v$VERSION/$ARCHIVE"
 
 rouge()  { printf '\033[31m%s\033[0m\n' "$*"; }

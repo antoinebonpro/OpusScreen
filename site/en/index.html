@@ -65,7 +65,7 @@
       <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M3 5.5 10.2 4.5v7H3v-6zM11.4 4.3 21 3v8.5h-9.6v-7.2zM3 12.5h7.2v7L3 18.5v-6zM11.4 12.5H21V21l-9.6-1.3v-7.2z"/></svg>
       Download for Windows
     </a>
-    <a class="bouton clair grand" id="dl-mac" href="https://github.com/antoinebonpro/OpusScreen/releases/download/mac-v1.0.1/OpusScreen-1.0.1.dmg">
+    <a class="bouton clair grand" id="dl-mac" href="https://github.com/antoinebonpro/OpusScreen/releases/download/mac-v1.0.2/OpusScreen-1.0.2.dmg">
       <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M16.37 1.43c0 1.14-.42 2.2-1.25 3.02-.98.98-2.13 1.55-3.35 1.45-.05-1.1.42-2.27 1.2-3.05.82-.9 2.15-1.35 3.4-1.42zM20.4 17.02c-.55 1.27-.82 1.84-1.53 2.96-.99 1.56-2.39 3.5-4.12 3.51-1.54.02-1.93-1-4.02-.99-2.09.01-2.52 1.01-4.06.99-1.73-.01-3.05-1.76-4.04-3.32C-.15 15.8-.45 10.65 1.3 7.93c1.24-1.93 3.2-3.06 5.04-3.06 1.87 0 3.05 1.03 4.6 1.03 1.5 0 2.42-1.03 4.59-1.03 1.64 0 3.37.89 4.61 2.43-4.05 2.22-3.39 8.01.26 9.72z"/></svg>
       Download for macOS
     </a>
@@ -80,6 +80,17 @@
       <button type="button" id="copier-cmd">Copy</button>
     </div>
     <p class="commande-mac-note">It downloads, <strong>checks the SHA-256</strong>, installs into <em>Applications</em> and launches. The button above goes through the browser instead: macOS will then say “Apple could not verify…”, and the box below tells you what to do. <a href="https://github.com/antoinebonpro/OpusScreen/blob/main/mac/install.sh">Read the script</a> before running it — it explains what it bypasses, and what stands in its place.</p>
+  </div>
+
+  <div class="apres-clic" id="apres-clic" hidden>
+    <h3>The download has started — and macOS will refuse to open it.</h3>
+    <p class="apres-intro">That is expected, and it is not a problem with the file: it is not countersigned by an Apple certificate, which costs ninety-nine euros a year. Three steps, once only.</p>
+    <ol>
+      <li>Open the downloaded image and drag <strong>OpusScreen</strong> into <strong>Applications</strong>.</li>
+      <li>Double-click it. macOS shows “<em>Apple could not verify…</em>” — click <strong>Done</strong> or <strong>OK</strong>. That dialog is normal.</li>
+      <li>Open <strong>System Settings → Privacy &amp; Security</strong>, scroll to the <strong>Security</strong> section: a line names OpusScreen. Click <strong>“Open Anyway”</strong>, then confirm with Touch ID.</li>
+    </ol>
+    <p class="apres-sortie">On macOS 13 and 14, right-clicking the application and choosing <em>Open</em> is enough — Apple removed that shortcut from macOS 15 onwards. <strong>To avoid all of this</strong>, the command above installs with no warning at all.</p>
   </div>
 
   <details class="note-secu" id="note-secu">
@@ -102,7 +113,7 @@
         <p><strong>macOS 15 and later</strong>, including macOS 26: dismiss the dialog, then <em>System Settings</em> → <em>Privacy &amp; Security</em> → scroll to the <em>Security</em> section, where a line names the file → <em>Open Anyway</em>.</p>
         <p><strong>macOS 13 and 14</strong>: right-click the file → <em>Open</em>. Apple removed that shortcut from macOS 15 onwards; an instruction still recommending it sends you looking for a button that no longer exists.</p>
         <p>Or, in one command:</p>
-        <code>xattr -d com.apple.quarantine ~/Downloads/OpusScreen-1.0.1.dmg</code>
+        <code>xattr -d com.apple.quarantine ~/Downloads/OpusScreen-1.0.2.dmg</code>
         <p style="margin-top:12px"><strong>The message comes back with every fresh download</strong>, and that is expected: the quarantine mark is put on the file you received, not on the installed application. Once OpusScreen sits in <em>Applications</em>, it no longer appears.</p>
       </div>
     </div>
@@ -389,7 +400,7 @@
           <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M3 5.5 10.2 4.5v7H3v-6zM11.4 4.3 21 3v8.5h-9.6v-7.2zM3 12.5h7.2v7L3 18.5v-6zM11.4 12.5H21V21l-9.6-1.3v-7.2z"/></svg>
           Download for Windows
         </a>
-        <a class="bouton clair grand" id="dl-mac-2" href="https://github.com/antoinebonpro/OpusScreen/releases/download/mac-v1.0.1/OpusScreen-1.0.1.dmg">
+        <a class="bouton clair grand" id="dl-mac-2" href="https://github.com/antoinebonpro/OpusScreen/releases/download/mac-v1.0.2/OpusScreen-1.0.2.dmg">
           <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M16.37 1.43c0 1.14-.42 2.2-1.25 3.02-.98.98-2.13 1.55-3.35 1.45-.05-1.1.42-2.27 1.2-3.05.82-.9 2.15-1.35 3.4-1.42zM20.4 17.02c-.55 1.27-.82 1.84-1.53 2.96-.99 1.56-2.39 3.5-4.12 3.51-1.54.02-1.93-1-4.02-.99-2.09.01-2.52 1.01-4.06.99-1.73-.01-3.05-1.76-4.04-3.32C-.15 15.8-.45 10.65 1.3 7.93c1.24-1.93 3.2-3.06 5.04-3.06 1.87 0 3.05 1.03 4.6 1.03 1.5 0 2.42-1.03 4.59-1.03 1.64 0 3.37.89 4.61 2.43-4.05 2.22-3.39 8.01.26 9.72z"/></svg>
           Download for macOS
         </a>
@@ -411,7 +422,7 @@
       <nav aria-label="The software">
         <h4>The software</h4>
         <a href="https://github.com/antoinebonpro/OpusScreen/releases/latest/download/OpusScreen.exe">Download</a>
-        <a href="https://github.com/antoinebonpro/OpusScreen/releases/download/mac-v1.0.1/OpusScreen-1.0.1.dmg">Download for macOS</a>
+        <a href="https://github.com/antoinebonpro/OpusScreen/releases/download/mac-v1.0.2/OpusScreen-1.0.2.dmg">Download for macOS</a>
         <a href="https://github.com/antoinebonpro/OpusScreen/releases">All releases</a>
         <a href="https://github.com/antoinebonpro/OpusScreen/blob/main/CHANGELOG.md">Changelog</a>
       </nav>

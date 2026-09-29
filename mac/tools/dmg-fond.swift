@@ -80,10 +80,8 @@ func ecrire(_ texte: String, _ taille: CGFloat, _ poids: NSFont.Weight,
            options: [.usesLineFragmentOrigin, .usesFontLeading])
 }
 
-ecrire("Glissez OpusScreen dans Applications", 20, .semibold, c(17, 38, 42),
-       centreEn: L / 2, hautA: 52)
-ecrire("Puis, la toute première fois : clic droit sur l’application → Ouvrir.",
-       13, .regular, c(92, 116, 118), centreEn: L / 2, hautA: 84)
+ecrire("Glissez OpusScreen dans Applications", 21, .semibold, c(17, 38, 42),
+       centreEn: L / 2, hautA: 46)
 
 // ------------------------------------------------------------------ la fleche
 
@@ -106,10 +104,34 @@ fleche.close()
 c(23, 190, 177).setFill()
 fleche.fill()
 
-// ------------------------------------------------------------------ la signature
+// ------------------------------------------------ si macOS refuse de l'ouvrir
 
-ecrire("OpusScreen — luminosité, couleur et accessibilité visuelle",
-       11, .regular, c(139, 161, 162), centreEn: L / 2, hautA: 372)
+// Cette phrase est la raison d'etre du bas de la fenetre.
+//
+// Elle disait « clic droit sur l'application → Ouvrir ». Apple a retire ce
+// raccourci a partir de macOS 15 : l'instruction envoyait donc chercher un
+// bouton qui n'existe plus, exactement au moment ou l'on en a besoin - devant
+// une boite qui parle de logiciel malveillant, et loin du site ou se trouve
+// l'explication. Une aide fausse a cet endroit-la est pire qu'une aide absente.
+
+let banniere = NSRect(x: 40, y: y(384), width: L - 80, height: 88)
+let cadre = NSBezierPath(roundedRect: banniere.insetBy(dx: 0.5, dy: 0.5), xRadius: 14, yRadius: 14)
+c(255, 251, 240).setFill()
+cadre.fill()
+c(238, 220, 188).setStroke()
+cadre.lineWidth = 1
+cadre.stroke()
+
+ecrire("Si macOS refuse de l’ouvrir — « Apple n’a pas pu confirmer… »",
+       12.5, .semibold, c(109, 76, 20), centreEn: L / 2, hautA: 316)
+ecrire("Réglages Système → Confidentialité et sécurité → « Ouvrir quand même »",
+       13, .regular, c(82, 62, 26), centreEn: L / 2, hautA: 340)
+ecrire("Sur macOS 13 et 14 : clic droit sur l’application → Ouvrir.",
+       11, .regular, c(139, 122, 92), centreEn: L / 2, hautA: 364)
+
+// La signature de bas de fenetre a ete retiree : elle ne tenait plus sous la
+// banniere, et entre dire son propre nom une fois de plus et dire a quelqu'un
+// comment ouvrir ce qu'il vient de telecharger, le choix est vite fait.
 
 NSGraphicsContext.restoreGraphicsState()
 

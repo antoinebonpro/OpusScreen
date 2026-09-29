@@ -38,7 +38,7 @@ case "${1:-}" in
 esac
 
 APP="OpusScreen.app"
-VERSION="1.0.1"
+VERSION="1.0.2"
 BUNDLE_ID="com.opusscreen.OpusScreen"
 
 # Meme cible que `platforms: [.macOS(.v13)]` dans Package.swift. Les deux

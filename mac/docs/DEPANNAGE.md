@@ -2,7 +2,7 @@
 
 ## macOS refuse d'ouvrir le fichier téléchargé
 
-> « Apple n'a pas pu confirmer que « OpusScreen-1.0.1.dmg » ne contenait pas de logiciel
+> « Apple n'a pas pu confirmer que « OpusScreen-1.0.2.dmg » ne contenait pas de logiciel
 > malveillant susceptible d'endommager votre Mac ou de porter atteinte à votre vie privée. »
 
 **C'est la première chose que rencontre quiconque télécharge l'application, et ce n'est pas
@@ -29,7 +29,7 @@ script le dit lui-même ; il est lisible avant d'être exécuté.
 |---|---|
 | **macOS 15 et suivants** (dont 26) | Fermez la boîte. **Réglages Système → Confidentialité et sécurité**, descendez jusqu'à la section *Sécurité* : une ligne cite le fichier bloqué. Cliquez **« Ouvrir quand même »**, puis confirmez par Touch ID ou mot de passe. |
 | **macOS 13 et 14** | Clic droit sur le fichier → *Ouvrir*, puis *Ouvrir* dans la boîte qui suit. |
-| **N'importe laquelle, au terminal** | `xattr -d com.apple.quarantine ~/Downloads/OpusScreen-1.0.1.dmg` |
+| **N'importe laquelle, au terminal** | `xattr -d com.apple.quarantine ~/Downloads/OpusScreen-1.0.2.dmg` |
 
 Le clic droit → *Ouvrir* **ne suffit plus depuis macOS 15** : Apple a retiré ce raccourci
 pour les logiciels non notariés. Une documentation qui le recommande encore — la nôtre l'a
@@ -42,11 +42,11 @@ fichiers distincts aux yeux de macOS.
 **Pour vérifier que le fichier est bien celui qui a été publié**, avant de passer outre :
 
 ```bash
-shasum -a 256 ~/Downloads/OpusScreen-1.0.1.dmg
+shasum -a 256 ~/Downloads/OpusScreen-1.0.2.dmg
 ```
 
 L'empreinte doit correspondre à celle publiée sur la
-[page de la version](https://github.com/antoinebonpro/OpusScreen/releases/tag/mac-v1.0.1).
+[page de la version](https://github.com/antoinebonpro/OpusScreen/releases/tag/mac-v1.0.2).
 Si elle diffère, n'ouvrez pas le fichier.
 
 **Ou n'en passez pas par là du tout** : `./build.sh` compile votre propre paquet en une
