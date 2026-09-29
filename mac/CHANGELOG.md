@@ -4,6 +4,33 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ---
 
+## [1.0.3] — 2026-09-29
+
+### Ajouté — `--version`
+
+Un outil en ligne de commande qui ne sait pas dire son propre numéro est un outil qu'on ne
+peut pas dépanner. Il le dit maintenant, et s'arrête là.
+
+### Corrigé — une option mal orthographiée était ignorée en silence
+
+`--brightnes 40` lançait l'application et ne faisait rien d'autre : l'ordre semblait ignoré
+sans raison, et la ligne de commande passait pour cassée alors qu'elle n'avait rien reçu. Elle
+le signale désormais, **et continue quand même** — refuser de démarrer serait pire, une copie
+lancée à l'ouverture de session pouvant recevoir des arguments qu'elle ne connaît pas et qui
+ne sont la faute de personne. Les arguments que macOS ajoute lui-même (`-psn_…`,
+`-NSDocumentRevisionsDebugMode`) ne déclenchent rien : s'en plaindre reviendrait à crier sur
+ce qu'on a soi-même demandé.
+
+### Corrigé — une sonde de développement qui disait faux
+
+`--update-check` annonçait « installée : 1.0.0 » quel que soit le numéro réel, puis « une
+version plus récente est proposée » — ce qui était faux. Le binaire de test n'est pas un
+paquet d'application : la lecture de la version retombait sur sa valeur de repli. Elle est
+maintenant lue dans le paquet construit, ou la sonde dit qu'elle ne peut pas comparer. Une
+sonde qui dit faux est pire qu'une sonde absente : on la croit.
+
+---
+
 ## [1.0.2] — 2026-09-29
 
 ### Corrigé — la fenêtre du disque donnait une instruction périmée

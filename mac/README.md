@@ -46,8 +46,8 @@ est [lisible ici](install.sh) avant d'être exécuté, et l'empreinte attendue y
 clair.
 
 **Ou à la main :**
-[OpusScreen-1.0.2.dmg](https://github.com/antoinebonpro/OpusScreen/releases/download/mac-v1.0.2/OpusScreen-1.0.2.dmg)
-· [notes de version](https://github.com/antoinebonpro/OpusScreen/releases/tag/mac-v1.0.2)
+[OpusScreen-1.0.3.dmg](https://github.com/antoinebonpro/OpusScreen/releases/download/mac-v1.0.3/OpusScreen-1.0.3.dmg)
+· [notes de version](https://github.com/antoinebonpro/OpusScreen/releases/tag/mac-v1.0.3)
 
 Ouvrez l'image, glissez **OpusScreen** dans *Applications*, ouvrez-le. macOS 13 (Ventura) ou
 plus récent, **Apple Silicon et Intel** — le paquet contient les deux architectures.
@@ -64,7 +64,7 @@ open OpusScreen.app     # lance (icône dans la barre des menus)
 
 ./build.sh run          # construit et lance
 
-./run-tests.sh          # 135 tests de calcul, en mode à blanc
+./run-tests.sh          # 137 tests de calcul, en mode à blanc
 ./run-tests.sh all      # + 30 vérifications sur le matériel réel
                         # + 20 de bout en bout sur l'application livrée
 
@@ -100,7 +100,7 @@ Installer les outils si besoin : `xcode-select --install`.
 > fonctionnent sans cette autorisation** — l'application le dit et continue.
 
 > 🛡️ **macOS refuse d'ouvrir le fichier téléchargé** — « Apple n'a pas pu confirmer que
-> « OpusScreen-1.0.2.dmg » ne contenait pas de logiciel malveillant ». Le paquet n'est pas
+> « OpusScreen-1.0.3.dmg » ne contenait pas de logiciel malveillant ». Le paquet n'est pas
 > *notarié* : la notarisation passe par un compte de développeur Apple, quatre-vingt-dix-neuf
 > euros par an. Trois façons d'en sortir :
 >
@@ -112,7 +112,7 @@ Installer les outils si besoin : `xcode-select --install`.
 > - **Ou n'en passez pas par là** : la commande d'installation en tête de ce fichier
 >   n'affiche aucun avertissement, `curl` ne posant pas la marque de quarantaine que les
 >   navigateurs posent. Sur un fichier déjà téléchargé :
->   `xattr -d com.apple.quarantine ~/Downloads/OpusScreen-1.0.2.dmg`
+>   `xattr -d com.apple.quarantine ~/Downloads/OpusScreen-1.0.3.dmg`
 >
 > Si l'application redemande la même chose au premier lancement, refaites le même geste pour
 > elle. Et si vous préférez ne pas faire confiance à un binaire, `./build.sh` compile le

@@ -44,9 +44,25 @@ enum Probe {
             print("    paquet      : \(info.downloadUrl)")
             print("    taille      : \(info.size) o")
             print("    empreinte   : \(info.sha256)")
-            let mienne = Installer.currentVersion.map(String.init).joined(separator: ".")
-            print("    installee   : \(mienne)")
-            print(Updater.isNewer(info.version, Installer.currentVersion)
+            // La version installee est lue dans le paquet CONSTRUIT, et non dans
+            // celui qui execute ce test.
+            //
+            // Ce binaire de test n'est pas un paquet d'application : il n'a pas
+            // d'Info.plist, `Installer.currentVersionShort` retombe donc sur sa
+            // valeur de repli et la sonde annoncait « 1.0.0 » quel que soit le
+            // numero reel - puis « une version plus recente est proposee », ce
+            // qui etait faux. Une sonde qui dit faux est pire qu'une sonde
+            // absente : on la croit.
+            let plist = "OpusScreen.app/Contents/Info.plist"
+            guard let info2 = NSDictionary(contentsOfFile: plist),
+                  let mienne = info2["CFBundleShortVersionString"] as? String else {
+                print("    installee   : inconnue — OpusScreen.app absent a cote")
+                print("    => comparaison impossible (lancez ./build.sh d'abord)")
+                return
+            }
+            let nombres = Updater.parseVersion(mienne)
+            print("    construite  : \(mienne)")
+            print(Updater.isNewer(info.version, nombres)
                   ? "    => une version plus recente est proposee"
                   : "    => rien de plus recent : aucune proposition")
         } catch {

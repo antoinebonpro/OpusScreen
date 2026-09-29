@@ -11,7 +11,7 @@ Trois niveaux, et chacun répond à une question différente.
 
 | Niveau | Ce qu'il vérifie | Compte |
 |---|---|---|
-| **calcul** | le moteur est-il juste ? | 7 suites, 135 tests, 5 622 assertions |
+| **calcul** | le moteur est-il juste ? | 7 suites, 137 tests, 5 635 assertions |
 | **réel** | le système accepte-t-il ce qu'on lui demande ? | 30 tests sur le matériel |
 | **bout en bout** | l'application livrée fonctionne-t-elle ? | 20 vérifications |
 

@@ -13,10 +13,28 @@ public enum OpusScreenMain {
     public static func run() {
         let args = Array(Swift.CommandLine.arguments.dropFirst())
 
+        // On le DIT, et l'on continue quand meme.
+        //
+        // Se plaindre suffit ; refuser de demarrer serait pire. Une application
+        // lancee a l'ouverture de session peut recevoir des arguments qu'elle ne
+        // connait pas, et qui ne sont la faute de personne : mieux vaut une
+        // application qui tourne avec une ligne d'avertissement qu'une session
+        // qui s'ouvre sans elle.
+        for option in CommandLineDriver.unknownOptions(args) {
+            FileHandle.standardError.write(Data(
+                "OpusScreen : option inconnue « \(option) » — voir --help\n".utf8))
+        }
+
         if CommandLineDriver.wantsHelp(args) {
             print(CommandLineDriver.helpText)
             return
         }
+
+        if CommandLineDriver.wantsVersion(args) {
+            print("OpusScreen " + Installer.currentVersionShort)
+            return
+        }
+
 
         let app = NSApplication.shared
         let delegate = AppDelegate(args: args)

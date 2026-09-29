@@ -191,6 +191,31 @@ final class SystemTest: XCTestCase {
         XCTAssertTrue(Updater.isNewer([1, 0, 1], [1, 0]))
     }
 
+    /// Une faute de frappe dans une option doit se VOIR. Sans cela, l'ordre
+    /// semble ignore sans raison et la ligne de commande passe pour cassee.
+    @objc func testUnknownOptionsAreReported() {
+        XCTAssertEqual(CommandLineDriver.unknownOptions(["--brightnes", "40"]), ["--brightnes"])
+        XCTAssertEqual(CommandLineDriver.unknownOptions(["--brightness", "40"]), [])
+        XCTAssertEqual(CommandLineDriver.unknownOptions(["--temp", "2500", "--mode", "Nuit"]), [])
+        XCTAssertEqual(CommandLineDriver.unknownOptions(["--help"]), [])
+        XCTAssertEqual(CommandLineDriver.unknownOptions(["--version"]), [])
+        XCTAssertEqual(CommandLineDriver.unknownOptions(["--updated"]), [])
+        XCTAssertEqual(CommandLineDriver.unknownOptions(["--uninstall"]), [])
+
+        // Ce que le systeme ajoute de lui-meme a une application lancee depuis
+        // le Finder ou a l'ouverture de session. S'en plaindre reviendrait a
+        // crier sur ce que l'on a soi-meme demande.
+        XCTAssertEqual(CommandLineDriver.unknownOptions(["-psn_0_12345"]), [])
+        XCTAssertEqual(CommandLineDriver.unknownOptions(["-NSDocumentRevisionsDebugMode", "YES"]), [])
+    }
+
+    @objc func testVersionFlag() {
+        XCTAssertTrue(CommandLineDriver.wantsVersion(["--version"]))
+        XCTAssertTrue(CommandLineDriver.wantsVersion(["-v"]))
+        XCTAssertFalse(CommandLineDriver.wantsVersion(["--brightness", "40"]))
+        XCTAssertFalse(CommandLineDriver.wantsVersion([]))
+    }
+
     @objc func testTagParsing() {
         XCTAssertEqual(Updater.parseVersion("v3.4.0"), [3, 4, 0])
         XCTAssertEqual(Updater.parseVersion("3.4.0"), [3, 4, 0])

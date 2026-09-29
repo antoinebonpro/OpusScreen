@@ -28,6 +28,30 @@ public enum CommandLineDriver {
         args.contains { $0 == "--help" || $0 == "-h" }
     }
 
+    public static func wantsVersion(_ args: [String]) -> Bool {
+        args.contains { $0 == "--version" || $0 == "-v" }
+    }
+
+    /// Toutes les options que cette application reconnait.
+    private static let knownOptions: Set<String> = Set(
+        commands + ["--help", "-h", "--version", "-v", "--minimized", "--show",
+                    "--uninstall", "--updated"]
+    )
+
+    /// Les options ecrites par l'utilisateur que l'on ne reconnait pas.
+    ///
+    /// Sans cela, une faute de frappe - `--brightnes 40` - lance l'application
+    /// et ne fait rien d'autre. L'ordre semble alors ignore sans raison, et la
+    /// ligne de commande passe pour cassee alors qu'elle n'a rien recu.
+    ///
+    /// On ne regarde QUE les mots commencant par « -- » : le systeme ajoute de
+    /// lui-meme des arguments a une application lancee depuis le Finder ou a
+    /// l'ouverture de session (`-psn_...`, `-NSDocumentRevisionsDebugMode`), et
+    /// s'en plaindre serait crier sur ce que l'on a soi-meme demande.
+    public static func unknownOptions(_ args: [String]) -> [String] {
+        args.filter { $0.hasPrefix("--") && !knownOptions.contains($0.lowercased()) }
+    }
+
     public static func startMinimized(_ args: [String]) -> Bool {
         args.contains { $0.caseInsensitiveCompare("--minimized") == .orderedSame }
     }
@@ -241,6 +265,10 @@ public enum CommandLineDriver {
       --show               ouvre la fenetre de reglages
       --minimized          demarre sans ouvrir la fenetre
       --uninstall          desinstalle OpusScreen
+      --version            affiche le numero de version, puis quitte
+      --help               affiche cette aide
+
+    Une option mal orthographiee est signalee plutot qu'ignoree.
 
     Si OpusScreen tourne deja, l'ordre lui est transmis et prend effet
     immediatement. Sinon il s'applique au demarrage.
