@@ -228,6 +228,41 @@ section { padding: clamp(56px, 8vw, 104px) 0; }
 .garanties td { color: var(--accent); font-weight: 700; white-space: nowrap; font-size: .92rem; }
 .garanties tr:last-child th, .garanties tr:last-child td { border-bottom: 0; }
 
+/* ------------------------------------------------ apres le clic sur telecharger */
+
+/*
+   Ce panneau apparait AU MOMENT du clic, et c'est tout son interet.
+   L'obstacle ne se presente pas sur cette page : il se presente deux minutes
+   plus tard, dans le Finder, devant une boite qui parle de logiciel
+   malveillant - et la page qui expliquait quoi faire a ete quittee depuis
+   longtemps. Une explication que l'on doit avoir lue par avance n'aide
+   personne. Celle-ci s'affiche a l'ecran et y reste.
+*/
+.apres-clic {
+  max-width: 680px; margin: 18px auto 0; text-align: left;
+  background: var(--carte); border: 2px solid var(--accent); border-radius: 18px;
+  padding: 20px 22px; box-shadow: var(--ombre-forte);
+}
+.apres-clic h3 { margin: 0 0 4px; font-size: 1.02rem; color: var(--encre); }
+.apres-clic .apres-intro { margin: 0 0 14px; font-size: .92rem; color: var(--plume); }
+.apres-clic ol { margin: 0; padding: 0; list-style: none; counter-reset: pas; }
+.apres-clic li {
+  counter-increment: pas; position: relative; padding: 0 0 14px 40px;
+  font-size: .95rem; color: var(--plume); line-height: 1.6;
+}
+.apres-clic li:last-child { padding-bottom: 0; }
+.apres-clic li::before {
+  content: counter(pas); position: absolute; left: 0; top: 1px;
+  width: 26px; height: 26px; border-radius: 50%; background: var(--accent-p);
+  color: var(--accent-c); font-weight: 700; font-size: .85rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.apres-clic strong { color: var(--encre); }
+.apres-clic .apres-sortie {
+  margin: 16px 0 0; padding-top: 14px; border-top: 1px solid var(--trait);
+  font-size: .9rem; color: var(--estompe);
+}
+
 /* --------------------------------------------- installation en une commande */
 
 /*

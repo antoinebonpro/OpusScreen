@@ -448,6 +448,27 @@
     var doublon = document.getElementById('note-secu-commande');
     if (doublon && bloc) doublon.hidden = true;
 
+    // Les etapes s'affichent AU CLIC, et non dans une note a lire d'avance.
+    //
+    // L'obstacle ne se presente pas sur cette page : il se presente deux
+    // minutes plus tard, dans le Finder, devant une boite qui parle de
+    // logiciel malveillant - et cette page a ete quittee depuis longtemps.
+    var apres = document.getElementById('apres-clic');
+    if (apres) {
+      ['dl-mac', 'dl-mac-2', 'dl-barre'].forEach(function (id) {
+        var lien = document.getElementById(id);
+        if (!lien) return;
+        lien.addEventListener('click', function () {
+          apres.hidden = false;
+          // Le telechargement ne quitte pas la page : on amene simplement les
+          // etapes sous les yeux, sans les arracher a ce qu'ils lisaient.
+          if (apres.scrollIntoView) {
+            apres.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          }
+        });
+      });
+    }
+
     var note = document.getElementById('note-secu');
     if (note) {
       var titre = note.querySelector('.note-secu-titre');
