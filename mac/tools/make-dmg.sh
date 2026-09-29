@@ -23,11 +23,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-VERSION="1.0.0"
 VOLUME="OpusScreen"
 APP="OpusScreen.app"
-DMG="OpusScreen-$VERSION.dmg"
-
 # La fenetre, en points. Ces trois valeurs sont les memes que celles du script
 # qui dessine le fond : elles doivent le rester, sinon les icones ne tombent plus
 # sur la fleche.
@@ -43,6 +40,21 @@ if [ "${1:-}" != "--sans-build" ]; then
 fi
 
 [ -d "$APP" ] || { echo "OpusScreen.app absent : lancez ./build.sh"; exit 1; }
+
+# Le numero est LU dans le paquet, et non recopie ici. Deux endroits ou ecrire
+# la meme version sont deux endroits qui finissent par ne plus etre d'accord -
+# et c'est le nom du fichier publie qui mentirait.
+VERSION="$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" \
+           "$APP/Contents/Info.plist")"
+DMG="OpusScreen-$VERSION.dmg"
+
+# Les deux architectures, ou rien : un paquet arm64 seul ne DEMARRE PAS sur un
+# Mac Intel, et cela ne se voit pas depuis la machine qui l'a construit.
+ARCHS="$(lipo -archs "$APP/Contents/MacOS/OpusScreen")"
+case "$ARCHS" in
+    *arm64*x86_64*|*x86_64*arm64*) echo "==> Architectures : $ARCHS" ;;
+    *) echo "REFUS : le paquet n'est pas universel ($ARCHS). Lancez ./build.sh"; exit 1 ;;
+esac
 
 echo "==> Fond de la fenetre"
 ETAPE="$(mktemp -d)"

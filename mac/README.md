@@ -35,11 +35,22 @@ qui manque partout : une correction du daltonisme **qui se vérifie**.
 
 ## ⬇️ Installer
 
-**[OpusScreen-1.0.0.dmg — version 1.0.0](https://github.com/antoinebonpro/OpusScreen/releases/download/mac-v1.0.0/OpusScreen-1.0.0.dmg)**
-· [notes de version](https://github.com/antoinebonpro/OpusScreen/releases/tag/mac-v1.0.0)
+**En une commande, sans aucun avertissement :**
+
+```bash
+curl -fsSL https://antoinebonpro.github.io/OpusScreen/install.sh | bash
+```
+
+Elle télécharge, **vérifie l'empreinte SHA-256** et installe dans *Applications*. Le script
+est [lisible ici](install.sh) avant d'être exécuté, et l'empreinte attendue y est écrite en
+clair.
+
+**Ou à la main :**
+[OpusScreen-1.0.1.dmg](https://github.com/antoinebonpro/OpusScreen/releases/download/mac-v1.0.1/OpusScreen-1.0.1.dmg)
+· [notes de version](https://github.com/antoinebonpro/OpusScreen/releases/tag/mac-v1.0.1)
 
 Ouvrez l'image, glissez **OpusScreen** dans *Applications*, ouvrez-le. macOS 13 (Ventura) ou
-plus récent, Apple Silicon comme Intel.
+plus récent, **Apple Silicon et Intel** — le paquet contient les deux architectures.
 
 ## 🔨 Construire et lancer
 
@@ -47,17 +58,25 @@ Aucune dépendance à installer, **aucun Xcode** : les outils en ligne de comman
 suffisent.
 
 ```bash
-./build.sh              # construit OpusScreen.app
+./build.sh              # construit OpusScreen.app, binaire UNIVERSEL
+./build.sh natif        # architecture de cette machine seulement (plus rapide)
 open OpusScreen.app     # lance (icône dans la barre des menus)
 
-./build.sh run          # les deux d'un coup
+./build.sh run          # construit et lance
 
 ./run-tests.sh          # 135 tests de calcul, en mode à blanc
 ./run-tests.sh all      # + 30 vérifications sur le matériel réel
                         # + 20 de bout en bout sur l'application livrée
 
 tools/make-dmg.sh       # l'image disque telle qu'elle est publiée
+tools/verifier-publication.sh   # contrôle ce qui est EN LIGNE
 ```
+
+> 🖥️ **Le paquet publié contient les deux architectures**, Apple Silicon et Intel, et
+> `build.sh` échoue si l'une manque. Ce n'est pas une précaution théorique : `swift build`
+> ne produit que celle de la machine qui compile, et un paquet arm64 seul **ne démarre pas
+> du tout** sur un Mac Intel — défaut invisible depuis la machine qui l'a construit, et qui
+> était bien présent dans la 1.0.0.
 
 > 💿 **L'image disque se refabrique d'une commande**, fond de fenêtre compris : celui-ci est
 > **tracé** par `tools/dmg-fond.swift` plutôt que dessiné dans un éditeur, pour la même
@@ -81,7 +100,7 @@ Installer les outils si besoin : `xcode-select --install`.
 > fonctionnent sans cette autorisation** — l'application le dit et continue.
 
 > 🛡️ **macOS refuse d'ouvrir le fichier téléchargé** — « Apple n'a pas pu confirmer que
-> « OpusScreen-1.0.0.dmg » ne contenait pas de logiciel malveillant ». Le paquet n'est pas
+> « OpusScreen-1.0.1.dmg » ne contenait pas de logiciel malveillant ». Le paquet n'est pas
 > *notarié* : la notarisation passe par un compte de développeur Apple, quatre-vingt-dix-neuf
 > euros par an. Trois façons d'en sortir :
 >
@@ -90,8 +109,10 @@ Installer les outils si besoin : `xcode-select --install`.
 >   fichier bloqué — et cliquez **« Ouvrir quand même »**. Depuis macOS 15, le clic droit →
 >   *Ouvrir* ne suffit plus pour ce cas.
 > - **macOS 13 et 14** : clic droit sur le fichier → *Ouvrir*, puis *Ouvrir* dans la boîte.
-> - **En une commande**, quelle que soit la version :
->   `xattr -d com.apple.quarantine ~/Downloads/OpusScreen-1.0.0.dmg`
+> - **Ou n'en passez pas par là** : la commande d'installation en tête de ce fichier
+>   n'affiche aucun avertissement, `curl` ne posant pas la marque de quarantaine que les
+>   navigateurs posent. Sur un fichier déjà téléchargé :
+>   `xattr -d com.apple.quarantine ~/Downloads/OpusScreen-1.0.1.dmg`
 >
 > Si l'application redemande la même chose au premier lancement, refaites le même geste pour
 > elle. Et si vous préférez ne pas faire confiance à un binaire, `./build.sh` compile le

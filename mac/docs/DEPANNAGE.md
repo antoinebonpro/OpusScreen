@@ -2,7 +2,7 @@
 
 ## macOS refuse d'ouvrir le fichier téléchargé
 
-> « Apple n'a pas pu confirmer que « OpusScreen-1.0.0.dmg » ne contenait pas de logiciel
+> « Apple n'a pas pu confirmer que « OpusScreen-1.0.1.dmg » ne contenait pas de logiciel
 > malveillant susceptible d'endommager votre Mac ou de porter atteinte à votre vie privée. »
 
 **C'est la première chose que rencontre quiconque télécharge l'application, et ce n'est pas
@@ -12,13 +12,24 @@ Apple, qui l'analyse et y appose un tampon. Elle passe par un compte de dévelop
 quatre-vingt-dix-neuf euros par an, et c'est la seule façon de faire disparaître ce message
 pour tout le monde.
 
-**Ce qu'il faut faire**, selon la version de macOS :
+**Le plus simple est de ne pas passer par le navigateur du tout :**
+
+```bash
+curl -fsSL https://antoinebonpro.github.io/OpusScreen/install.sh | bash
+```
+
+Cette commande télécharge, vérifie l'empreinte SHA-256 et installe dans *Applications*, sans
+aucun avertissement — la marque de quarantaine est posée par les **navigateurs**, et `curl`
+ne la pose pas. Elle contourne la vérification d'Apple plutôt que de la satisfaire, et le
+script le dit lui-même ; il est lisible avant d'être exécuté.
+
+**Sinon**, selon la version de macOS :
 
 | Version | Le geste |
 |---|---|
 | **macOS 15 et suivants** (dont 26) | Fermez la boîte. **Réglages Système → Confidentialité et sécurité**, descendez jusqu'à la section *Sécurité* : une ligne cite le fichier bloqué. Cliquez **« Ouvrir quand même »**, puis confirmez par Touch ID ou mot de passe. |
 | **macOS 13 et 14** | Clic droit sur le fichier → *Ouvrir*, puis *Ouvrir* dans la boîte qui suit. |
-| **N'importe laquelle, au terminal** | `xattr -d com.apple.quarantine ~/Downloads/OpusScreen-1.0.0.dmg` |
+| **N'importe laquelle, au terminal** | `xattr -d com.apple.quarantine ~/Downloads/OpusScreen-1.0.1.dmg` |
 
 Le clic droit → *Ouvrir* **ne suffit plus depuis macOS 15** : Apple a retiré ce raccourci
 pour les logiciels non notariés. Une documentation qui le recommande encore — la nôtre l'a
@@ -31,11 +42,11 @@ fichiers distincts aux yeux de macOS.
 **Pour vérifier que le fichier est bien celui qui a été publié**, avant de passer outre :
 
 ```bash
-shasum -a 256 ~/Downloads/OpusScreen-1.0.0.dmg
+shasum -a 256 ~/Downloads/OpusScreen-1.0.1.dmg
 ```
 
 L'empreinte doit correspondre à celle publiée sur la
-[page de la version](https://github.com/antoinebonpro/OpusScreen/releases/tag/mac-v1.0.0).
+[page de la version](https://github.com/antoinebonpro/OpusScreen/releases/tag/mac-v1.0.1).
 Si elle diffère, n'ouvrez pas le fichier.
 
 **Ou n'en passez pas par là du tout** : `./build.sh` compile votre propre paquet en une

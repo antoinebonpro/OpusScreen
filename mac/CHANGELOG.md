@@ -4,6 +4,54 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ---
 
+## [1.0.1] — 2026-09-25
+
+### Corrigé — la 1.0.0 ne démarrait pas sur les Mac Intel
+
+Le paquet publié ne contenait **que** l'architecture Apple Silicon. Sur un Mac Intel il ne se
+lançait pas du tout — pas lentement : pas du tout. La documentation promettait pourtant
+« Apple Silicon comme Intel ».
+
+La cause tient en une phrase : `swift build` ne produit que l'architecture de la machine qui
+compile, et **le défaut est invisible depuis cette machine-là** — le paquet s'y lance
+parfaitement. Rien dans la chaîne de vérification ne regardait ce que l'on venait de
+fabriquer ; les 165 tests s'exécutaient sur la seule architecture présente et passaient tous.
+
+Le paquet est désormais universel. `swift build --arch arm64 --arch x86_64` aurait suffi,
+mais réclame `xcbuild`, qui n'arrive qu'avec Xcode : on compile donc deux fois, chacune dans
+son dossier de travail, et `lipo` réunit les deux exécutables.
+
+**Et cela se vérifie maintenant, au lieu de se supposer** : `build.sh` échoue si l'une des
+deux architectures manque, `tools/make-dmg.sh` refuse de fabriquer une image à partir d'un
+paquet qui ne les a pas toutes les deux, et `install.sh` refuse d'installer un paquet qui ne
+contient pas l'architecture de la machine où il tourne.
+
+### Ajouté — installer sans l'avertissement de macOS
+
+```bash
+curl -fsSL https://antoinebonpro.github.io/OpusScreen/install.sh | bash
+```
+
+Télécharge, **vérifie l'empreinte SHA-256**, installe dans *Applications* et lance. Aucun
+avertissement : la marque de quarantaine qui déclenche « Apple n'a pas pu confirmer… » est
+posée par les **navigateurs**, et `curl` ne la pose pas.
+
+Dit franchement : cela **contourne** la vérification d'Apple, cela ne la satisfait pas. Ce qui
+la remplace est vérifiable à l'œil — l'empreinte attendue est écrite en clair dans le script,
+lisible avant d'être exécuté, et l'installation est refusée si le fichier reçu n'y correspond
+pas à l'octet près. La seule façon de faire disparaître l'avertissement sans rien contourner
+reste la notarisation, qui demande un compte de développeur Apple payant.
+
+### Ajouté — un contrôle de ce qui est en ligne
+
+`tools/verifier-publication.sh` compare ce qui est **publié** à ce qui est **écrit** :
+l'empreinte épinglée dans `install.sh` contre celle du fichier réellement servi, le script
+servi par le site contre celui du dépôt, les liens des deux pages contre la version en cours,
+et que « dernière version » reste celle de Windows. Une publication tient par des valeurs
+recopiées à plusieurs endroits ; ce qui casse quand elles divergent, c'est la confiance.
+
+---
+
 ## [1.0.0] — 2026-09-24
 
 Première version pour macOS. Portage intégral d'OpusScreen 3.4.0, écrit pour Windows.

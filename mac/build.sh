@@ -6,9 +6,21 @@
 # d'Apple suffisent. C'est le pendant du build.cmd de la version Windows, qui
 # s'appuyait sur le compilateur C# livre avec le systeme.
 #
-#   ./build.sh            construit OpusScreen.app en mode release
+#   ./build.sh            construit OpusScreen.app, binaire UNIVERSEL
+#   ./build.sh natif      release, architecture de cette machine seulement
 #   ./build.sh debug      construit en mode debug (compilation plus rapide)
 #   ./build.sh run        construit puis lance
+#
+# Le paquet publie contient les DEUX architectures, Apple Silicon et Intel.
+#
+# Ce n'est pas un luxe : `swift build` ne produit que l'architecture de la
+# machine qui compile. Un paquet construit sur un Mac Apple Silicon ne demarre
+# pas du tout sur un Mac Intel - il n'est pas lent, il ne s'ouvre pas. La
+# premiere version publiee avait ce defaut, et promettait pourtant les deux.
+#
+# `swift build --arch arm64 --arch x86_64` ferait le travail, mais reclame
+# xcbuild, qui n'arrive qu'avec Xcode. On compile donc deux fois, chacune dans
+# son propre dossier de travail, et `lipo` reunit les deux executables.
 #
 set -euo pipefail
 
@@ -16,27 +28,52 @@ cd "$(dirname "$0")"
 
 CONFIG="release"
 RUN="no"
+UNIVERSEL="oui"
 case "${1:-}" in
-    debug) CONFIG="debug" ;;
+    debug) CONFIG="debug"; UNIVERSEL="non" ;;
+    natif) UNIVERSEL="non" ;;
     run)   RUN="yes" ;;
     "")    ;;
-    *)     echo "usage: ./build.sh [debug|run]"; exit 1 ;;
+    *)     echo "usage: ./build.sh [natif|debug|run]"; exit 1 ;;
 esac
 
 APP="OpusScreen.app"
-VERSION="1.0.0"
+VERSION="1.0.1"
 BUNDLE_ID="com.opusscreen.OpusScreen"
 
-echo "==> Compilation ($CONFIG)"
-swift build -c "$CONFIG" --product OpusScreenApp
+# Meme cible que `platforms: [.macOS(.v13)]` dans Package.swift. Les deux
+# doivent rester d'accord : c'est ce qui est promis dans la documentation.
+CIBLE="macos13.0"
 
-BIN_DIR="$(swift build -c "$CONFIG" --show-bin-path)"
+if [ "$UNIVERSEL" = "oui" ]; then
+    echo "==> Compilation universelle (arm64 + x86_64)"
+    for ARCH in arm64 x86_64; do
+        echo "    $ARCH"
+        swift build -c "$CONFIG" --product OpusScreenApp \
+             --scratch-path ".build-$ARCH" \
+             -Xswiftc -target -Xswiftc "$ARCH-apple-$CIBLE"
+    done
+    BIN_ARM="$(swift build -c "$CONFIG" --scratch-path .build-arm64 \
+               -Xswiftc -target -Xswiftc "arm64-apple-$CIBLE" --show-bin-path)"
+    BIN_X86="$(swift build -c "$CONFIG" --scratch-path .build-x86_64 \
+               -Xswiftc -target -Xswiftc "x86_64-apple-$CIBLE" --show-bin-path)"
+    BIN_DIR="$BIN_ARM"
+else
+    echo "==> Compilation ($CONFIG, $(uname -m) seulement)"
+    swift build -c "$CONFIG" --product OpusScreenApp
+    BIN_DIR="$(swift build -c "$CONFIG" --show-bin-path)"
+fi
 
 echo "==> Assemblage du paquet"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
-cp "$BIN_DIR/OpusScreenApp" "$APP/Contents/MacOS/OpusScreen"
+if [ "$UNIVERSEL" = "oui" ]; then
+    lipo -create "$BIN_ARM/OpusScreenApp" "$BIN_X86/OpusScreenApp" \
+         -output "$APP/Contents/MacOS/OpusScreen"
+else
+    cp "$BIN_DIR/OpusScreenApp" "$APP/Contents/MacOS/OpusScreen"
+fi
 
 # Le paquet de ressources produit par SwiftPM contient le logo. Il doit vivre
 # dans Resources : c'est la que `Bundle.module` le cherche une fois l'executable
@@ -132,6 +169,29 @@ PLIST
 echo "==> Signature locale"
 codesign --force --deep --sign - "$APP" 2>/dev/null || \
     echo "    (signature impossible : l'autorisation d'ecran sera redemandee a chaque construction)"
+
+# ---------------------------------------------------------------- controle
+#
+# On VERIFIE ce que l'on vient de produire plutot que de le supposer. Une
+# construction universelle qui retombe silencieusement sur une seule
+# architecture est exactement le defaut que ce script est cense empecher - et
+# il ne se voit pas : le paquet se lance parfaitement sur la machine qui l'a
+# construit.
+
+ARCHS="$(lipo -archs "$APP/Contents/MacOS/OpusScreen")"
+if [ "$UNIVERSEL" = "oui" ]; then
+    case "$ARCHS" in
+        *arm64*) ;;
+        *) echo "ECHEC : arm64 absent du paquet ($ARCHS)"; exit 1 ;;
+    esac
+    case "$ARCHS" in
+        *x86_64*) ;;
+        *) echo "ECHEC : x86_64 absent du paquet ($ARCHS)"; exit 1 ;;
+    esac
+    echo "==> Architectures : $ARCHS  (Apple Silicon et Intel)"
+else
+    echo "==> Architectures : $ARCHS  — paquet NON publiable en l'etat"
+fi
 
 echo
 echo "OpusScreen.app est pret."

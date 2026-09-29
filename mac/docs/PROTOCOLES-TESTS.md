@@ -242,6 +242,7 @@ swift run OpusScreenTests --render           # dessine les 11 pages dans des PNG
 swift run OpusScreenTests --render --tall    # pages entières, sans défilement
 swift run OpusScreenTests --gamma            # le point blanc réellement affiché
 swift run OpusScreenTests --update-check     # ce que GitHub répond, aujourd'hui
+tools/verifier-publication.sh               # ce qui est en ligne est-il coherent
 ```
 
 `--update-check` pose au vrai serveur la question que l'application pose chaque jour, et

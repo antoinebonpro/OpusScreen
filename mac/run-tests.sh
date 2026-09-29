@@ -44,7 +44,25 @@ if [ "$MODE" = "build" ] || [ "$MODE" = "app" ] || [ "$MODE" = "all" ]; then
         echo "Le paquet n'a pas ete produit."
         exit 1
     fi
-    echo "  ✓ OpusScreen.app construit"
+    ARCHS="$(lipo -archs OpusScreen.app/Contents/MacOS/OpusScreen)"
+    case "$ARCHS" in
+        *arm64*x86_64*|*x86_64*arm64*) echo "  ✓ OpusScreen.app construit  ($ARCHS)" ;;
+        *) echo "  ✗ paquet non universel ($ARCHS) : il ne demarrerait pas sur l'autre Mac"
+           exit 1 ;;
+    esac
+
+    # Le script d'installation vit a deux endroits : dans mac/, ou il est lu et
+    # modifie, et dans site/, d'ou il est SERVI. Deux copies d'un meme fichier
+    # finissent par differer, et c'est la copie servie qui compte - celle que
+    # les gens executent.
+    if [ -f ../site/install.sh ]; then
+        if diff -q install.sh ../site/install.sh > /dev/null; then
+            echo "  ✓ install.sh : la copie servie par le site est identique"
+        else
+            echo "  ✗ install.sh differe de ../site/install.sh"
+            exit 1
+        fi
+    fi
 fi
 
 if [ "$MODE" = "app" ] || [ "$MODE" = "all" ]; then

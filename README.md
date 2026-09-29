@@ -120,19 +120,30 @@ Toutes les versions : [page des publications](https://github.com/antoinebonpro/O
 
 ### 🍎 Pour macOS
 
-**[OpusScreen-1.0.0.dmg — version 1.0.0](https://github.com/antoinebonpro/OpusScreen/releases/download/mac-v1.0.0/OpusScreen-1.0.0.dmg)**
-· [notes de version](https://github.com/antoinebonpro/OpusScreen/releases/tag/mac-v1.0.0)
+**En une commande, sans aucun avertissement :**
+
+```bash
+curl -fsSL https://antoinebonpro.github.io/OpusScreen/install.sh | bash
+```
+
+Elle télécharge, **vérifie l'empreinte SHA-256** et installe dans *Applications*. Le script
+est [lisible avant d'être exécuté](mac/install.sh).
+
+**Ou à la main :**
+[OpusScreen-1.0.1.dmg](https://github.com/antoinebonpro/OpusScreen/releases/download/mac-v1.0.1/OpusScreen-1.0.1.dmg)
+· [notes de version](https://github.com/antoinebonpro/OpusScreen/releases/tag/mac-v1.0.1)
 · [le code et sa documentation](mac/)
 
-macOS 13 (Ventura) ou plus récent, Apple Silicon comme Intel. Ouvrez l'image, glissez
-**OpusScreen** dans *Applications* — la fenêtre montre le geste —, puis ouvrez-le. Le portage refait **toutes** les fonctions de
+macOS 13 (Ventura) ou plus récent, **Apple Silicon et Intel** — le paquet contient les deux
+architectures. Ouvrez l'image, glissez **OpusScreen** dans *Applications* — la fenêtre montre
+le geste —, puis ouvrez-le. Le portage refait **toutes** les fonctions de
 la version Windows sur les API de macOS — les quatre étages de luminosité, les onze pages de
 réglages, le test de daltonisme, la loupe, les quinze raccourcis, la ligne de commande — et
 le fichier de configuration reste **le même**, clef par clef : une configuration exportée
 depuis un PC s'importe sur le Mac telle quelle.
 
 > 🛡️ **macOS refuse d'ouvrir le fichier téléchargé** — « Apple n'a pas pu confirmer que
-> « OpusScreen-1.0.0.dmg » ne contenait pas de logiciel malveillant ». Le paquet n'est pas
+> « OpusScreen-1.0.1.dmg » ne contenait pas de logiciel malveillant ». Le paquet n'est pas
 > *notarié* : la notarisation passe par un compte de développeur Apple, quatre-vingt-dix-neuf
 > euros par an. Trois façons d'en sortir :
 >
@@ -141,8 +152,10 @@ depuis un PC s'importe sur le Mac telle quelle.
 >   fichier bloqué — et cliquez **« Ouvrir quand même »**. Depuis macOS 15, le clic droit →
 >   *Ouvrir* ne suffit plus pour ce cas.
 > - **macOS 13 et 14** : clic droit sur le fichier → *Ouvrir*, puis *Ouvrir* dans la boîte.
-> - **En une commande**, quelle que soit la version :
->   `xattr -d com.apple.quarantine ~/Downloads/OpusScreen-1.0.0.dmg`
+> - **Ou n'en passez pas par là** : la commande d'installation ci-dessus n'affiche aucun
+>   avertissement, `curl` ne posant pas la marque de quarantaine que les navigateurs posent.
+>   Sur un fichier déjà téléchargé :
+>   `xattr -d com.apple.quarantine ~/Downloads/OpusScreen-1.0.1.dmg`
 >
 > Si l'application redemande la même chose au premier lancement, refaites le même geste pour
 > elle. Et si vous préférez ne pas faire confiance à un binaire, `cd mac && ./build.sh` compile
@@ -179,7 +192,7 @@ ligne de commande d'Apple suffisent.
 
 ```
 cd mac
-./build.sh            compile OpusScreen.app
+./build.sh            compile OpusScreen.app (binaire universel, Intel + Apple Silicon)
 ./run-tests.sh all    vérifie : calcul, matériel réel, et le paquet livré
 tools/make-dmg.sh     fabrique l'image disque telle qu'elle est publiée
 ```

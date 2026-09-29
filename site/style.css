@@ -228,6 +228,38 @@ section { padding: clamp(56px, 8vw, 104px) 0; }
 .garanties td { color: var(--accent); font-weight: 700; white-space: nowrap; font-size: .92rem; }
 .garanties tr:last-child th, .garanties tr:last-child td { border-bottom: 0; }
 
+/* --------------------------------------------- installation en une commande */
+
+/*
+   Visible d'emblee sur un Mac, et non repliee dans une note.
+   Cliquer « Telecharger » fera TOUJOURS apparaitre l'avertissement de macOS :
+   c'est le navigateur qui marque le fichier, et aucune formulation de la page
+   n'y change rien. La seule voie qui n'avertit pas doit donc se voir avant le
+   clic, pas apres.
+*/
+.commande-mac {
+  max-width: 680px; margin: 20px auto 0; text-align: left;
+  background: var(--carte); border: 1px solid var(--trait); border-radius: 18px;
+  padding: 18px 20px; box-shadow: var(--ombre);
+}
+.commande-mac-titre { margin: 0 0 12px; font-size: .97rem; color: var(--encre); font-weight: 600; }
+.commande-mac-ligne { display: flex; gap: 10px; align-items: stretch; }
+.commande-mac-ligne code {
+  flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere;
+  background: var(--accent-p); border: 1px solid #cfe7e4; border-radius: 12px;
+  padding: 11px 13px; font-size: .84rem; color: #0b3f3b; line-height: 1.5;
+}
+.commande-mac-ligne button {
+  flex: none; cursor: pointer; border: 0; border-radius: 12px; padding: 0 18px;
+  background: var(--accent); color: #fff; font: inherit; font-weight: 600; font-size: .9rem;
+}
+.commande-mac-ligne button:hover { background: var(--accent-c); }
+.commande-mac-note { margin: 12px 0 0; font-size: .88rem; color: var(--estompe); line-height: 1.6; }
+@media (max-width: 560px) {
+  .commande-mac-ligne { flex-direction: column; }
+  .commande-mac-ligne button { padding: 11px 18px; }
+}
+
 /* ------------------------------------------- avertissement de telechargement */
 
 /*

@@ -4,3 +4,7 @@ OpusScreen.app/
 OpusScreen-*.dmg
 OpusScreen-mac.zip
 .DS_Store
+
+# Dossiers de travail des deux compilations croisees.
+.build-arm64/
+.build-x86_64/
